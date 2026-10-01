@@ -1,0 +1,412 @@
+import React, { useState } from 'react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  MessageSquare, 
+  Layers, 
+  Receipt, 
+  DollarSign, 
+  CheckSquare, 
+  Sparkles, 
+  ShieldCheck, 
+  Activity, 
+  Settings, 
+  Search, 
+  Menu, 
+  X,
+  LogOut,
+  TrendingUp
+} from 'lucide-react';
+import { db } from '../../lib/database';
+import { Client, InvoiceWithMetrics, AuthUser } from '../../types';
+import { AdminDashboard } from './AdminDashboard';
+import { ClientManagement } from './ClientManagement';
+import { ClientProfileModal } from './ClientProfileModal';
+import { OnboardingWizardModal } from './OnboardingWizardModal';
+import { InvoicesView } from './InvoicesView';
+import { PaymentsView } from './PaymentsView';
+import { AppointmentsView } from './AppointmentsView';
+import { MessagesView } from './MessagesView';
+import { SubscriptionManagement } from './SubscriptionManagement';
+import { RevenueView } from './RevenueView';
+import { TasksView } from './TasksView';
+import { AICopilotView } from './AICopilotView';
+import { AuditLogView } from './AuditLogView';
+import { SystemHealthView } from './SystemHealthView';
+import { SettingsView } from './SettingsView';
+
+interface AdminShellProps {
+  currentUser?: AuthUser | null;
+  onLogout: () => void;
+  onBackToLanding: () => void;
+  onSwitchToClient: () => void;
+  onOpenSupabaseModal?: () => void;
+  isSupabaseConnected?: boolean;
+}
+
+export const AdminShell: React.FC<AdminShellProps> = ({
+  currentUser,
+  onLogout,
+  onBackToLanding,
+  onSwitchToClient,
+  onOpenSupabaseModal,
+  isSupabaseConnected = false,
+}) => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedClientForProfile, setSelectedClientForProfile] = useState<Client | null>(null);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [preselectedPaymentInvoice, setPreselectedPaymentInvoice] = useState<InvoiceWithMetrics | null>(null);
+
+  // Global Search state
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const kpis = db.getAdminKPIs();
+  const clients = db.getAllClientsIncludingArchived();
+  const invoices = db.getInvoices();
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'clients', label: 'Clients', icon: Users, badge: kpis.activeClientsCount },
+    { id: 'appointments', label: 'Appointments', icon: Calendar, alert: kpis.pendingAppointmentsCount > 0 },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, badge: kpis.unreadMessagesCount > 0 ? kpis.unreadMessagesCount : undefined },
+    { id: 'subscriptions', label: 'Subscriptions', icon: Layers },
+    { id: 'invoices', label: 'Invoices', icon: Receipt, alert: kpis.overdueInvoicesCount > 0 },
+    { id: 'payments', label: 'Payments', icon: DollarSign },
+    { id: 'revenue', label: 'Revenue', icon: TrendingUp },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'copilot', label: 'AI Copilot', icon: Sparkles },
+    { id: 'audit', label: 'Audit log', icon: ShieldCheck },
+    { id: 'health', label: 'System health', icon: Activity },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  // Global Search results
+  const searchResults = globalSearchTerm.trim().length > 1 ? {
+    clients: clients.filter(c => c.company_name.toLowerCase().includes(globalSearchTerm.toLowerCase()) || c.contact_name.toLowerCase().includes(globalSearchTerm.toLowerCase())),
+    invoices: invoices.filter(i => i.invoice_number.toLowerCase().includes(globalSearchTerm.toLowerCase())),
+  } : null;
+
+  const handleSelectInvoiceForPayment = (invoice: InvoiceWithMetrics) => {
+    setPreselectedPaymentInvoice(invoice);
+    setActiveTab('payments');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#17181B] text-[#EDEAE2] flex">
+      {/* Desktop Sidebar — Neumorphic Depth, Surface #1D1F23, Zero Borders */}
+      <aside className="hidden lg:flex flex-col w-64 neo-sidebar shrink-0 sticky top-0 h-screen select-none z-20">
+        {/* Brand Lockup */}
+        <div className="h-16 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#E2896A] text-[#17181B] font-semibold text-xs flex items-center justify-center">
+              VO
+            </div>
+            <div>
+              <span className="font-semibold text-sm tracking-tight text-[#EDEAE2] block leading-none">
+                VectorOps
+              </span>
+              <span className="text-[11px] text-[#8B8D93] mt-0.5 block">
+                Agency operating system
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-normal transition-all duration-150 ${
+                  isActive
+                    ? 'neo-inset text-[#EDEAE2] font-semibold'
+                    : 'text-[#8B8D93] hover:text-[#EDEAE2]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#E2896A]' : 'text-[#8B8D93]'}`} />
+                  <span>{item.label}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {item.badge !== undefined && (
+                    <span className="font-mono-numbers text-[11px] text-[#8B8D93]">
+                      {item.badge}
+                    </span>
+                  )}
+                  {item.alert && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E2604F]" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Database & Operator Footer */}
+        <div className="p-4 space-y-3">
+          {/* Active Operator Profile Card */}
+          <div className="w-full p-2.5 rounded-xl neo-flat flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-[#E2896A]/20 text-[#E2896A] text-xs font-bold flex items-center justify-center shrink-0">
+                {currentUser?.full_name ? currentUser.full_name[0] : 'A'}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-medium text-[#EDEAE2] truncate">
+                  {currentUser?.full_name || 'Sovereign Operator'}
+                </div>
+                <div className="text-[10px] text-[#8B8D93] truncate">
+                  {currentUser?.email || 'admin@vectorops.ai'}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Sign out"
+              className="p-1.5 rounded-lg text-[#8B8D93] hover:text-[#E2604F] transition-colors shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Quick link to client portal and landing page */}
+          <div className="flex items-center justify-between text-xs px-1 text-[#8B8D93]">
+            <button
+              onClick={onSwitchToClient}
+              className="hover:text-[#EDEAE2] transition-colors"
+            >
+              Client portal
+            </button>
+            <button
+              onClick={onBackToLanding}
+              className="hover:text-[#EDEAE2] transition-colors"
+            >
+              Landing page
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Layout */}
+      <div className="flex-1 flex flex-col min-w-0">
+        
+        {/* Top Header Bar — Surface #1D1F23, Raised Shadow, Zero Border */}
+        <header className="h-16 px-6 bg-[#1D1F23] neo-raised sticky top-0 z-30 flex items-center justify-between gap-4">
+          
+          {/* Mobile hamburger & Clean view title */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-1.5 text-[#8B8D93] hover:text-[#EDEAE2] rounded-md"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            <div className="hidden sm:block text-xs font-semibold text-[#EDEAE2] capitalize">
+              {navItems.find(n => n.id === activeTab)?.label || activeTab}
+            </div>
+          </div>
+
+          {/* Center: Global Search with Inset Depth */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-3.5 h-3.5 text-[#8B8D93] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search clients, invoices, appointments..."
+              value={globalSearchTerm}
+              onChange={(e) => setGlobalSearchTerm(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl text-[#EDEAE2] placeholder-[#8B8D93] focus:outline-none neo-inset transition-all"
+            />
+
+            {/* Live Global Search Dropdown */}
+            {isSearchFocused && searchResults && (
+              <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-[#1D1F23] rounded-xl neo-raised z-50 space-y-2 text-xs">
+                {searchResults.clients.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-[#8B8D93] px-2 py-0.5">
+                      Clients
+                    </div>
+                    {searchResults.clients.map(c => (
+                      <div
+                        key={c.id}
+                        onMouseDown={() => {
+                          setSelectedClientForProfile(c);
+                          setGlobalSearchTerm('');
+                        }}
+                        className="px-2 py-1.5 hover:bg-white/[0.04] rounded-lg cursor-pointer text-[#EDEAE2]"
+                      >
+                        {c.company_name} ({c.contact_name})
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchResults.invoices.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-[#8B8D93] px-2 py-0.5">
+                      Invoices
+                    </div>
+                    {searchResults.invoices.map(i => (
+                      <div
+                        key={i.id}
+                        onMouseDown={() => {
+                          setActiveTab('invoices');
+                          setGlobalSearchTerm('');
+                        }}
+                        className="px-2 py-1.5 hover:bg-white/[0.04] rounded-lg cursor-pointer text-[#EDEAE2] flex justify-between"
+                      >
+                        <span>{i.invoice_number}</span>
+                        <span className="font-mono-numbers text-[#E2896A]">${(i.balance_due_cents / 100).toFixed(2)} due</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right Controls — User profile pill, Client Portal & Logout */}
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF7D]" />
+              <span className="text-[#EDEAE2] font-medium">{currentUser?.full_name || 'Operator'}</span>
+              <span className="text-[10px] text-[#E2896A] font-mono uppercase bg-[#E2896A]/10 px-1.5 py-0.5 rounded">
+                Admin
+              </span>
+            </div>
+
+            <button
+              onClick={onBackToLanding}
+              className="btn-secondary text-xs px-3 py-1.5"
+              title="View public landing page"
+            >
+              Landing page
+            </button>
+
+            <button
+              onClick={onSwitchToClient}
+              className="btn-secondary text-xs px-3 py-1.5"
+            >
+              Client portal
+            </button>
+
+            <button
+              onClick={onLogout}
+              className="px-3 py-1.5 rounded-xl neo-raised text-xs text-[#8B8D93] hover:text-[#E2604F] transition-colors flex items-center gap-1.5"
+              title="Sign out of VectorOps"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile Flyout Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-[#1D1F23] p-4 space-y-1 neo-raised">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center justify-between p-2.5 rounded-lg text-xs ${
+                  activeTab === item.id ? 'neo-inset text-[#EDEAE2] font-semibold' : 'text-[#8B8D93]'
+                }`}
+              >
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Viewport Content */}
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          {activeTab === 'dashboard' && (
+            <AdminDashboard
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onOpenOnboarding={() => setIsOnboardingOpen(true)}
+            />
+          )}
+
+          {activeTab === 'clients' && (
+            <ClientManagement
+              onSelectClient={(c) => setSelectedClientForProfile(c)}
+              onOpenOnboarding={() => setIsOnboardingOpen(true)}
+            />
+          )}
+
+          {activeTab === 'invoices' && (
+            <InvoicesView
+              onRecordPaymentForInvoice={handleSelectInvoiceForPayment}
+            />
+          )}
+
+          {activeTab === 'payments' && (
+            <PaymentsView
+              preselectedInvoice={preselectedPaymentInvoice}
+              onClearPreselectedInvoice={() => setPreselectedPaymentInvoice(null)}
+            />
+          )}
+
+          {activeTab === 'appointments' && <AppointmentsView />}
+
+          {activeTab === 'messages' && <MessagesView />}
+
+          {activeTab === 'subscriptions' && <SubscriptionManagement />}
+
+          {activeTab === 'revenue' && <RevenueView />}
+
+          {activeTab === 'tasks' && <TasksView />}
+
+          {activeTab === 'copilot' && <AICopilotView />}
+
+          {activeTab === 'audit' && <AuditLogView />}
+
+          {activeTab === 'health' && (
+            <SystemHealthView onOpenSupabaseModal={onOpenSupabaseModal} />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsView onOpenSupabaseModal={onOpenSupabaseModal} />
+          )}
+        </main>
+      </div>
+
+      {/* Global Client Profile Modal */}
+      {selectedClientForProfile && (
+        <ClientProfileModal
+          client={selectedClientForProfile}
+          onClose={() => setSelectedClientForProfile(null)}
+          onOpenMessageThread={() => setActiveTab('messages')}
+          onOpenAppointmentBooking={() => setActiveTab('appointments')}
+        />
+      )}
+
+      {/* Global Onboarding Wizard Modal */}
+      {isOnboardingOpen && (
+        <OnboardingWizardModal
+          isOpen={isOnboardingOpen}
+          onClose={() => setIsOnboardingOpen(false)}
+          onClientCreated={(client) => {
+            setSelectedClientForProfile(client);
+          }}
+        />
+      )}
+    </div>
+  );
+};

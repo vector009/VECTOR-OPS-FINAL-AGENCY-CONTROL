@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #17181B;
+    --surface-main: #1D1F23;
+    --text-primary: #EDEAE2;
+    --text-muted: #8B8D93;
+    --accent: #E2896A;
+    --accent-hover: #EA9679;
+    --success: #4CAF7D;
+    --warning: #E0A94C;
+    --danger: #E2604F;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    background-color: #17181B;
+    color: #EDEAE2;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    color: #EDEAE2;
+  }
+
+  .font-mono-numbers {
+    font-family: 'JetBrains Mono', 'Plus Jakarta Sans', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* TRUE NEUMORPHISM (Exact specification: zero borders, dual soft shadows) */
+
+/* Raised card (KPI cards, briefing panel, list items, landing stat block):
+   background: #1D1F23; border: none; border-radius: 16px;
+   box-shadow: -8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6); */
+.neo-raised, .neo-card, .neo-item-raised {
+  background-color: #1D1F23;
+  border: none !important;
+  border-radius: 16px;
+  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
+               8px  8px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* Primary KPI cards: Monthly recurring revenue & Collected this month (accent glow & primary weight) */
+.neo-kpi-primary {
+  background-color: #1D1F23;
+  border: none !important;
+  border-radius: 16px;
+  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
+               8px  8px 16px rgba(0, 0, 0, 0.6),
+               inset 0 0 16px rgba(226, 137, 106, 0.12);
+  transform: translateY(-2px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Secondary KPI cards: Active clients, Outstanding, Overdue, Setup fees */
+.neo-kpi-secondary {
+  background-color: #1D1F23;
+  border: none !important;
+  border-radius: 16px;
+  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
+               8px  8px 16px rgba(0, 0, 0, 0.6);
+  opacity: 0.94;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hero-level element (Autonomous agency briefing panel only — strongest depth) */
+.neo-focal, .neo-hero, .neo-briefing {
+  background-color: #1D1F23;
+  border: none !important;
+  border-radius: 20px;
+  box-shadow: -10px -10px 20px rgba(255, 255, 255, 0.035),
+               10px  10px 20px rgba(0, 0, 0, 0.65),
+              inset 0 0 24px rgba(226, 137, 106, 0.08);
+}
+
+/* Modal depth: deep elevation, clean shadow boundary */
+.neo-modal {
+  background-color: #1D1F23;
+  border: none !important;
+  border-radius: 20px;
+  box-shadow: -10px -10px 24px rgba(255, 255, 255, 0.035),
+               10px  10px 30px rgba(0, 0, 0, 0.7);
+}
+
+/* Inset / pressed (active sidebar item, focused input):
+   box-shadow: inset -4px -4px 10px rgba(255,255,255,0.02),
+               inset 4px 4px 10px rgba(0,0,0,0.55); */
+.neo-inset {
+  background-color: #17181B;
+  border: none !important;
+  box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.02),
+              inset  4px  4px 10px rgba(0, 0, 0, 0.55);
+}
+
+/* Sidebar elevation */
+.neo-sidebar {
+  background-color: #1D1F23;
+  border: none !important;
+  box-shadow: 6px 0 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Flat elements: simple utility rows with zero shadow */
+.neo-flat {
+  background-color: #1D1F23;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* NEUMORPHIC BUTTONS (Tactile, dual soft shadows, zero borders) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #E2896A;
+  color: #17181B;
+  border: none !important;
+  box-shadow: -4px -4px 12px rgba(255, 255, 255, 0.03),
+               4px  4px 12px rgba(0, 0, 0, 0.55);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #EA9679;
+  box-shadow: -5px -5px 14px rgba(255, 255, 255, 0.04),
+               5px  5px 16px rgba(0, 0, 0, 0.65);
+}
+
+.btn-primary:active {
+  box-shadow: inset -2px -2px 6px rgba(255, 255, 255, 0.03),
+              inset  2px  2px 6px rgba(0, 0, 0, 0.55);
+  transform: translateY(0px) scale(0.99);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #1D1F23;
+  color: #EDEAE2;
+  border: none !important;
+  box-shadow: -4px -4px 10px rgba(255, 255, 255, 0.025),
+               4px  4px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  color: #E2896A;
+  box-shadow: -5px -5px 12px rgba(255, 255, 255, 0.035),
+               5px  5px 14px rgba(0, 0, 0, 0.6);
+}
+
+.btn-secondary:active {
+  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02),
+              inset  3px  3px 8px rgba(0, 0, 0, 0.5);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #1D1F23;
+  color: #E2604F;
+  border: none !important;
+  box-shadow: -4px -4px 10px rgba(255, 255, 255, 0.02),
+               4px  4px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  box-shadow: -5px -5px 12px rgba(255, 255, 255, 0.03),
+               5px  5px 14px rgba(0, 0, 0, 0.6);
+  color: #EA7060;
+}
+
+.btn-danger:active {
+  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02),
+              inset  3px  3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #17181B;
+}
+::-webkit-scrollbar-thumb {
+  background: #25282E;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #33373E;
+}
