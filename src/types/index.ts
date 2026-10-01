@@ -63,6 +63,7 @@ export type PaymentMethod =
   | 'BANK_TRANSFER' 
   | 'WISE' 
   | 'PAYPAL' 
+  | 'STRIPE'
   | 'OTHER';
 
 export type AppointmentStatus = 

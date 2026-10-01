@@ -341,6 +341,90 @@ const SEED_INVOICES: Invoice[] = [
 
 const SEED_PAYMENTS: Payment[] = [
   {
+    id: 'f0000000-0000-0000-0000-00000000000a',
+    client_id: 'c0000000-0000-0000-0000-000000000001',
+    invoice_id: 'e0000000-0000-0000-0000-000000000001',
+    amount_cents: 35000,
+    received_at: '2026-01-18T10:00:00Z',
+    payment_method: 'STRIPE',
+    external_reference: 'STRIPE-CH-01018',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'Q1 voice infrastructure starter deposit.',
+    created_at: '2026-01-18T10:05:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000b',
+    client_id: 'c0000000-0000-0000-0000-000000000001',
+    invoice_id: 'e0000000-0000-0000-0000-000000000001',
+    amount_cents: 42000,
+    received_at: '2026-02-14T11:30:00Z',
+    payment_method: 'BANK_TRANSFER',
+    external_reference: 'ACH-FEB-2026-02',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'February voice operations retainer.',
+    created_at: '2026-02-14T11:35:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000c',
+    client_id: 'c0000000-0000-0000-0000-000000000002',
+    invoice_id: 'e0000000-0000-0000-0000-000000000002',
+    amount_cents: 48000,
+    received_at: '2026-03-20T09:15:00Z',
+    payment_method: 'STRIPE',
+    external_reference: 'STRIPE-CH-03020',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'March telephony sprint settlement.',
+    created_at: '2026-03-20T09:20:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000d',
+    client_id: 'c0000000-0000-0000-0000-000000000001',
+    invoice_id: 'e0000000-0000-0000-0000-000000000002',
+    amount_cents: 55000,
+    received_at: '2026-04-15T15:45:00Z',
+    payment_method: 'WISE',
+    external_reference: 'WISE-APR-0415',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'April expansion subscription fee.',
+    created_at: '2026-04-15T15:50:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000e',
+    client_id: 'c0000000-0000-0000-0000-000000000003',
+    invoice_id: 'e0000000-0000-0000-0000-000000000003',
+    amount_cents: 68000,
+    received_at: '2026-05-19T14:10:00Z',
+    payment_method: 'BANK_TRANSFER',
+    external_reference: 'ACH-MAY-0519',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'May emergency dispatch setup fee.',
+    created_at: '2026-05-19T14:15:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000f',
+    client_id: 'c0000000-0000-0000-0000-000000000002',
+    invoice_id: 'e0000000-0000-0000-0000-000000000002',
+    amount_cents: 72000,
+    received_at: '2026-06-22T16:30:00Z',
+    payment_method: 'STRIPE',
+    external_reference: 'STRIPE-CH-06022',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'June recurring voice intelligence retainer.',
+    created_at: '2026-06-22T16:35:00Z',
+  },
+  {
+    id: 'f0000000-0000-0000-0000-00000000000g',
+    client_id: 'c0000000-0000-0000-0000-000000000004',
+    invoice_id: 'e0000000-0000-0000-0000-000000000005',
+    amount_cents: 85000,
+    received_at: '2026-07-20T11:00:00Z',
+    payment_method: 'BANK_TRANSFER',
+    external_reference: 'ACH-JUL-0720',
+    created_by: 'a0000000-0000-0000-0000-000000000001',
+    notes: 'July enterprise voice setup and initial SLA.',
+    created_at: '2026-07-20T11:05:00Z',
+  },
+  {
     id: 'f0000000-0000-0000-0000-000000000001',
     client_id: 'c0000000-0000-0000-0000-000000000001',
     invoice_id: 'e0000000-0000-0000-0000-000000000001',
@@ -1122,13 +1206,13 @@ class VectorOpsDatabase {
     }
 
     // Authoritative local aggregation matching revenue_by_month view
+    // Starts strictly from January of the active calendar year (Jan -> Dec)
     const monthlyMap = new Map<string, { revenue_cents: number; payment_count: number }>();
+    const currentYear = new Date().getUTCFullYear();
     
-    // Ensure last 12 months exist so the chart shows full progression even if 0 revenue in some months
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-      const key = d.toISOString().slice(0, 7) + '-01'; // "YYYY-MM-01"
+    // Always start from January (month 0 to 11)
+    for (let month = 0; month < 12; month++) {
+      const key = `${currentYear}-${String(month + 1).padStart(2, '0')}-01`;
       monthlyMap.set(key, { revenue_cents: 0, payment_count: 0 });
     }
 
@@ -1143,9 +1227,11 @@ class VectorOpsDatabase {
     }
 
     const result: RevenueByMonth[] = [];
-    const sortedKeys = Array.from(monthlyMap.keys()).sort();
-    const recentKeys = sortedKeys.slice(-12);
-    for (const k of recentKeys) {
+    // Sort starting from Jan of current year
+    const sortedKeys = Array.from(monthlyMap.keys())
+      .filter(k => k.startsWith(`${currentYear}-`))
+      .sort();
+    for (const k of sortedKeys) {
       const data = monthlyMap.get(k)!;
       result.push({
         month: k,

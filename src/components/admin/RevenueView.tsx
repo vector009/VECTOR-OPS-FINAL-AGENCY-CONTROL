@@ -43,11 +43,11 @@ export const RevenueView: React.FC = () => {
     loadData();
   }, []);
 
-  // Format month label e.g. "2026-09-01" -> "Sep '26"
+  // Format month label e.g. "2026-01-01" -> "Jan"
   const formatMonthLabel = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+      return d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
     } catch {
       return dateStr;
     }
@@ -150,7 +150,7 @@ export const RevenueView: React.FC = () => {
           <div>
             <h2 className="text-base font-semibold text-[#EDEAE2] tracking-tight">Revenue trajectory</h2>
             <p className="text-xs text-[#8B8D93] mt-0.5">
-              {timeframe === 'monthly' ? 'Monthly settled revenue for the past 12 months' : 'Annual revenue across all recorded years'}
+              {timeframe === 'monthly' ? 'Monthly settled collections from January through December' : 'Annual revenue across all recorded years'}
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export const RevenueView: React.FC = () => {
                   : 'text-[#8B8D93] hover:text-[#EDEAE2]'
               }`}
             >
-              Monthly (12 mo)
+              Monthly (Jan – Dec)
             </button>
             <button
               onClick={() => setTimeframe('yearly')}

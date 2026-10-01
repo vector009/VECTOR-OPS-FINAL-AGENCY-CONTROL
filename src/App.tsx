@@ -52,7 +52,7 @@ function AppContent() {
         setCurrentPath(hash.startsWith('/') ? hash : `/${hash}`);
       } else {
         const path = window.location.pathname;
-        setCurrentPath(path && path !== '/' ? path : '/login');
+        setCurrentPath(path && path !== '/' ? path : '/landing');
       }
     };
 
@@ -68,13 +68,13 @@ function AppContent() {
   useEffect(() => {
     if (!isLoading && (currentPath === '/' || currentPath === '')) {
       if (!profile) {
-        navigate('/login');
+        navigate('/landing');
       } else if (profile.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (profile.role === 'CLIENT') {
         navigate('/portal/dashboard');
       } else {
-        navigate('/login');
+        navigate('/landing');
       }
     }
   }, [currentPath, profile, isLoading]);
