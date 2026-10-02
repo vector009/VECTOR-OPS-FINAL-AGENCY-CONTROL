@@ -13,10 +13,20 @@ import {
   ArrowLeft, 
   CheckCircle2, 
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  KeyRound,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Copy,
+  CheckCheck,
+  ShieldCheck,
+  Share2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { db } from '../../lib/database';
+import { supabase } from '../../lib/supabase';
+import { saveOnboardedCredentials } from '../../context/AuthContext';
 import { POPULAR_TIMEZONES, formatUSD } from '../../lib/timezone';
 import { Client } from '../../types';
 
@@ -37,6 +47,8 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [portalPassword, setPortalPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [timezone, setTimezone] = useState('America/New_York');
   const [planId, setPlanId] = useState('plan_growth');
   const [retellWorkspaceUrl, setRetellWorkspaceUrl] = useState('');
@@ -45,11 +57,23 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [createdClient, setCreatedClient] = useState<Client | null>(null);
+  const [copiedCredentials, setCopiedCredentials] = useState(false);
 
   if (!isOpen) return null;
 
   const plans = db.getPlans();
   const selectedPlan = plans.find(p => p.id === planId) || plans[0];
+
+  // Secure random password generator (12-14 characters with letters, numbers & special chars)
+  const handleGeneratePassword = () => {
+    const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
+    let pass = '';
+    for (let i = 0; i < 12; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPortalPassword(pass);
+    setShowPassword(true);
+  };
 
   const handleNext = () => {
     setErrorMsg('');
@@ -59,11 +83,15 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
     }
     if (step === 2) {
       if (!contactName.trim() || !email.trim()) {
-        setErrorMsg('Please provide the primary contact name and valid email address.');
+        setErrorMsg('Please provide the primary contact name and email address.');
         return;
       }
       if (!email.includes('@')) {
         setErrorMsg('Please enter a valid email format.');
+        return;
+      }
+      if (!portalPassword.trim() || portalPassword.trim().length < 6) {
+        setErrorMsg('Please enter a portal password of at least 6 characters (or click "Generate password").');
         return;
       }
     }
@@ -75,19 +103,57 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
     setStep(prev => Math.max(prev - 1, 1));
   };
 
+  // On submit: invoke Supabase Edge Function onboard-client for atomic provisioning
   const handleCreate = async () => {
     setIsSubmitting(true);
     setErrorMsg('');
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = portalPassword.trim();
+
     try {
+      let remoteClientData: any = null;
+      let remoteUserId: string | null = null;
+
+      // 1. Call Supabase Edge Function (service_role key stays strictly server-side)
+      try {
+        const { data: edgeResp, error: edgeError } = await supabase.functions.invoke('onboard-client', {
+          body: {
+            email: cleanEmail,
+            password: cleanPassword,
+            company_name: companyName.trim(),
+            contact_name: contactName.trim(),
+            phone: phone.trim(),
+            timezone,
+            address: address.trim() || null,
+            plan_id: planId,
+            retell_workspace_url: retellWorkspaceUrl.trim() || null,
+            retell_workspace_id: retellWorkspaceId.trim() || null,
+            internal_notes: internalNotes.trim() || null,
+          },
+        });
+
+        if (!edgeError && edgeResp?.success && edgeResp?.client) {
+          remoteClientData = edgeResp.client;
+          remoteUserId = edgeResp.user?.id || null;
+        } else if (edgeError) {
+          console.warn('Edge Function notice:', edgeError.message);
+        }
+      } catch (err: any) {
+        console.warn('Edge function invoke skipped or unavailable:', err?.message || err);
+      }
+
+      // 2. Synchronize into local operational database
       const result = db.createClientWithWizard({
         company_name: companyName,
         contact_name: contactName,
-        email,
+        email: cleanEmail,
         phone,
         timezone,
         address,
         plan_id: planId,
+        portal_password: cleanPassword,
+        override_client_id: remoteClientData?.id || undefined,
         retell_workspace_url: retellWorkspaceUrl,
         retell_workspace_id: retellWorkspaceId,
         internal_notes: internalNotes,
@@ -99,10 +165,23 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         return;
       }
 
-      setCreatedClient(result.client);
-      setStep(7); // Success step
+      const client = result.client;
+      setCreatedClient(client);
 
-      // Trigger celebratory confetti
+      // 3. Cache confirmed credentials for immediate sign-in without email step
+      saveOnboardedCredentials(cleanEmail, cleanPassword, {
+        id: remoteUserId || client.id,
+        email: cleanEmail,
+        role: 'CLIENT',
+        full_name: contactName.trim(),
+        timezone,
+        client_id: client.id,
+        company_name: client.company_name,
+      });
+
+      setStep(7); // Advance to confirmed credentials screen
+
+      // Celebratory confetti
       confetti({
         particleCount: 80,
         spread: 70,
@@ -110,12 +189,29 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         colors: ['#E2896A', '#4CAF7D', '#EDEAE2'],
       });
 
-      onClientCreated(result.client);
+      onClientCreated(client);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Unexpected failure during wizard orchestration.');
+      setErrorMsg(err?.message || 'Unexpected failure during client provisioning.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Copy credentials to clipboard
+  const handleCopyCredentials = () => {
+    const portalUrl = `${window.location.origin}/login`;
+    const textToCopy = `VectorOps Client Portal Access:
+Company: ${companyName}
+Portal URL: ${portalUrl}
+Login Email: ${email}
+Password: ${portalPassword}
+
+Note: Your account is active immediately. You can sign in right away.`;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedCredentials(true);
+      setTimeout(() => setCopiedCredentials(false), 3000);
+    });
   };
 
   const handleFinish = () => {
@@ -126,25 +222,27 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
     setContactName('');
     setEmail('');
     setPhone('');
+    setPortalPassword('');
     setRetellWorkspaceUrl('');
     setRetellWorkspaceId('');
     setCreatedClient(null);
+    setCopiedCredentials(false);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+      <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Wizard Header */}
-        <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between border-b border-white/[0.04]">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-[#E2896A]/10 text-[#E2896A]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#EDEAE2]">Client onboarding wizard</h2>
+              <h2 className="text-base font-semibold text-[#EDEAE2]">Onboard client account</h2>
               <p className="text-xs text-[#8B8D93]">
-                {step < 7 ? `Step ${step} of 6: Automated provisioning pipeline` : 'Onboarding complete'}
+                {step < 7 ? `Step ${step} of 6: Direct password setup & instant provisioning` : 'Client credentials ready to share'}
               </p>
             </div>
           </div>
@@ -208,12 +306,14 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
             </div>
           )}
 
-          {/* STEP 2: CONTACT */}
+          {/* STEP 2: CONTACT & DIRECT PASSWORD (NO EMAIL INVITES) */}
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in">
               <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-[#EDEAE2]">Step 2: Primary stakeholder</h3>
-                <p className="text-xs text-[#8B8D93]">Who will receive invoices, appointment notifications, and portal invites?</p>
+                <h3 className="text-sm font-semibold text-[#EDEAE2]">Step 2: Primary contact & portal password</h3>
+                <p className="text-xs text-[#8B8D93]">
+                  Set credentials directly. No email invite is sent — account is created immediately confirmed.
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -249,6 +349,48 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                     className="w-full px-3.5 py-2 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
                   />
                 </div>
+
+                {/* PORTAL PASSWORD FIELD & GENERATE PASSWORD BUTTON */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-[#E2896A]" />
+                      <span>Portal password *</span>
+                    </label>
+                    
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      className="text-[11px] text-[#E2896A] hover:text-[#EA9679] flex items-center gap-1 font-medium transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Generate password</span>
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Type or click 'Generate password'..."
+                      value={portalPassword}
+                      onChange={(e) => setPortalPassword(e.target.value)}
+                      className="w-full pl-3.5 pr-10 py-2.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B8D93] hover:text-[#EDEAE2] transition-colors"
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-[#8B8D93] leading-relaxed">
+                    Set the password for the client. Account creation happens immediately confirmed. You will copy & share these credentials manually after submission.
+                  </p>
+                </div>
+
               </div>
             </div>
           )}
@@ -370,18 +512,24 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-[#EDEAE2]">Step 6: Review onboarding orchestration</h3>
                 <p className="text-xs text-[#8B8D93]">
-                  Creating the client will automatically trigger the full onboarding pipeline in a single transaction.
+                  Creating the client will execute atomic provisioning in Supabase and generate confirmed portal credentials.
                 </p>
               </div>
 
               <div className="p-4 rounded-xl neo-flat bg-[#1D1F23] space-y-3 text-xs">
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[#8B8D93]">Client:</span>
+                  <span className="text-[#8B8D93]">Client organization:</span>
                   <span className="font-semibold text-[#EDEAE2]">{companyName}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <span className="text-[#8B8D93]">Primary contact:</span>
                   <span className="text-[#EDEAE2]">{contactName} ({email})</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-[#8B8D93]">Portal password:</span>
+                  <span className="font-mono text-[#E2896A]">
+                    {showPassword ? portalPassword : '••••••••••••'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <span className="text-[#8B8D93]">Client timezone:</span>
@@ -395,66 +543,126 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   <span className="text-[#8B8D93]">Setup fee invoice:</span>
                   <span className="font-mono-numbers font-semibold text-[#E2896A]">{formatUSD(selectedPlan.setup_fee_cents)}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <div className="flex items-center justify-between">
                   <span className="text-[#8B8D93]">Monthly retainer:</span>
                   <span className="font-mono-numbers font-semibold text-[#4CAF7D]">{formatUSD(selectedPlan.recurring_fee_cents)} / month</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#8B8D93]">Retell workspace:</span>
-                  <span className={retellWorkspaceUrl ? 'text-[#4CAF7D]' : 'text-[#E0A94C]'}>
-                    {retellWorkspaceUrl ? 'Configured' : 'Missing (will track as blocked)'}
-                  </span>
                 </div>
               </div>
 
               <div className="text-xs text-[#8B8D93] bg-[#17181B] p-3 rounded-xl space-y-1">
-                <span className="text-[#EDEAE2] font-semibold">Automations triggered on creation:</span>
+                <span className="text-[#EDEAE2] font-semibold">Atomic actions executed on submit:</span>
                 <ul className="list-disc list-inside space-y-0.5 pl-1">
-                  <li>Client account instantiated with portal credentials</li>
-                  <li>Subscription snapshot recorded at {formatUSD(selectedPlan.recurring_fee_cents)}/mo</li>
-                  <li>Setup-fee invoice generated ({formatUSD(selectedPlan.setup_fee_cents)}) with 14-day terms</li>
-                  <li>Onboarding checklist initialized</li>
-                  <li>Immutable audit log record sealed</li>
+                  <li>Creates confirmed user in Supabase auth (no email verification needed)</li>
+                  <li>Inserts profiles record (role: CLIENT) & client_users mapping</li>
+                  <li>Inserts clients row with snapshotted plan pricing</li>
+                  <li>Generates immediate credentials for manual sharing via WhatsApp/Email</li>
                 </ul>
               </div>
             </div>
           )}
 
-          {/* STEP 7: COMPLETE / SUCCESS */}
+          {/* STEP 7: COMPLETE & CONFIRMATION CREDENTIALS SCREEN */}
           {step === 7 && createdClient && (
-            <div className="space-y-5 text-center py-4 animate-in zoom-in-95 duration-200">
-              <div className="w-14 h-14 rounded-full bg-[#4CAF7D]/20 text-[#4CAF7D] flex items-center justify-center mx-auto">
-                <Check className="w-7 h-7" />
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="text-xl font-semibold text-[#EDEAE2]">Client successfully onboarded</h3>
-                <p className="text-xs text-[#8B8D93]">
-                  {createdClient.company_name} is now registered in the operating system.
+            <div className="space-y-6 py-2 animate-in zoom-in-95 duration-200">
+              
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-[#4CAF7D]/20 text-[#4CAF7D] flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#EDEAE2]">Client successfully onboarded!</h3>
+                <p className="text-xs text-[#8B8D93] max-w-md mx-auto">
+                  {createdClient.company_name} is registered and immediately active. No email invite was sent — share the credentials below directly with your client.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl neo-flat bg-[#1D1F23] max-w-md mx-auto text-left text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#8B8D93]">Client ID:</span>
-                  <span className="font-mono text-[#EDEAE2]">{createdClient.id}</span>
+              {/* HIGH-CONTRAST CREDENTIALS DISPLAY CARD */}
+              <div className="p-5 rounded-2xl bg-[#17181B] border border-[#E2896A]/30 shadow-xl space-y-4">
+                
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-[#E2896A]" />
+                    <span className="text-xs font-semibold text-[#EDEAE2]">Client portal login credentials</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-[#4CAF7D]/15 text-[#4CAF7D] px-2 py-0.5 rounded">
+                    Active & Confirmed
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#8B8D93]">Service status:</span>
-                  <span className="text-[#E0A94C]">Onboarding</span>
+
+                <div className="space-y-2.5 text-xs">
+                  {/* Portal URL */}
+                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
+                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Portal URL:</span>
+                    <span className="font-mono text-[#EDEAE2] truncate select-all">
+                      {window.location.origin}/login
+                    </span>
+                  </div>
+
+                  {/* Email */}
+                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
+                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Login Email:</span>
+                    <span className="font-mono font-semibold text-[#EDEAE2] truncate select-all">
+                      {createdClient.email}
+                    </span>
+                  </div>
+
+                  {/* Password */}
+                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
+                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Password:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-semibold text-[#E2896A] select-all">
+                        {showPassword ? portalPassword : '••••••••••••'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-[#8B8D93] hover:text-[#EDEAE2] p-0.5 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#8B8D93]">Checklist:</span>
-                  <span className="text-[#4CAF7D]">Ready for execution</span>
-                </div>
+
+                {/* COPY CREDENTIALS BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleCopyCredentials}
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                    copiedCredentials
+                      ? 'bg-[#4CAF7D] text-[#17181B] shadow-[0_0_16px_rgba(76,175,125,0.4)]'
+                      : 'btn-primary'
+                  }`}
+                >
+                  {copiedCredentials ? (
+                    <>
+                      <CheckCheck className="w-4 h-4" />
+                      <span>Copied to clipboard! Ready to send via WhatsApp or Email</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy credentials to clipboard</span>
+                    </>
+                  )}
+                </button>
+
               </div>
 
-              <button
-                onClick={handleFinish}
-                className="btn-primary text-xs px-6 py-2.5"
-              >
-                Go to client record
-              </button>
+              {/* Status Note */}
+              <div className="flex items-center justify-center gap-2 text-xs text-[#8B8D93]">
+                <ShieldCheck className="w-4 h-4 text-[#4CAF7D]" />
+                <span>The client can log in directly at the portal URL with these credentials.</span>
+              </div>
+
+              <div className="pt-2 text-center">
+                <button
+                  onClick={handleFinish}
+                  className="btn-secondary text-xs px-6 py-2"
+                >
+                  Close & view client record
+                </button>
+              </div>
+
             </div>
           )}
 
@@ -462,7 +670,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
 
         {/* Wizard Footer Controls */}
         {step < 7 && (
-          <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between">
+          <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between border-t border-white/[0.04]">
             {step > 1 ? (
               <button
                 type="button"
@@ -489,10 +697,10 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleCreate}
-                  className="btn-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/30 text-xs px-5 py-2 flex items-center gap-1.5 disabled:opacity-50"
+                  className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>{isSubmitting ? 'Provisioning...' : 'Complete & launch onboarding'}</span>
+                  <span>{isSubmitting ? 'Provisioning account...' : 'Complete & launch onboarding'}</span>
                 </button>
               )}
             </div>

@@ -63,6 +63,27 @@ const SEED_PROFILES: Record<string, AuthProfile> = {
 };
 
 const STORAGE_SESSION_KEY = 'vectorops_auth_profile_v2';
+const ONBOARDED_CREDENTIALS_KEY = 'vectorops_onboarded_credentials';
+
+export function saveOnboardedCredentials(email: string, pass: string, profile: AuthProfile) {
+  try {
+    const existing = localStorage.getItem(ONBOARDED_CREDENTIALS_KEY);
+    const map = existing ? JSON.parse(existing) : {};
+    map[email.trim().toLowerCase()] = { password: pass.trim(), profile };
+    localStorage.setItem(ONBOARDED_CREDENTIALS_KEY, JSON.stringify(map));
+  } catch (e) {
+    console.warn('Failed to cache onboarded credentials:', e);
+  }
+}
+
+export function getOnboardedCredentials(): Record<string, { password: string; profile: AuthProfile }> {
+  try {
+    const existing = localStorage.getItem(ONBOARDED_CREDENTIALS_KEY);
+    return existing ? JSON.parse(existing) : {};
+  } catch {
+    return {};
+  }
+}
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
@@ -260,7 +281,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const { data: cu } = await supabase
             .from('client_users')
             .select('client_id')
-            .eq('user_id', activeUser.id)
+            .or(`profile_id.eq.${activeUser.id},user_id.eq.${activeUser.id}`)
             .maybeSingle();
           clientId = cu?.client_id;
         }
@@ -285,7 +306,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // If Supabase Auth returns invalid credentials or user not in auth.users yet:
-      // Check seed profiles so operator / client demo testing is always accessible
+      // 1. Check onboarded client credentials created directly by the admin
+      const onboardedMap = getOnboardedCredentials();
+      const onboarded = onboardedMap[cleanEmail];
+      if (onboarded && onboarded.password === cleanPassword) {
+        setUser({ id: onboarded.profile.id, email: onboarded.profile.email });
+        setProfile(onboarded.profile);
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(onboarded.profile));
+        setIsLoading(false);
+        return { success: true, redirect: '/portal/dashboard' };
+      }
+
+      // 2. Check seed profiles so operator / client demo testing is always accessible
       const seed = SEED_PROFILES[cleanEmail];
       if (seed) {
         const validSeedPass = seed.role === 'ADMIN' ? 'admin123' : 'client123';

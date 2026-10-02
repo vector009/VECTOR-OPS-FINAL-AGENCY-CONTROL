@@ -1724,6 +1724,8 @@ class VectorOpsDatabase {
     timezone: string;
     address?: string;
     plan_id: string;
+    portal_password?: string;
+    override_client_id?: string;
     retell_workspace_url?: string;
     retell_workspace_id?: string;
     internal_notes?: string;
@@ -1731,7 +1733,7 @@ class VectorOpsDatabase {
     const plan = this.plans.find(p => p.id === params.plan_id);
     if (!plan) return { success: false, error: 'Plan not found.' };
 
-    const clientId = generateUuid();
+    const clientId = params.override_client_id || generateUuid();
     const slug = params.company_name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
     const nowIso = new Date().toISOString();
     const today = nowIso.split('T')[0];
@@ -1757,7 +1759,7 @@ class VectorOpsDatabase {
     this.clients.unshift(newClient);
 
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && !params.override_client_id) {
       supabase.from('clients').insert([newClient]).then(({ error }) => {
         if (error) console.warn('Supabase client insert error:', error.message);
       });
