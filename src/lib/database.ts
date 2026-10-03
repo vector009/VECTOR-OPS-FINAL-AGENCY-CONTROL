@@ -27,7 +27,6 @@ import {
   RevenueByYear
 } from '../types';
 import { getSupabaseClient } from './supabase';
-import { createCalendarEventWithMeet, deleteCalendarEvent } from './googleCalendar';
 
 const DEFAULT_SETTINGS: AgencySettings = {
   agency_name: 'VectorOps Agency Operating System',
@@ -1603,13 +1602,24 @@ class VectorOpsDatabase {
 
   /**
    * confirm_appointment(p_appointment_id) returns void
-   * Auto-creates Google Calendar event and Google Meet video conference if admin has connected Calendar
    */
   public async confirm_appointment(
     p_appointment_id: string,
     p_meeting_provider?: MeetingProvider,
     p_meeting_url?: string
-  ): Promise<{ success: boolean; meeting_url?: string; error?: string }> {
+  ): Promise<{ success: boolean; error?: string }> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { error } = await supabase.rpc('confirm_appointment', { p_appointment_id });
+        if (error) throw error;
+        this.saveToStorage();
+        return { success: true };
+      } catch (err: any) {
+        console.warn('Supabase confirm_appointment fallback:', err.message);
+      }
+    }
+
     const apt = this.appointments.find(a => a.id === p_appointment_id);
     if (!apt) return { success: false, error: 'Appointment not found.' };
 
@@ -1617,68 +1627,14 @@ class VectorOpsDatabase {
     if (p_meeting_provider) apt.meeting_provider = p_meeting_provider;
     if (p_meeting_url) apt.meeting_url = p_meeting_url;
 
-    // Side effect: If Google Calendar is connected, create event & auto-generate Meet link
-    try {
-      const client = this.clients.find(c => c.id === apt.client_id);
-      const calendarResult = await createCalendarEventWithMeet(
-        apt,
-        client?.email,
-        client?.company_name || client?.contact_name
-      );
-      if (calendarResult?.meetingUrl) {
-        apt.meeting_url = calendarResult.meetingUrl;
-        apt.meeting_provider = 'GOOGLE_MEET';
-      }
-    } catch (calErr) {
-      console.warn('Google Calendar event creation notice:', calErr);
-    }
-
-    const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const { error } = await supabase.rpc('confirm_appointment', { p_appointment_id });
-        if (error) {
-          // Fallback direct table update if rpc not available
-          await supabase.from('appointments').update({
-            status: 'CONFIRMED',
-            meeting_url: apt.meeting_url,
-            meeting_provider: apt.meeting_provider,
-          }).eq('id', p_appointment_id);
-        } else if (apt.meeting_url) {
-          await supabase.from('appointments').update({
-            meeting_url: apt.meeting_url,
-            meeting_provider: apt.meeting_provider,
-          }).eq('id', p_appointment_id);
-        }
-      } catch (err: any) {
-        console.warn('Supabase confirm_appointment sync notice:', err.message);
-      }
-    }
-
     this.saveToStorage();
-    return { success: true, meeting_url: apt.meeting_url || undefined };
+    return { success: true };
   }
 
   /**
    * cancel_appointment(p_appointment_id, p_reason) returns void
-   * Cancels appointment and deletes corresponding Google Calendar event if one exists
    */
   public async cancel_appointment(p_appointment_id: string, p_reason?: string): Promise<{ success: boolean; error?: string }> {
-    const apt = this.appointments.find(a => a.id === p_appointment_id);
-    if (!apt) return { success: false, error: 'Appointment not found.' };
-
-    apt.status = 'CANCELLED';
-    apt.cancelled_at = new Date().toISOString();
-    apt.cancellation_reason = p_reason || 'Cancelled by operator';
-    apt.blocking = false;
-
-    // Side effect: Delete corresponding Google Calendar event if one was created
-    try {
-      await deleteCalendarEvent(p_appointment_id);
-    } catch (calErr) {
-      console.warn('Google Calendar event deletion notice:', calErr);
-    }
-
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
@@ -1686,17 +1642,21 @@ class VectorOpsDatabase {
           p_appointment_id,
           p_reason: p_reason || null,
         });
-        if (error) {
-          await supabase.from('appointments').update({
-            status: 'CANCELLED',
-            cancelled_at: apt.cancelled_at,
-            cancellation_reason: apt.cancellation_reason,
-          }).eq('id', p_appointment_id);
-        }
+        if (error) throw error;
+        this.saveToStorage();
+        return { success: true };
       } catch (err: any) {
         console.warn('Supabase cancel_appointment fallback:', err.message);
       }
     }
+
+    const apt = this.appointments.find(a => a.id === p_appointment_id);
+    if (!apt) return { success: false, error: 'Appointment not found.' };
+
+    apt.status = 'CANCELLED';
+    apt.cancelled_at = new Date().toISOString();
+    apt.cancellation_reason = p_reason || 'Cancelled by operator';
+    apt.blocking = false;
 
     this.saveToStorage();
     return { success: true };

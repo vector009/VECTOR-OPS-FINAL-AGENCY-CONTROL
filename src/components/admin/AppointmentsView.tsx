@@ -5,65 +5,22 @@ import {
   Check, 
   X, 
   ExternalLink, 
-  Video,
-  Copy,
-  CheckCheck,
-  AlertTriangle,
-  Sparkles
+  Video 
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { Appointment, MeetingProvider } from '../../types';
 import { formatInTimezone } from '../../lib/timezone';
 import { StatusBadge } from '../common/StatusBadge';
-import { 
-  isGoogleCalendarConnected, 
-  getGoogleCalendarUser, 
-  connectGoogleCalendar, 
-  initCalendarAuth 
-} from '../../lib/googleCalendar';
 
 export const AppointmentsView: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  // Modals & Actions
+  // Modals
   const [isAttachLinkOpen, setIsAttachLinkOpen] = useState(false);
   const [meetingProvider, setMeetingProvider] = useState<MeetingProvider>('GOOGLE_MEET');
   const [meetingUrl, setMeetingUrl] = useState('');
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [calendarConnected, setCalendarConnected] = useState(isGoogleCalendarConnected());
-  const [calendarUser, setCalendarUser] = useState(getGoogleCalendarUser());
-  const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
-
-  React.useEffect(() => {
-    const unsub = initCalendarAuth((connected, email) => {
-      setCalendarConnected(connected);
-      if (email) {
-        setCalendarUser({ email, displayName: email });
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  const handleQuickConnectCalendar = async () => {
-    setIsConnectingCalendar(true);
-    setActionError('');
-    const res = await connectGoogleCalendar();
-    setIsConnectingCalendar(false);
-    if (res.success) {
-      setCalendarConnected(true);
-      setCalendarUser({ email: res.email || 'operator@vectorops.ai' });
-    } else {
-      setActionError(res.error || 'Failed to authenticate Google Calendar.');
-    }
-  };
-
-  // Cancellation Confirmation Modal (User confirmation for destructive calendar ops)
-  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
-  const [cancelReason, setCancelReason] = useState('Cancelled by agency administrator');
-  const [isCancelling, setIsCancelling] = useState(false);
 
   // Propose New Time Modal
   const [isProposeOpen, setIsProposeOpen] = useState(false);
@@ -75,8 +32,6 @@ export const AppointmentsView: React.FC = () => {
   const appointments = db.getAppointments();
   const clients = db.getAllClientsIncludingArchived();
   const settings = db.getSettings();
-  const calendarConnected = isGoogleCalendarConnected();
-  const calendarUser = getGoogleCalendarUser();
 
   const filteredAppointments = appointments.filter(apt => {
     if (statusFilter !== 'ALL' && apt.status !== statusFilter) return false;
@@ -85,20 +40,14 @@ export const AppointmentsView: React.FC = () => {
 
   const handleAcceptAppointment = async (apt: Appointment) => {
     setActionError('');
-    setIsAccepting(true);
-    try {
-      const result = await db.confirm_appointment(apt.id);
-      if (!result.success) {
-        setActionError(result.error || 'Failed to accept appointment.');
-        return;
-      }
-      const updated = db.getAppointments().find(a => a.id === apt.id);
-      setSelectedAppointment(updated || null);
-    } catch (err: any) {
-      setActionError(err?.message || 'Error confirming appointment.');
-    } finally {
-      setIsAccepting(false);
+    const defaultUrl = apt.meeting_url || 'https://meet.google.com/vec-ops-vox';
+    const result = await db.confirm_appointment(apt.id, 'GOOGLE_MEET', defaultUrl);
+    if (!result.success) {
+      setActionError(result.error || 'Failed to accept appointment.');
+      return;
     }
+    const updated = db.getAppointments().find(a => a.id === apt.id);
+    setSelectedAppointment(updated || null);
   };
 
   const handleProposeNewTime = (e: React.FormEvent) => {
@@ -117,31 +66,10 @@ export const AppointmentsView: React.FC = () => {
     setSelectedAppointment(updated || null);
   };
 
-  const promptCancel = (apt: Appointment) => {
-    setAppointmentToCancel(apt);
-    setCancelReason('Cancelled by agency administrator');
-  };
-
-  const confirmCancel = async () => {
-    if (!appointmentToCancel) return;
-    setIsCancelling(true);
-    try {
-      await db.cancel_appointment(appointmentToCancel.id, cancelReason);
-      const updated = db.getAppointments().find(a => a.id === appointmentToCancel.id);
-      setSelectedAppointment(updated || null);
-      setAppointmentToCancel(null);
-    } catch (err: any) {
-      setActionError(err?.message || 'Failed to cancel appointment.');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
-  const handleCopyMeetingLink = (url: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    });
+  const handleCancel = async (apt: Appointment) => {
+    await db.cancel_appointment(apt.id, 'Cancelled by agency administrator');
+    const updated = db.getAppointments().find(a => a.id === apt.id);
+    setSelectedAppointment(updated || null);
   };
 
   const handleSaveMeetingLink = async (e: React.FormEvent) => {
@@ -170,20 +98,11 @@ export const AppointmentsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Agency Timezone & Google Calendar Status Notice */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 p-2 rounded-xl neo-flat bg-[#1D1F23] text-xs">
-            <Globe className="w-3.5 h-3.5 text-[#E2896A]" />
-            <span className="text-[#8B8D93]">Agency timezone:</span>
-            <span className="text-[#EDEAE2] font-semibold">{settings.admin_timezone}</span>
-          </div>
-
-          <div className={`flex items-center gap-1.5 p-2 rounded-xl neo-flat text-xs ${
-            calendarConnected ? 'text-[#4CAF7D]' : 'text-[#8B8D93]'
-          }`}>
-            <Video className="w-3.5 h-3.5" />
-            <span>Meet Auto-Sync: <strong>{calendarConnected ? 'Active' : 'Manual'}</strong></span>
-          </div>
+        {/* Agency Timezone Notice */}
+        <div className="flex items-center gap-2 p-2 rounded-xl neo-flat bg-[#1D1F23] text-xs">
+          <Globe className="w-3.5 h-3.5 text-[#E2896A]" />
+          <span className="text-[#8B8D93]">Agency timezone:</span>
+          <span className="text-[#EDEAE2] font-semibold">{settings.admin_timezone}</span>
         </div>
       </div>
 
@@ -329,40 +248,18 @@ export const AppointmentsView: React.FC = () => {
                   </div>
 
                   {selectedAppointment.meeting_url ? (
-                    <div className="space-y-2">
-                      <div className="p-2.5 rounded-xl neo-inset text-[#4CAF7D] font-semibold flex items-center justify-between transition-colors">
-                        <a
-                          href={selectedAppointment.meeting_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 hover:underline"
-                        >
-                          <Video className="w-4 h-4 text-[#4CAF7D]" />
-                          <span>Join {selectedAppointment.meeting_provider || 'Google Meet'}</span>
-                        </a>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyMeetingLink(selectedAppointment.meeting_url!)}
-                            className="p-1 text-[#8B8D93] hover:text-[#EDEAE2] rounded transition-colors"
-                            title="Copy meeting link"
-                          >
-                            {copiedLink ? <CheckCheck className="w-3.5 h-3.5 text-[#4CAF7D]" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-                          <a
-                            href={selectedAppointment.meeting_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 text-[#8B8D93] hover:text-[#EDEAE2]"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      </div>
-                      <div className="font-mono text-[10px] text-[#8B8D93] truncate px-1">
-                        {selectedAppointment.meeting_url}
-                      </div>
-                    </div>
+                    <a
+                      href={selectedAppointment.meeting_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl neo-inset text-[#4CAF7D] font-semibold flex items-center justify-between transition-colors"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Video className="w-4 h-4" />
+                        <span>Join {selectedAppointment.meeting_provider || 'meeting'}</span>
+                      </span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   ) : (
                     <div className="text-xs text-[#8B8D93]">
                       No URL attached yet. (Client will see join link once confirmed).
@@ -377,34 +274,25 @@ export const AppointmentsView: React.FC = () => {
                   </span>
 
                   {selectedAppointment.status === 'REQUESTED' && (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => handleAcceptAppointment(selectedAppointment)}
-                          disabled={isAccepting}
-                          className="btn-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/30 text-xs py-2 px-3 shadow-md shadow-emerald-600/20 disabled:opacity-60"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>{isAccepting ? 'Generating Meet...' : 'Accept & confirm'}</span>
-                        </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleAcceptAppointment(selectedAppointment)}
+                        className="btn-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/30 text-xs py-2 px-3 shadow-md shadow-emerald-600/20"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Accept & confirm</span>
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            const today = new Date().toISOString().split('T')[0];
-                            setProposeDate(today);
-                            setIsProposeOpen(true);
-                          }}
-                          className="btn-secondary text-xs py-2 px-3"
-                        >
-                          Propose other time
-                        </button>
-                      </div>
-
-                      <p className="text-[10px] text-[#8B8D93]">
-                        {calendarConnected 
-                          ? '✓ Auto-generates Google Meet room & creates event on your Google Calendar' 
-                          : '✓ Confirms booking (Tip: Connect Google Calendar in Settings for auto-Meet links)'}
-                      </p>
+                      <button
+                        onClick={() => {
+                          const today = new Date().toISOString().split('T')[0];
+                          setProposeDate(today);
+                          setIsProposeOpen(true);
+                        }}
+                        className="btn-secondary text-xs py-2 px-3"
+                      >
+                        Propose other time
+                      </button>
                     </div>
                   )}
 
@@ -417,7 +305,7 @@ export const AppointmentsView: React.FC = () => {
                         Mark complete
                       </button>
                       <button
-                        onClick={() => promptCancel(selectedAppointment)}
+                        onClick={() => handleCancel(selectedAppointment)}
                         className="btn-danger text-xs py-2 px-3"
                       >
                         Cancel meeting
@@ -558,79 +446,6 @@ export const AppointmentsView: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-      {/* Cancellation Confirmation Modal (User confirmation for Google Calendar event deletion) */}
-      {appointmentToCancel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-md overflow-hidden border border-white/[0.04]">
-            <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between border-b border-white/[0.04]">
-              <div className="flex items-center gap-2 text-[#E2604F]">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <h2 className="text-base font-semibold text-[#EDEAE2]">Cancel appointment</h2>
-              </div>
-              <button 
-                onClick={() => setAppointmentToCancel(null)} 
-                className="p-1 text-[#8B8D93] hover:text-[#EDEAE2]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <div className="p-3.5 rounded-xl neo-inset space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#8B8D93]">Client:</span>
-                  <span className="text-[#EDEAE2] font-semibold">
-                    {clients.find(c => c.id === appointmentToCancel.client_id)?.company_name || 'Client'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#8B8D93]">Scheduled for:</span>
-                  <span className="text-[#EDEAE2] font-mono-numbers">
-                    {formatInTimezone(appointmentToCancel.starts_at, settings.admin_timezone, 'datetime')}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#E2604F]/10 border border-[#E2604F]/20 text-[#EDEAE2] space-y-1">
-                <span className="font-semibold text-[#E2604F] block">Google Calendar & Meet Synchronization</span>
-                <p className="text-[11px] text-[#8B8D93] leading-relaxed">
-                  Cancelling this appointment will also delete/cancel the associated event from your Google Calendar and remove the Google Meet room.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-semibold text-[#EDEAE2]">Cancellation reason (logged to audit)</label>
-                <input
-                  type="text"
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="e.g. Rescheduled upon client request"
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setAppointmentToCancel(null)}
-                  disabled={isCancelling}
-                  className="px-4 py-2 text-xs font-normal text-[#8B8D93] hover:text-[#EDEAE2] neo-raised rounded-lg transition-colors"
-                >
-                  Keep appointment
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmCancel}
-                  disabled={isCancelling}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-[#E2604F] hover:bg-[#EA6D5C] rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5"
-                >
-                  {isCancelling ? 'Cancelling & deleting event...' : 'Cancel appointment & delete event'}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
