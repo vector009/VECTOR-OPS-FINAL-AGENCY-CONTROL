@@ -21,7 +21,8 @@ import {
   Copy,
   CheckCheck,
   ShieldCheck,
-  Share2
+  Share2,
+  Link as LinkIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { db } from '../../lib/database';
@@ -29,6 +30,7 @@ import { supabase } from '../../lib/supabase';
 import { saveOnboardedCredentials } from '../../context/AuthContext';
 import { POPULAR_TIMEZONES, formatUSD } from '../../lib/timezone';
 import { Client } from '../../types';
+import { PlatformIcon } from '../common/PlatformIcon';
 
 interface OnboardingWizardModalProps {
   isOpen: boolean;
@@ -53,6 +55,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const [planId, setPlanId] = useState('plan_growth');
   const [retellWorkspaceUrl, setRetellWorkspaceUrl] = useState('');
   const [retellWorkspaceId, setRetellWorkspaceId] = useState('');
+  const [preferredPaymentLinkId, setPreferredPaymentLinkId] = useState<string>('');
   const [internalNotes, setInternalNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -63,6 +66,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
 
   const plans = db.getPlans();
   const selectedPlan = plans.find(p => p.id === planId) || plans[0];
+  const activePaymentLinks = db.getActivePaymentLinks();
 
   // Secure random password generator (12-14 characters with letters, numbers & special chars)
   const handleGeneratePassword = () => {
@@ -156,6 +160,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         override_client_id: remoteClientData?.id || undefined,
         retell_workspace_url: retellWorkspaceUrl,
         retell_workspace_id: retellWorkspaceId,
+        preferred_payment_link_id: preferredPaymentLinkId || null,
         internal_notes: internalNotes,
       });
 
@@ -454,6 +459,34 @@ Note: Your account is active immediately. You can sign in right away.`;
                     </div>
                   </div>
                 ))}
+
+                {/* PART 2: Payment redirect selector */}
+                <div className="pt-3 border-t border-white/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                      <LinkIcon className="w-3.5 h-3.5 text-[#E2896A]" />
+                      <span>Payment redirect (optional)</span>
+                    </label>
+                    <span className="text-[10px] text-[#8B8D93]">Portal "Pay now" action</span>
+                  </div>
+
+                  <select
+                    value={preferredPaymentLinkId}
+                    onChange={(e) => setPreferredPaymentLinkId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  >
+                    <option value="">No redirect link (Pay now button hidden in portal)</option>
+                    {activePaymentLinks.map((link) => (
+                      <option key={link.id} value={link.id}>
+                        {link.label} ({link.platform})
+                      </option>
+                    ))}
+                  </select>
+
+                  <p className="text-[11px] text-[#8B8D93] leading-relaxed">
+                    Selecting a link enables the client's "Pay now" button when within 7 days of their renewal. If WhatsApp is selected, their exact invoice details are automatically pre-filled!
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -542,6 +575,14 @@ Note: Your account is active immediately. You can sign in right away.`;
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <span className="text-[#8B8D93]">Setup fee invoice:</span>
                   <span className="font-mono-numbers font-semibold text-[#E2896A]">{formatUSD(selectedPlan.setup_fee_cents)}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-[#8B8D93]">Payment redirect:</span>
+                  <span className="font-semibold text-[#EDEAE2]">
+                    {preferredPaymentLinkId 
+                      ? activePaymentLinks.find(l => l.id === preferredPaymentLinkId)?.label || 'Configured'
+                      : 'None (Hidden in portal)'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#8B8D93]">Monthly retainer:</span>

@@ -19,12 +19,15 @@ import {
   Plus, 
   AlertCircle,
   Archive,
-  Send
+  Send,
+  Link as LinkIcon,
+  Check
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { Client, ClientServiceStatus, ServiceStatus, Note, NoteType } from '../../types';
 import { formatUSD, formatInTimezone } from '../../lib/timezone';
 import { StatusBadge } from '../common/StatusBadge';
+import { PlatformIcon } from '../common/PlatformIcon';
 
 interface ClientProfileModalProps {
   client: Client | null;
@@ -43,6 +46,9 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   const [newNoteContent, setNewNoteContent] = useState('');
   const [newNoteCategory, setNewNoteCategory] = useState<NoteType>('GENERAL');
   const [newMessageText, setNewMessageText] = useState('');
+  const [selectedPaymentLinkId, setSelectedPaymentLinkId] = useState<string>(client?.preferred_payment_link_id || '');
+  const [isUpdatingLink, setIsUpdatingLink] = useState(false);
+  const [paymentLinkNotice, setPaymentLinkNotice] = useState(false);
 
   if (!client) return null;
 
@@ -54,6 +60,17 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   const tasks = db.getTasks().filter(t => t.client_id === client.id);
   const notes = db.getNotes(client.id);
   const onboardingItems = db.getOnboardingItems(client.id);
+  const activePaymentLinks = db.getActivePaymentLinks();
+  const assignedLink = client.preferred_payment_link_id ? db.getPaymentLink(client.preferred_payment_link_id) : null;
+
+  const handleUpdatePaymentLink = async (newLinkId: string) => {
+    setSelectedPaymentLinkId(newLinkId);
+    setIsUpdatingLink(true);
+    await db.updateClientPaymentLink(client.id, newLinkId || null);
+    setIsUpdatingLink(false);
+    setPaymentLinkNotice(true);
+    setTimeout(() => setPaymentLinkNotice(false), 2500);
+  };
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +249,62 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Payment Redirect Setting (Admin-Controlled per Client) */}
+              <div className="p-4 rounded-xl neo-card space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="w-4 h-4 text-[#E2896A]" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8B8D93] font-mono-numbers">
+                      Client Portal Payment Redirect ("Pay now" destination)
+                    </h3>
+                  </div>
+                  {paymentLinkNotice && (
+                    <span className="text-[11px] text-[#4CAF7D] flex items-center gap-1 font-semibold animate-in fade-in">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Updated</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1">
+                    <select
+                      value={selectedPaymentLinkId}
+                      disabled={isUpdatingLink}
+                      onChange={(e) => handleUpdatePaymentLink(e.target.value)}
+                      className="w-full px-3.5 py-2 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                    >
+                      <option value="">No redirect link assigned (Pay now button hidden in portal)</option>
+                      {activePaymentLinks.map((link) => (
+                        <option key={link.id} value={link.id}>
+                          {link.label} ({link.platform}) — {link.url}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {assignedLink && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neo-flat bg-[#17181B] text-xs shrink-0">
+                      <PlatformIcon platform={assignedLink.platform} size={15} />
+                      <span className="text-[#EDEAE2] font-medium">{assignedLink.label}</span>
+                      <a
+                        href={assignedLink.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#E2896A] hover:underline"
+                        title="Test link"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-[#8B8D93] leading-relaxed">
+                  When a payment link is assigned, the client sees a prominent "Pay now" card in their portal when within 7 days of their renewal. If WhatsApp is selected, their specific invoice number and amount are automatically pre-filled!
+                </p>
+              </div>
             </div>
           )}
 
@@ -243,8 +316,21 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   <div>
                     <div className="text-xs text-[#8B8D93] font-mono-numbers uppercase">Active Subscription</div>
                     <div className="text-base font-bold text-[#EDEAE2] mt-0.5">{activeSub.service_name}</div>
-                    <div className="text-xs text-[#8B8D93] mt-0.5">
-                      Rate: <span className="font-mono-numbers text-[#4CAF7D] font-semibold">{formatUSD(activeSub.recurring_fee_cents)}/mo</span> · Next Billing: <span className="font-mono-numbers text-[#EDEAE2]">{activeSub.next_billing_date}</span>
+                    <div className="text-xs text-[#8B8D93] mt-0.5 flex flex-wrap items-center gap-2">
+                      <span>Rate: <span className="font-mono-numbers text-[#4CAF7D] font-semibold">{formatUSD(activeSub.recurring_fee_cents)}/mo</span></span>
+                      <span>·</span>
+                      <span>Next Billing: <span className="font-mono-numbers text-[#EDEAE2]">{activeSub.next_billing_date}</span></span>
+                      {(() => {
+                        const days = db.days_until_billing(activeSub.id);
+                        const isUrgent = days <= 7;
+                        return (
+                          <span className={`text-[10px] font-mono-numbers font-semibold px-2 py-0.5 rounded-full ${
+                            isUrgent ? 'bg-[#E0A94C]/20 text-[#E0A94C]' : 'bg-[#4CAF7D]/20 text-[#4CAF7D]'
+                          }`}>
+                            {days > 0 ? `${days} days left` : days === 0 ? 'Due today' : `${Math.abs(days)} days overdue`}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="text-right">

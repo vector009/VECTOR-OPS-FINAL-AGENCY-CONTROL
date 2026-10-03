@@ -9,7 +9,8 @@ import {
   AlertCircle, 
   X,
   User,
-  Bot
+  Bot,
+  CreditCard
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { Task, TaskPriority, TaskStatus, TaskSource } from '../../types';
@@ -114,6 +115,7 @@ export const TasksView: React.FC = () => {
             className="px-3 py-1.5 rounded-xl neo-inset text-[#EDEAE2] text-xs focus:outline-none"
           >
             <option value="ALL">All sources</option>
+            <option value="BILLING">Billing & renewal triggers</option>
             <option value="AI">AI autonomous created</option>
             <option value="CLIENT_MESSAGE">From client message</option>
             <option value="ONBOARDING">From onboarding</option>
@@ -163,6 +165,11 @@ export const TasksView: React.FC = () => {
                         <span className="inline-flex items-center gap-1 text-[11px] text-[#E2896A]">
                           <Sparkles className="w-3 h-3" />
                           <span>AI-created</span>
+                        </span>
+                      ) : t.source === 'BILLING' ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-[#E0A94C]">
+                          <CreditCard className="w-3 h-3" />
+                          <span>Billing reminder</span>
                         </span>
                       ) : (
                         <span className="text-[11px] text-[#8B8D93]">

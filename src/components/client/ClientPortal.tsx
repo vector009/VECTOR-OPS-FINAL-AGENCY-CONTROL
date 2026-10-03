@@ -24,6 +24,8 @@ import { Client, Invoice, Appointment, Message, AuthUser } from '../../types';
 import { formatUSD, formatInTimezone } from '../../lib/timezone';
 import { StatusBadge } from '../common/StatusBadge';
 import { ThemeToggle } from '../../context/ThemeContext';
+import { PlatformIcon } from '../common/PlatformIcon';
+import { buildPaymentRedirectUrl } from '../../lib/paymentLinks';
 
 interface ClientPortalProps {
   currentUser?: AuthUser | null;
@@ -84,6 +86,24 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   const outstandingBalanceCents = invoices
     .filter(i => i.status !== 'PAID' && i.status !== 'VOID')
     .reduce((sum, i) => sum + i.balance_due_cents, 0);
+
+  // Preferred payment link & real-time renewal countdown
+  const preferredPaymentLink = client?.preferred_payment_link_id 
+    ? db.getPaymentLink(client.preferred_payment_link_id) 
+    : null;
+
+  const daysUntilBilling = activeSub ? db.days_until_billing(activeSub.id) : 0;
+  const isRenewalDueSoon = daysUntilBilling <= 7;
+
+  // Build context-aware prefilled pay redirect URL (WhatsApp with invoice number & due date)
+  const unpaidInvoices = invoices.filter(i => i.status !== 'PAID' && i.status !== 'VOID');
+  const relevantInvoice = unpaidInvoices.find(i => i.subscription_id === activeSub?.id) ||
+                          [...unpaidInvoices].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0] ||
+                          invoices[0] || null;
+
+  const payRedirectUrl = preferredPaymentLink 
+    ? buildPaymentRedirectUrl(preferredPaymentLink, relevantInvoice, activeSub) 
+    : null;
 
   const handleRequestBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,6 +326,63 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
               )}
             </div>
 
+            {/* Real-Time Renewal Countdown & Pay Redirect Card (Part 3) */}
+            {activeSub && (
+              <div 
+                className={`p-5 rounded-2xl transition-all ${
+                  isRenewalDueSoon
+                    ? 'neo-raised bg-[#1D1F23] ring-1 ring-[#E0A94C]/40 border-l-4 border-l-[#E0A94C]'
+                    : 'neo-raised bg-[#1D1F23]'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-4 h-4 ${isRenewalDueSoon ? 'text-[#E0A94C]' : 'text-[#4CAF7D]'}`} />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#8B8D93] font-mono-numbers">
+                        Subscription Billing
+                      </span>
+                      {isRenewalDueSoon && (
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#E0A94C]/15 text-[#E0A94C] font-semibold animate-pulse">
+                          Renewal Approaching
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className={`text-xl font-bold tracking-tight font-mono-numbers ${
+                      isRenewalDueSoon ? 'text-[#E0A94C]' : 'text-[#EDEAE2]'
+                    }`}>
+                      {daysUntilBilling > 0 
+                        ? `${daysUntilBilling} days until your next payment` 
+                        : daysUntilBilling === 0 
+                          ? 'Payment is due today' 
+                          : `Payment overdue by ${Math.abs(daysUntilBilling)} days`}
+                    </h3>
+
+                    <p className="text-xs text-[#8B8D93]">
+                      Next cycle date: <span className="font-semibold text-[#EDEAE2] font-mono-numbers">{activeSub.next_billing_date}</span> · Retainer: <span className="font-semibold text-[#4CAF7D] font-mono-numbers">{formatUSD(activeSub.recurring_fee_cents)}/mo</span> ({activeSub.service_name})
+                    </p>
+                  </div>
+
+                  {/* "Pay now" button: ONLY shown if days_until_billing <= 7 AND preferred_payment_link_id is set */}
+                  {isRenewalDueSoon && preferredPaymentLink && payRedirectUrl && (
+                    <div className="shrink-0 self-start sm:self-auto">
+                      <a
+                        href={payRedirectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-2.5 text-xs font-semibold text-[#17181B] bg-[#E0A94C] hover:bg-[#EABA5E] active:scale-[0.98] rounded-xl transition-all shadow-[0_4px_14px_rgba(224,169,76,0.3)] flex items-center gap-2"
+                      >
+                        <PlatformIcon platform={preferredPaymentLink.platform} size={15} />
+                        <span>Pay now ({preferredPaymentLink.label})</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Service & Billing Summary Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="neo-raised p-4 rounded-xl space-y-1">
@@ -331,7 +408,9 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                 <div className="text-base font-semibold font-mono-numbers text-[#EDEAE2]">
                   {activeSub?.next_billing_date || 'Oct 15, 2026'}
                 </div>
-                <div className="text-[11px] text-[#8B8D93]">Automatic invoice generation</div>
+                <div className={`text-[11px] font-mono-numbers ${isRenewalDueSoon ? 'text-[#E0A94C] font-semibold' : 'text-[#8B8D93]'}`}>
+                  {daysUntilBilling > 0 ? `${daysUntilBilling} days remaining` : daysUntilBilling === 0 ? 'Due today' : `${Math.abs(daysUntilBilling)}d overdue`}
+                </div>
               </div>
 
               <div className="neo-raised p-4 rounded-xl space-y-1">

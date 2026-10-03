@@ -24,7 +24,9 @@ import {
   ClientServiceStatus,
   RevenueSummary,
   RevenueByMonth,
-  RevenueByYear
+  RevenueByYear,
+  AgencyPaymentLink,
+  PaymentPlatform
 } from '../types';
 import { getSupabaseClient } from './supabase';
 
@@ -723,6 +725,7 @@ class VectorOpsDatabase {
   private notes: Note[] = [];
   private onboardingItems: OnboardingItem[] = [];
   private auditLogs: AuditLog[] = [];
+  private paymentLinks: AgencyPaymentLink[] = [];
   private settings: AgencySettings = { ...DEFAULT_SETTINGS };
   private listeners: Set<() => void> = new Set();
 
@@ -757,6 +760,7 @@ class VectorOpsDatabase {
           this.notes = Array.isArray(parsed.notes) ? parsed.notes : [];
           this.onboardingItems = Array.isArray(parsed.onboardingItems) ? parsed.onboardingItems : [];
           this.auditLogs = Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [];
+          this.paymentLinks = Array.isArray(parsed.paymentLinks) ? parsed.paymentLinks : [];
           this.settings = parsed.settings || { ...DEFAULT_SETTINGS };
           return;
         }
@@ -780,6 +784,7 @@ class VectorOpsDatabase {
     this.notes = [];
     this.onboardingItems = [];
     this.auditLogs = [];
+    this.paymentLinks = [];
     this.settings = { ...DEFAULT_SETTINGS };
     this.saveToStorage();
   }
@@ -801,6 +806,7 @@ class VectorOpsDatabase {
         notes: this.notes,
         onboardingItems: this.onboardingItems,
         auditLogs: this.auditLogs,
+        paymentLinks: this.paymentLinks,
         settings: this.settings,
       };
       localStorage.setItem('vectorops_live_store_v2', JSON.stringify(payload));
@@ -847,6 +853,7 @@ class VectorOpsDatabase {
     this.notes = [];
     this.onboardingItems = [];
     this.auditLogs = [];
+    this.paymentLinks = [];
     this.saveToStorage();
   }
 
@@ -906,6 +913,12 @@ class VectorOpsDatabase {
       const { data: supaProfiles } = await supabase.from('profiles').select('*');
       if (supaProfiles && supaProfiles.length > 0) {
         this.profiles = supaProfiles;
+      }
+
+      // 9. Fetch agency payment links
+      const { data: supaLinks } = await supabase.from('agency_payment_links').select('*');
+      if (supaLinks) {
+        this.paymentLinks = supaLinks;
       }
 
       this.saveToStorage();
@@ -1715,6 +1728,156 @@ class VectorOpsDatabase {
     return { success: true };
   }
 
+  // --- AGENCY PAYMENT LINKS MANAGEMENT ---
+  public getPaymentLinks(): AgencyPaymentLink[] {
+    return [...this.paymentLinks];
+  }
+
+  public getActivePaymentLinks(): AgencyPaymentLink[] {
+    return this.paymentLinks.filter(l => l.is_active);
+  }
+
+  public getPaymentLink(id: string): AgencyPaymentLink | undefined {
+    return this.paymentLinks.find(l => l.id === id);
+  }
+
+  public async addPaymentLink(link: {
+    platform: PaymentPlatform;
+    label: string;
+    url: string;
+    is_active?: boolean;
+  }): Promise<AgencyPaymentLink> {
+    const newLink: AgencyPaymentLink = {
+      id: generateUuid(),
+      platform: link.platform,
+      label: link.label.trim(),
+      url: link.url.trim(),
+      is_active: link.is_active !== undefined ? link.is_active : true,
+      created_at: new Date().toISOString(),
+    };
+    this.paymentLinks.push(newLink);
+    this.saveToStorage();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('agency_payment_links').insert([{
+          id: newLink.id,
+          platform: newLink.platform,
+          label: newLink.label,
+          url: newLink.url,
+          is_active: newLink.is_active,
+        }]);
+      } catch (err) {
+        console.warn('Supabase addPaymentLink notice:', err);
+      }
+    }
+    return newLink;
+  }
+
+  public async updatePaymentLink(
+    id: string,
+    updates: Partial<Omit<AgencyPaymentLink, 'id'>>
+  ): Promise<boolean> {
+    const idx = this.paymentLinks.findIndex(l => l.id === id);
+    if (idx === -1) return false;
+
+    this.paymentLinks[idx] = {
+      ...this.paymentLinks[idx],
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    this.saveToStorage();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('agency_payment_links').update(updates).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase updatePaymentLink notice:', err);
+      }
+    }
+    return true;
+  }
+
+  public async deletePaymentLink(id: string): Promise<boolean> {
+    const idx = this.paymentLinks.findIndex(l => l.id === id);
+    if (idx === -1) return false;
+
+    this.paymentLinks.splice(idx, 1);
+
+    // Unset preferred_payment_link_id from any clients referencing this link
+    let clientsModified = false;
+    this.clients.forEach(c => {
+      if (c.preferred_payment_link_id === id) {
+        c.preferred_payment_link_id = null;
+        clientsModified = true;
+      }
+    });
+
+    this.saveToStorage();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('agency_payment_links').delete().eq('id', id);
+        if (clientsModified) {
+          await supabase.from('clients').update({ preferred_payment_link_id: null }).eq('preferred_payment_link_id', id);
+        }
+      } catch (err) {
+        console.warn('Supabase deletePaymentLink notice:', err);
+      }
+    }
+    return true;
+  }
+
+  public async updateClientPaymentLink(clientId: string, linkId: string | null): Promise<boolean> {
+    const client = this.clients.find(c => c.id === clientId);
+    if (!client) return false;
+
+    client.preferred_payment_link_id = linkId || null;
+    this.saveToStorage();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('clients').update({ preferred_payment_link_id: linkId || null }).eq('id', clientId);
+      } catch (err) {
+        console.warn('Supabase updateClientPaymentLink notice:', err);
+      }
+    }
+    return true;
+  }
+
+  // --- REAL-TIME RENEWAL & BILLING COUNTDOWN ---
+  public days_until_billing(subscription_id: string): number {
+    const sub = this.subscriptions.find(s => s.id === subscription_id);
+    if (!sub || !sub.next_billing_date) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const billingDate = new Date(sub.next_billing_date);
+    billingDate.setHours(0, 0, 0, 0);
+
+    const diffMs = billingDate.getTime() - today.getTime();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  public async fetchDaysUntilBilling(subscription_id: string): Promise<number> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.rpc('days_until_billing', { subscription_id });
+        if (!error && typeof data === 'number') {
+          return data;
+        }
+      } catch (e) {
+        // Fallback to local calculation
+      }
+    }
+    return this.days_until_billing(subscription_id);
+  }
+
   // --- CLIENT CREATION VIA WIZARD ---
   public createClientWithWizard(params: {
     company_name: string;
@@ -1728,6 +1891,7 @@ class VectorOpsDatabase {
     override_client_id?: string;
     retell_workspace_url?: string;
     retell_workspace_id?: string;
+    preferred_payment_link_id?: string | null;
     internal_notes?: string;
   }): { success: boolean; error?: string; client?: Client } {
     const plan = this.plans.find(p => p.id === params.plan_id);
@@ -1750,6 +1914,7 @@ class VectorOpsDatabase {
       internal_notes: params.internal_notes?.trim() || null,
       service_status: 'ONBOARDING',
       portal_status: 'ENABLED',
+      preferred_payment_link_id: params.preferred_payment_link_id || null,
       retell_workspace_url: params.retell_workspace_url?.trim() || null,
       retell_workspace_id: params.retell_workspace_id?.trim() || null,
       last_activity_at: nowIso,

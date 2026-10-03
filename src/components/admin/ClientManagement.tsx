@@ -200,9 +200,28 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
                         {sub ? formatUSD(sub.recurring_fee_cents) : '—'}
                       </td>
 
-                      {/* Next Billing */}
-                      <td className="py-3.5 px-4 font-mono-numbers text-[#8B8D93]">
-                        {sub?.next_billing_date || '—'}
+                      {/* Next Billing & Real-Time Renewal Countdown */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {sub?.next_billing_date ? (
+                          <div className="space-y-0.5">
+                            <div className="font-mono-numbers text-[#EDEAE2]">{sub.next_billing_date}</div>
+                            {(() => {
+                              const days = db.days_until_billing(sub.id);
+                              const isUrgent = days <= 7;
+                              return (
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-mono-numbers font-medium px-1.5 py-0.5 rounded ${
+                                  isUrgent 
+                                    ? 'bg-[#E0A94C]/15 text-[#E0A94C] font-semibold' 
+                                    : 'bg-white/5 text-[#8B8D93]'
+                                }`}>
+                                  {days > 0 ? `${days}d left` : days === 0 ? 'Due today' : `${Math.abs(days)}d overdue`}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <span className="text-[#8B8D93] font-mono-numbers">—</span>
+                        )}
                       </td>
 
                       {/* Billing Status */}

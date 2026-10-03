@@ -150,6 +150,25 @@ export interface AuthUser {
   created_at: string;
 }
 
+export type PaymentPlatform = 
+  | 'WHATSAPP' 
+  | 'INSTAGRAM' 
+  | 'X' 
+  | 'PAYPAL' 
+  | 'TELEGRAM' 
+  | 'EMAIL' 
+  | 'CUSTOM';
+
+export interface AgencyPaymentLink {
+  id: string; // uuid (PK)
+  platform: PaymentPlatform;
+  label: string;
+  url: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Client {
   id: string; // uuid (PK)
   slug: string; // unique
@@ -162,6 +181,7 @@ export interface Client {
   internal_notes: string | null;
   service_status: ClientServiceStatus;
   portal_status: 'ENABLED' | 'DISABLED';
+  preferred_payment_link_id?: string | null; // FK to agency_payment_links.id
   retell_workspace_url: string | null;
   retell_workspace_id: string | null;
   last_activity_at: string;

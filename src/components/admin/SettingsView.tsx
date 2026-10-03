@@ -16,11 +16,15 @@ import {
   Cloud,
   Check,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Plus,
+  Edit2,
+  Link as LinkIcon
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { POPULAR_TIMEZONES } from '../../lib/timezone';
-import { AgencySettings } from '../../types';
+import { AgencySettings, AgencyPaymentLink, PaymentPlatform } from '../../types';
+import { PlatformIcon } from '../common/PlatformIcon';
 import { 
   getStoredSupabaseConfig, 
   saveSupabaseConfig, 
@@ -60,6 +64,90 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const invoicesCount = db.getInvoices().length;
   const appointmentsCount = db.getAppointments().length;
   const isConnected = !!initialConfig.url && !!initialConfig.anonKey;
+
+  // Payment links state
+  const paymentLinks = db.getPaymentLinks();
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [linkPlatform, setLinkPlatform] = useState<PaymentPlatform>('WHATSAPP');
+  const [linkLabel, setLinkLabel] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkIsActive, setLinkIsActive] = useState(true);
+  const [linkError, setLinkError] = useState('');
+
+  const getPlaceholderForPlatform = (platform: PaymentPlatform) => {
+    switch (platform) {
+      case 'WHATSAPP': return 'https://wa.me/91XXXXXXXXXX';
+      case 'INSTAGRAM': return 'https://instagram.com/youragency';
+      case 'X': return 'https://x.com/youragency';
+      case 'PAYPAL': return 'https://paypal.me/youragency';
+      case 'TELEGRAM': return 'https://t.me/youragency';
+      case 'EMAIL': return 'mailto:billing@yourdomain.com';
+      case 'CUSTOM': default: return 'https://yourgateway.com/pay';
+    }
+  };
+
+  const handleOpenAddLink = () => {
+    setEditingLinkId(null);
+    setLinkPlatform('WHATSAPP');
+    setLinkLabel('WhatsApp — Primary');
+    setLinkUrl('https://wa.me/');
+    setLinkIsActive(true);
+    setLinkError('');
+    setIsLinkModalOpen(true);
+  };
+
+  const handleEditLink = (link: AgencyPaymentLink) => {
+    setEditingLinkId(link.id);
+    setLinkPlatform(link.platform);
+    setLinkLabel(link.label);
+    setLinkUrl(link.url);
+    setLinkIsActive(link.is_active);
+    setLinkError('');
+    setIsLinkModalOpen(true);
+  };
+
+  const handleSavePaymentLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinkError('');
+
+    if (!linkLabel.trim()) {
+      setLinkError('Please provide a descriptive label for this payment link.');
+      return;
+    }
+    if (!linkUrl.trim()) {
+      setLinkError('Please provide a destination URL or handle.');
+      return;
+    }
+
+    if (editingLinkId) {
+      await db.updatePaymentLink(editingLinkId, {
+        platform: linkPlatform,
+        label: linkLabel.trim(),
+        url: linkUrl.trim(),
+        is_active: linkIsActive,
+      });
+    } else {
+      await db.addPaymentLink({
+        platform: linkPlatform,
+        label: linkLabel.trim(),
+        url: linkUrl.trim(),
+        is_active: linkIsActive,
+      });
+    }
+
+    setIsLinkModalOpen(false);
+  };
+
+  const handleToggleLinkActive = async (link: AgencyPaymentLink) => {
+    await db.updatePaymentLink(link.id, { is_active: !link.is_active });
+  };
+
+  const handleDeleteLink = async (id: string) => {
+    if (confirm('Delete this payment link? Any client assigned to it will no longer display a Pay now redirect button until reassigned.')) {
+      await db.deletePaymentLink(id);
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,6 +391,243 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </form>
+
+      {/* PART 1: Agency Payment Links (Admin-Only) */}
+      <div className="neo-raised p-6 rounded-2xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <LinkIcon className="w-5 h-5 text-[#E2896A]" />
+            <div>
+              <h2 className="text-sm font-semibold text-[#EDEAE2]">
+                Agency payment links
+              </h2>
+              <p className="text-xs text-[#8B8D93]">
+                Manage direct payment destinations (WhatsApp, PayPal, Telegram, etc.) assignable per client
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenAddLink}
+            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add payment link</span>
+          </button>
+        </div>
+
+        {paymentLinks.length === 0 ? (
+          <div className="p-8 text-center rounded-xl neo-flat bg-[#1D1F23] text-xs text-[#8B8D93] space-y-3">
+            <p>No payment links configured. Click "Add payment link" to register your agency's WhatsApp, PayPal, or custom link.</p>
+            <button
+              type="button"
+              onClick={handleOpenAddLink}
+              className="text-xs text-[#E2896A] hover:underline font-medium"
+            >
+              + Create your first payment link
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {paymentLinks.map((link) => (
+              <div
+                key={link.id}
+                className="p-4 rounded-xl neo-flat bg-[#1D1F23] flex items-start justify-between gap-3 transition-colors"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl neo-raised flex items-center justify-center shrink-0">
+                    <PlatformIcon platform={link.platform} size={18} />
+                  </div>
+
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[#EDEAE2] truncate">
+                        {link.label}
+                      </span>
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#8B8D93]">
+                        {link.platform}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${link.is_active ? 'bg-[#4CAF7D]/10 text-[#4CAF7D]' : 'bg-white/5 text-[#8B8D93]'}`}>
+                        {link.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-[11px] text-[#8B8D93] truncate">
+                      <span className="truncate font-mono">{link.url}</span>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#E2896A] hover:text-[#EA9679] shrink-0 p-0.5"
+                        title="Test link in new tab"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                  {/* Toggle Active Switch */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleLinkActive(link)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                      link.is_active
+                        ? 'neo-inset text-[#4CAF7D]'
+                        : 'neo-raised text-[#8B8D93] hover:text-[#EDEAE2]'
+                    }`}
+                    title={link.is_active ? 'Click to deactivate' : 'Click to activate'}
+                  >
+                    {link.is_active ? 'Enabled' : 'Disabled'}
+                  </button>
+
+                  {/* Edit button */}
+                  <button
+                    type="button"
+                    onClick={() => handleEditLink(link)}
+                    className="p-1.5 rounded-lg neo-raised text-[#8B8D93] hover:text-[#EDEAE2] transition-colors"
+                    title="Edit link"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Delete button */}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLink(link.id)}
+                    className="p-1.5 rounded-lg neo-raised text-[#8B8D93] hover:text-[#E2604F] transition-colors"
+                    title="Remove link"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Payment Link Add / Edit Modal */}
+      {isLinkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PlatformIcon platform={linkPlatform} size={20} />
+                <h3 className="text-sm font-semibold text-[#EDEAE2]">
+                  {editingLinkId ? 'Edit payment link' : 'Add new payment link'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLinkModalOpen(false)}
+                className="text-[#8B8D93] hover:text-[#EDEAE2] text-xs p-1"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {linkError && (
+              <div className="p-3 rounded-xl neo-inset text-xs text-[#E2604F] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{linkError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePaymentLink} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-[#EDEAE2]">Platform *</label>
+                <div className="relative">
+                  <select
+                    value={linkPlatform}
+                    onChange={(e) => {
+                      const newPlat = e.target.value as PaymentPlatform;
+                      setLinkPlatform(newPlat);
+                      if (!editingLinkId) {
+                        setLinkUrl(getPlaceholderForPlatform(newPlat));
+                        setLinkLabel(`${newPlat.charAt(0) + newPlat.slice(1).toLowerCase()} — Primary`);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  >
+                    <option value="WHATSAPP">WhatsApp (Click-to-chat with automated invoice pre-fill)</option>
+                    <option value="PAYPAL">PayPal (Direct paypal.me link)</option>
+                    <option value="INSTAGRAM">Instagram (Profile / DM redirect)</option>
+                    <option value="X">X / Twitter (Profile / DM redirect)</option>
+                    <option value="TELEGRAM">Telegram (t.me redirect)</option>
+                    <option value="EMAIL">Email (mailto: with invoice details)</option>
+                    <option value="CUSTOM">Custom URL / Payment Gateway</option>
+                  </select>
+                </div>
+                {linkPlatform === 'WHATSAPP' && (
+                  <p className="text-[11px] text-[#4CAF7D] leading-relaxed">
+                    ✨ When client clicks "Pay now" in their portal, WhatsApp opens with their exact invoice number and balance pre-filled!
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-[#EDEAE2]">Label *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. WhatsApp — Ash, PayPal Agency Main"
+                  value={linkLabel}
+                  onChange={(e) => setLinkLabel(e.target.value)}
+                  className="w-full px-3.5 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-[#EDEAE2]">Destination URL or handle *</label>
+                <input
+                  type="text"
+                  placeholder={getPlaceholderForPlatform(linkPlatform)}
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="w-full px-3.5 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono text-[11px]"
+                  required
+                />
+                <span className="text-[10px] text-[#8B8D93]">
+                  Format example: {getPlaceholderForPlatform(linkPlatform)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="link-is-active"
+                  checked={linkIsActive}
+                  onChange={(e) => setLinkIsActive(e.target.checked)}
+                  className="rounded accent-[#E2896A]"
+                />
+                <label htmlFor="link-is-active" className="text-xs text-[#EDEAE2] cursor-pointer">
+                  Link is active (visible in onboarding & client assignment)
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsLinkModalOpen(false)}
+                  className="px-4 py-2 rounded-xl neo-raised text-xs text-[#8B8D93] hover:text-[#EDEAE2]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{editingLinkId ? 'Save changes' : 'Create link'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Cloudflare Hosting & Supabase Database Architecture */}
       <div className="neo-raised p-6 rounded-2xl space-y-5">
