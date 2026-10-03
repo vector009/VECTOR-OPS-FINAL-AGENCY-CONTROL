@@ -2,48 +2,74 @@
 
 @layer base {
   /* ================================================================
-     NIGHT MODE (Default) — True Neumorphic Palette
+     NIGHT MODE (Default) — True Neumorphic Palette with Surface Tiers
      ================================================================ */
   :root,
   [data-theme="dark"] {
-    --bg: #0E1512;              /* near-black, slight green undertone */
-    --surface: #141C19;          /* card/panel base */
-    --surface-raised: #16201C;   /* slightly lighter, for nested raised elements */
+    /* 3 Surface Depth Tiers */
+    --surface-1: #0E1512;          /* page background */
+    --surface-2: #141C19;          /* card/panel background */
+    --surface-3: #1B2622;          /* nested/raised-within-raised depth tier */
+
+    --bg: var(--surface-1);
+    --surface: var(--surface-2);
+    --surface-raised: var(--surface-3);
+
     --text-primary: #E8F0EC;
     --text-muted: #7C9289;
-    --accent: #2FD191;           /* premium emerald green */
-    --accent-soft: #1C7A56;      /* for secondary accent use, borders, icons */
-    --accent-blue: #3B9EFF;      /* secondary accent — informational states, links */
-    --success: #2FD191;
-    --warning: #E8B84B;
-    --danger: #E2604F;
+
+    /* Semantic Color Accents (Color Means Something Rule) */
+    --accent-green: #2FD191;       /* ONLY for success, money-positive states, revenue */
+    --accent-blue: #3B9EFF;        /* PRIMARY interactive/navigation color in Admin */
+    --accent-amber: #E8B84B;       /* ONLY for warning, pending, due soon <=7d */
+    --accent-red: #E2604F;         /* ONLY for danger, overdue, void */
+
+    /* Token aliases */
+    --accent: var(--accent-green);
+    --accent-soft: #1C7A56;
+    --success: var(--accent-green);
+    --warning: var(--accent-amber);
+    --danger: var(--accent-red);
+
     --shadow-light: rgba(255, 255, 255, 0.025);
     --shadow-dark: rgba(0, 0, 0, 0.65);
 
-    /* Token aliases */
     --bg-main: var(--bg);
     --surface-main: var(--surface);
   }
 
   /* ================================================================
-     DAY MODE — True Neumorphic Soft Off-White Palette
+     DAY MODE — True Neumorphic Soft Off-White Palette with Surface Tiers
      ================================================================ */
   [data-theme="light"] {
-    --bg: #EAF0ED;               /* soft off-white, green undertone, NOT pure white */
-    --surface: #EAF0ED;          /* same as bg — critical for true neumorphism */
-    --surface-raised: #F2F6F4;
+    /* 3 Surface Depth Tiers */
+    --surface-1: #EAF0ED;          /* soft off-white page background */
+    --surface-2: #E1E8E4;          /* card background */
+    --surface-3: #F2F7F4;          /* nested/raised-within-raised depth tier */
+
+    --bg: var(--surface-1);
+    --surface: var(--surface-2);
+    --surface-raised: var(--surface-3);
+
     --text-primary: #16231D;
     --text-muted: #5C6F67;
-    --accent: #1C9A68;           /* deeper green for light-mode contrast/legibility */
-    --accent-soft: #BFE8D7;
-    --accent-blue: #2470C7;
-    --success: #1C9A68;
-    --warning: #B5831F;
-    --danger: #C44536;
-    --shadow-light: rgba(255, 255, 255, 0.9);
-    --shadow-dark: rgba(163, 177, 171, 0.55);   /* soft gray-green, NOT black, for light mode */
+
+    /* Semantic Color Accents (Color Means Something Rule) */
+    --accent-green: #1C9A68;       /* ONLY for success, money-positive states, revenue */
+    --accent-blue: #2470C7;        /* PRIMARY interactive/navigation color in Admin */
+    --accent-amber: #B5831F;       /* ONLY for warning, pending, due soon <=7d */
+    --accent-red: #C44536;         /* ONLY for danger, overdue, void */
 
     /* Token aliases */
+    --accent: var(--accent-green);
+    --accent-soft: #BFE8D7;
+    --success: var(--accent-green);
+    --warning: var(--accent-amber);
+    --danger: var(--accent-red);
+
+    --shadow-light: rgba(255, 255, 255, 0.9);
+    --shadow-dark: rgba(163, 177, 171, 0.55);
+
     --bg-main: var(--bg);
     --surface-main: var(--surface);
   }
@@ -157,12 +183,29 @@
   border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 12%, transparent) !important;
 }
 
+/* Surface Depth Tiers */
+.surface-1 {
+  background-color: var(--surface-1) !important;
+}
+
+.surface-2 {
+  background-color: var(--surface-2) !important;
+}
+
+.surface-3,
+.neo-surface-3 {
+  background-color: var(--surface-3) !important;
+  border-radius: 16px;
+  box-shadow: -5px -5px 12px var(--shadow-light),
+               5px  5px 12px var(--shadow-dark) !important;
+}
+
 /* ================================================================
    NEUMORPHIC BUTTONS & INTERACTIVE PRESS STATES
    Transition from raised to inset shadow over 120ms
    ================================================================ */
 
-/* Primary Action Button (Accent gradient fill with tactile raised shadow) */
+/* Primary Action Button inside Admin & App (Flat solid Blue, NO GRADIENTS!) */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -173,8 +216,8 @@
   line-height: 1.25rem;
   padding: 0.55rem 1.15rem;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 88%, #000)) !important;
-  color: #0E1512 !important; /* maximum legibility on vivid emerald */
+  background-color: var(--accent-blue) !important;
+  color: #FFFFFF !important;
   border: none !important;
   box-shadow: -6px -6px 14px var(--shadow-light),
                6px  6px 14px var(--shadow-dark) !important;
@@ -183,7 +226,7 @@
 }
 
 .btn-primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
   box-shadow: -8px -8px 18px var(--shadow-light),
                8px  8px 18px var(--shadow-dark) !important;
 }
@@ -192,6 +235,34 @@
   box-shadow: inset -4px -4px 8px rgba(255, 255, 255, 0.25),
               inset  4px  4px 8px rgba(0, 0, 0, 0.45) !important;
   transform: translateY(1px) scale(0.985);
+}
+
+/* Landing Page Conversion CTA Button (Green with subtle gradient specifically permitted for public persuasion surface) */
+.btn-landing-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent-green), color-mix(in srgb, var(--accent-green) 85%, #000)) !important;
+  color: #0E1512 !important;
+  border: none !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent-green) 35%, transparent),
+              -6px -6px 14px var(--shadow-light),
+               6px  6px 14px var(--shadow-dark) !important;
+  transition: box-shadow 120ms ease, transform 120ms ease, filter 150ms ease;
+  cursor: pointer;
+}
+
+.btn-landing-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--accent-green) 45%, transparent),
+              -8px -8px 18px var(--shadow-light),
+               8px  8px 18px var(--shadow-dark) !important;
 }
 
 /* Secondary Button (Tactile raised on surface, inset on click) */

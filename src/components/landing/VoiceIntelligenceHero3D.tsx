@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowRight, 
   PhoneCall, 
@@ -28,9 +28,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { db } from '../../lib/database';
-import { AuthUser, UserRole, SubscriptionPlan } from '../../types';
+import { AuthUser, UserRole, SubscriptionPlan, AgencyPaymentLink } from '../../types';
 import { ThemeToggle } from '../../context/ThemeContext';
 import { PlatformIcon } from '../common/PlatformIcon';
+import { buildGeneralInquiryRedirectUrl } from '../../lib/paymentLinks';
 
 interface VoiceIntelligenceHero3DProps {
   currentUser?: AuthUser | null;
@@ -115,6 +116,130 @@ const INDUSTRY_DEMOS: IndustryDemo[] = [
   }
 ];
 
+/**
+ * Reusable "Talk to us" control:
+ * - If 0 links active: triggers consultation modal
+ * - If 1 link active: renders single direct link (no dropdown needed)
+ * - If >1 links active: renders a popover dropdown of all active channels
+ * - Formats WhatsApp clicks with: "Hi, I'm interested in VectorOps' AI voice agent service for my business. Can we talk?"
+ */
+interface TalkToUsControlProps {
+  links: AgencyPaymentLink[];
+  label?: string;
+  className?: string;
+  onFallbackOpenModal: () => void;
+}
+
+const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
+  links,
+  label = "Talk to us",
+  className = "btn-landing-primary text-sm px-7 py-3 font-semibold",
+  onFallbackOpenModal
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  // Case 1: No active links configured in Settings -> Fallback to consultation modal
+  if (links.length === 0) {
+    return (
+      <button
+        onClick={onFallbackOpenModal}
+        className={`${className} flex items-center gap-2`}
+      >
+        <span>{label}</span>
+        <ArrowRight className="w-4 h-4" />
+      </button>
+    );
+  }
+
+  // Case 2: Exactly ONE active link configured -> Single direct button (No unnecessary dropdown)
+  if (links.length === 1) {
+    const single = links[0];
+    const targetUrl = buildGeneralInquiryRedirectUrl(single);
+
+    return (
+      <a
+        href={targetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} flex items-center gap-2`}
+      >
+        <PlatformIcon platform={single.platform} size={16} />
+        <span>{label} ({single.label})</span>
+        <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+      </a>
+    );
+  }
+
+  // Case 3: Multiple links configured -> Dropdown popover
+  return (
+    <div className="relative inline-block" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`${className} flex items-center gap-2`}
+      >
+        <span>{label}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-72 p-2.5 rounded-2xl neo-modal bg-[var(--surface-2)] border border-white/[0.08] shadow-2xl z-50 text-left animate-in fade-in duration-150">
+          <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] font-mono">
+            Connect with our team
+          </div>
+          <div className="space-y-1 mt-1">
+            {links.map((link) => {
+              const url = buildGeneralInquiryRedirectUrl(link);
+              return (
+                <a
+                  key={link.id || link.label}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-xl neo-flat hover:bg-white/[0.06] transition-colors text-xs text-[var(--text-primary)] group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <PlatformIcon platform={link.platform} size={18} />
+                    <div>
+                      <div className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                        {link.label}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-muted)]">
+                        {link.platform === 'WHATSAPP' 
+                          ? 'Instant WhatsApp chat' 
+                          : link.platform === 'EMAIL' 
+                            ? 'Direct inquiry email' 
+                            : `${link.platform} channel`}
+                      </div>
+                    </div>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)]" />
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = ({
   currentUser,
   onEnterAdmin,
@@ -125,6 +250,10 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
   // Live Plans state fetched from Supabase
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+
+  // Live Agency Payment / Contact Links from agency_payment_links table
+  const [agencyLinks, setAgencyLinks] = useState<AgencyPaymentLink[]>([]);
+  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
 
   // Interactive Call Simulation state
   const [selectedDemoIndex, setSelectedDemoIndex] = useState(0);
@@ -144,7 +273,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
   const activeDemo = INDUSTRY_DEMOS[selectedDemoIndex];
   const DemoIcon = activeDemo.icon;
 
-  // Fetch live active subscription plans from Supabase (Part 6 requirement)
+  // 1. Fetch live active subscription plans from Supabase (Part 6 requirement)
   useEffect(() => {
     let isMounted = true;
     async function fetchPlans() {
@@ -160,7 +289,6 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           if (!error && data && data.length > 0) {
             setPlans(data as SubscriptionPlan[]);
           } else {
-            // Fallback to active plans in local database if Supabase table is empty or offline
             const fallbackPlans = db.getPlans().filter(p => p.is_active);
             setPlans(fallbackPlans);
           }
@@ -178,6 +306,42 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
     }
 
     fetchPlans();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Fetch live active links from agency_payment_links table (Same table as Settings & Client Portal)
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchAgencyLinks() {
+      setIsLoadingLinks(true);
+      try {
+        const { data, error } = await supabase
+          .from('agency_payment_links')
+          .select('id, platform, label, url, is_active')
+          .eq('is_active', true);
+
+        if (isMounted) {
+          if (!error && data && data.length > 0) {
+            setAgencyLinks(data as AgencyPaymentLink[]);
+          } else {
+            const fallbackLinks = db.getActivePaymentLinks();
+            setAgencyLinks(fallbackLinks);
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setAgencyLinks(db.getActivePaymentLinks());
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingLinks(false);
+        }
+      }
+    }
+
+    fetchAgencyLinks();
     return () => {
       isMounted = false;
     };
@@ -222,7 +386,6 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
     e.preventDefault();
     if (!consultName || !consultEmail) return;
 
-    // Build pre-filled inquiry text and record in client inquiries
     setConsultSubmitted(true);
     setTimeout(() => {
       setIsConsultModalOpen(false);
@@ -235,27 +398,22 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
     }, 2500);
   };
 
-  // Find active WhatsApp payment/contact link or build default click-to-chat
-  const activeWhatsAppLink = db.getActivePaymentLinks().find(l => l.platform === 'WHATSAPP')?.url || 'https://wa.me/18005550199';
-  const cleanWhatsAppBase = activeWhatsAppLink.split('?')[0];
-  const whatsAppInquiryUrl = `${cleanWhatsAppBase}?text=${encodeURIComponent("Hi VectorOps, I'd like to see if your AI voice agent is a fit for my business.")}`;
-
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] flex flex-col selection:bg-[#4CAF7D]/30 selection:text-[var(--text-primary)] transition-colors duration-200">
+    <div className="min-h-screen bg-[var(--surface-1)] text-[var(--text-primary)] flex flex-col selection:bg-[var(--accent-green)]/30 selection:text-[var(--text-primary)] transition-colors duration-200">
       
       {/* Top Header Navigation */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[var(--bg)]/90 border-b border-white/[0.06] transition-colors">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[var(--surface-1)]/90 border-b border-white/[0.06] transition-colors">
         <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
           
           {/* Brand Identity */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl neo-raised flex items-center justify-center">
-              <div className="w-3.5 h-3.5 rounded-full bg-[var(--accent)] shadow-[0_0_12px_rgba(47,209,145,0.7)]" />
+              <div className="w-3.5 h-3.5 rounded-full bg-[var(--accent-green)] shadow-[0_0_12px_rgba(47,209,145,0.7)]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-[var(--text-primary)]">VectorOps</span>
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-mono">
+                <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[var(--accent-green)]/15 text-[var(--accent-green)] font-mono">
                   Voice Agency
                 </span>
               </div>
@@ -280,7 +438,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             {currentUser ? (
               <div className="flex items-center gap-2.5">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center font-bold text-[10px] bg-[var(--accent)]/20 text-[var(--accent)]">
+                  <div className="w-5 h-5 rounded-lg flex items-center justify-center font-bold text-[10px] bg-[var(--accent-green)]/20 text-[var(--accent-green)]">
                     {currentUser.full_name ? currentUser.full_name[0] : 'U'}
                   </div>
                   <span className="font-medium text-[var(--text-primary)] max-w-[120px] truncate">
@@ -343,10 +501,13 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
       <main className="flex-1 w-full space-y-24 sm:space-y-32 py-12 lg:py-16">
         
         {/* ================================================================
-            SECTION 1: HERO (Voice Motif + Interactive Call Demo)
+            SECTION 1: HERO (Voice Motif + Soft Radial Glow + Interactive Call Demo)
             ================================================================ */}
-        <section className="max-w-7xl mx-auto px-6 space-y-12">
+        <section className="max-w-7xl mx-auto px-6 space-y-12 relative">
           
+          {/* Allowed Rich Persuasion Gradient: Soft radial glow behind the hero waveform */}
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(47,209,145,0.14),transparent_70%)] pointer-events-none blur-3xl -z-10" />
+
           <div className="text-center max-w-4xl mx-auto space-y-6 pt-4">
             
             {/* Ambient Waveform Header Accent */}
@@ -356,7 +517,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                 {[40, 90, 60, 100, 75, 45, 85].map((h, idx) => (
                   <span
                     key={idx}
-                    className="w-0.5 bg-[var(--accent)] rounded-full animate-pulse"
+                    className="w-0.5 bg-[var(--accent-green)] rounded-full animate-pulse"
                     style={{
                       height: `${h}%`,
                       animationDuration: `${0.8 + idx * 0.2}s`
@@ -381,7 +542,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
               Your business gets a dedicated AI phone agent that answers every inbound call 24/7, books appointments directly into your calendar, and never puts a customer on hold.
             </p>
 
-            {/* Hero CTAs */}
+            {/* Hero CTAs — "Talk to us" pulls directly from agency_payment_links */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <a
                 href="#how-it-works"
@@ -391,23 +552,22 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                 <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
               </a>
 
-              <button
-                onClick={() => handleOpenConsultation('Free Consultation')}
-                className="btn-primary text-sm px-7 py-3 shadow-[0_4px_16px_rgba(47,209,145,0.3)] flex items-center gap-2 font-semibold"
-              >
-                <span>Talk to us</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <TalkToUsControl
+                links={agencyLinks}
+                label="Talk to us"
+                className="btn-landing-primary text-sm px-7 py-3 font-semibold"
+                onFallbackOpenModal={() => handleOpenConsultation('Free Consultation')}
+              />
             </div>
           </div>
 
           {/* Interactive Call Simulation — Proof by Demonstration */}
-          <div className="max-w-4xl mx-auto neo-raised rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden border border-white/[0.05]">
+          <div className="max-w-4xl mx-auto neo-raised rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden bg-[var(--surface-2)] border border-white/[0.05]">
             
             {/* Top Control Bar: Industry Switcher & Live Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
                   <DemoIcon className="w-5 h-5" />
                 </div>
                 <div>
@@ -424,7 +584,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                     onClick={() => handleSelectDemo(idx)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
                       selectedDemoIndex === idx
-                        ? 'neo-raised text-[var(--text-primary)] font-semibold text-[var(--accent)]'
+                        ? 'neo-raised text-[var(--text-primary)] font-semibold text-[var(--accent-green)]'
                         : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                     }`}
                   >
@@ -437,21 +597,21 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             {/* Scenario Context Banner */}
             <div className="p-3.5 rounded-xl neo-flat text-xs flex items-center justify-between gap-3 text-[var(--text-muted)]">
               <div className="flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <PhoneCall className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
                 <span><strong className="text-[var(--text-primary)]">Live scenario:</strong> {activeDemo.scenario}</span>
               </div>
               <button
                 onClick={isPlayingDemo ? () => setIsPlayingDemo(false) : handleStartDemoPlayback}
-                className="shrink-0 px-3 py-1 text-xs font-semibold rounded-lg neo-raised flex items-center gap-1.5 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
+                className="shrink-0 px-3 py-1 text-xs font-semibold rounded-lg neo-raised flex items-center gap-1.5 text-[var(--text-primary)] hover:text-[var(--accent-green)] transition-colors"
               >
                 {isPlayingDemo ? (
                   <>
-                    <Pause className="w-3 h-3 text-[var(--warning)]" />
+                    <Pause className="w-3 h-3 text-[var(--accent-amber)]" />
                     <span>Pause</span>
                   </>
                 ) : (
                   <>
-                    <Play className="w-3 h-3 text-[var(--accent)]" />
+                    <Play className="w-3 h-3 text-[var(--accent-green)]" />
                     <span>Replay call</span>
                   </>
                 )}
@@ -462,7 +622,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between text-xs text-[var(--text-muted)] px-1">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <Volume2 className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <Volume2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
                   <span>Simulated live call recording</span>
                 </span>
                 <span className="text-[11px] font-mono">Natural human cadence</span>
@@ -476,13 +636,13 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                       key={i}
                       className={`p-4 rounded-2xl text-xs leading-relaxed transition-all animate-in fade-in duration-300 ${
                         isAgent
-                          ? 'neo-raised ml-6 sm:ml-12 border-l-4 border-l-[var(--accent)]'
+                          ? 'neo-raised ml-6 sm:ml-12 border-l-4 border-l-[var(--accent-green)]'
                           : 'neo-flat mr-6 sm:mr-12'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className={`font-semibold flex items-center gap-1.5 ${
-                          isAgent ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
+                          isAgent ? 'text-[var(--accent-green)]' : 'text-[var(--text-muted)]'
                         }`}>
                           {isAgent ? (
                             <>
@@ -505,7 +665,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             {/* Live Result Outcome Card */}
             <div className="p-4 rounded-2xl neo-inset flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
                 <span className="font-semibold text-[var(--text-primary)]">{activeDemo.outcomeBadge}</span>
               </div>
               <span className="text-[var(--text-muted)] text-[11px] font-mono">
@@ -523,7 +683,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
         <section className="max-w-7xl mx-auto px-6 space-y-12">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--warning)] font-mono">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-amber)] font-mono">
               The cost of missed calls
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -537,8 +697,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Pain Point 1: After-Hours Missed Calls */}
-            <div className="p-7 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--warning)]">
+            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-amber)]">
                 <Clock className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -555,8 +715,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Pain Point 2: Front-Desk Peak Hour Burnout */}
-            <div className="p-7 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)]">
                 <Users className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -573,8 +733,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Pain Point 3: Customers Expect Immediate Answers */}
-            <div className="p-7 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)]">
+            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-red)]">
                 <PhoneCall className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -600,7 +760,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
         <section id="how-it-works" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] font-mono">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-blue)] font-mono">
               The setup process
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -615,9 +775,9 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             
             {/* Step 1 */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4 relative">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent)] font-mono">
+                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
                   1
                 </div>
                 <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Custom build</span>
@@ -631,9 +791,9 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Step 2 */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4 relative">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent)] font-mono">
+                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
                   2
                 </div>
                 <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">24/7 Answering</span>
@@ -647,9 +807,9 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Step 3 */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4 relative">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent)] font-mono">
+                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
                   3
                 </div>
                 <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Direct calendar</span>
@@ -663,9 +823,9 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Step 4 */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4 relative">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent)] font-mono">
+                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
                   4
                 </div>
                 <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Full visibility</span>
@@ -688,7 +848,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
         <section id="what-you-get" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] font-mono">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-green)] font-mono">
               The deliverables
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -702,8 +862,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Deliverable 1: Dedicated Voice Agent */}
-            <div className="p-8 rounded-3xl neo-raised space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)] shrink-0 mt-1">
+            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)] shrink-0 mt-1">
                 <PhoneCall className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -717,8 +877,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Deliverable 2: Private Client Portal */}
-            <div className="p-8 rounded-3xl neo-raised space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)] shrink-0 mt-1">
+            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)] shrink-0 mt-1">
                 <Calendar className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -732,8 +892,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Deliverable 3: Transparent Monthly Retainer */}
-            <div className="p-8 rounded-3xl neo-raised space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)] shrink-0 mt-1">
+            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)] shrink-0 mt-1">
                 <DollarSign className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -747,8 +907,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Deliverable 4: Dedicated Human Oversight */}
-            <div className="p-8 rounded-3xl neo-raised space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)] shrink-0 mt-1">
+            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)] shrink-0 mt-1">
                 <UserCheck className="w-6 h-6" />
               </div>
               <div className="space-y-1.5">
@@ -771,7 +931,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
         <section id="who-its-for" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] font-mono">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-blue)] font-mono">
               Target industries
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -785,15 +945,15 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Vertical 1: Dental & Medical */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
                 <Stethoscope className="w-6 h-6" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Dental & Medical
                 </h3>
-                <p className="text-xs text-[var(--accent)] font-medium">
+                <p className="text-xs text-[var(--accent-green)] font-medium">
                   After-hours patient capture
                 </p>
               </div>
@@ -803,15 +963,15 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Vertical 2: Real Estate */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)]">
                 <Building2 className="w-6 h-6" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Real Estate & Realty
                 </h3>
-                <p className="text-xs text-[var(--accent)] font-medium">
+                <p className="text-xs text-[var(--accent-blue)] font-medium">
                   Instant buyer pre-qualification
                 </p>
               </div>
@@ -821,15 +981,15 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Vertical 3: Logistics & Dispatch */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-amber)]">
                 <Truck className="w-6 h-6" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Logistics & Dispatch
                 </h3>
-                <p className="text-xs text-[var(--accent)] font-medium">
+                <p className="text-xs text-[var(--accent-amber)] font-medium">
                   24/7 load & driver intake
                 </p>
               </div>
@@ -839,15 +999,15 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
 
             {/* Vertical 4: Home Services */}
-            <div className="p-6 rounded-3xl neo-raised space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent)]">
+            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
+              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
                 <Wrench className="w-6 h-6" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Home Services
                 </h3>
-                <p className="text-xs text-[var(--accent)] font-medium">
+                <p className="text-xs text-[var(--accent-green)] font-medium">
                   Emergency technician dispatch
                 </p>
               </div>
@@ -866,7 +1026,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
         <section id="pricing" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] font-mono">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-green)] font-mono">
               Transparent investment
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -881,12 +1041,12 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           {isLoadingPlans ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-8 rounded-3xl neo-raised space-y-4 h-80" />
+                <div key={i} className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 h-80" />
               ))}
             </div>
           ) : plans.length === 0 ? (
             /* Graceful Fallback if all plans are deactivated */
-            <div className="max-w-xl mx-auto p-8 rounded-3xl neo-raised text-center space-y-4">
+            <div className="max-w-xl mx-auto p-8 rounded-3xl neo-raised bg-[var(--surface-2)] text-center space-y-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Pricing available on request</h3>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 We create bespoke voice operations architectures tailored to your exact call volume and multi-location requirements.
@@ -907,7 +1067,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                 return (
                   <div
                     key={plan.id || plan.name}
-                    className="p-8 rounded-3xl neo-raised flex flex-col justify-between space-y-6 relative transition-all hover:translate-y-[-2px]"
+                    className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] flex flex-col justify-between space-y-6 relative transition-all hover:translate-y-[-2px]"
                   >
                     <div className="space-y-4">
                       <div className="space-y-1">
@@ -915,10 +1075,10 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                         <p className="text-xs text-[var(--text-muted)] leading-relaxed">{plan.description}</p>
                       </div>
 
-                      {/* Headline Price & Setup Fee Line */}
+                      {/* Headline Price (Money Positive: Green) & Setup Fee Line */}
                       <div className="pt-2 border-t border-white/[0.06] space-y-0.5">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl sm:text-4xl font-bold font-mono-numbers text-[var(--accent)]">
+                          <span className="text-3xl sm:text-4xl font-bold font-mono-numbers text-[var(--accent-green)]">
                             {monthlyFormatted}
                           </span>
                           <span className="text-xs text-[var(--text-muted)] font-medium">/month</span>
@@ -934,21 +1094,21 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                           What's included:
                         </span>
                         <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
                           <span>{plan.included_service_description}</span>
                         </div>
                         <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
                           <span>Dedicated client dashboard & live call transcripts</span>
                         </div>
                         <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
                           <span>Full calendar synchronization & SMS confirmations</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Sales-Assisted Custom Quote CTA Button */}
+                    {/* Sales-Assisted Custom Quote CTA Button — Blue action button inside cards */}
                     <button
                       onClick={() => handleOpenConsultation(plan.name)}
                       className="w-full btn-primary text-xs py-3 font-semibold mt-4 flex items-center justify-center gap-2"
@@ -963,23 +1123,23 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           )}
 
           <p className="text-center text-xs text-[var(--text-muted)]">
-            Need custom integrations or high-volume multi-location routing? <button onClick={() => handleOpenConsultation('Enterprise Custom')} className="text-[var(--accent)] hover:underline font-semibold">Speak with our agency team</button>.
+            Need custom integrations or high-volume multi-location routing? <button onClick={() => handleOpenConsultation('Enterprise Custom')} className="text-[var(--accent-blue)] hover:underline font-semibold">Speak with our agency team</button>.
           </p>
 
         </section>
 
         {/* ================================================================
-            SECTION 7: FINAL CTA (Consultation / WhatsApp Inquiry)
+            SECTION 7: FINAL CTA (Dynamic Settings Links + Consultation)
             ================================================================ */}
         <section id="contact" className="max-w-4xl mx-auto px-6 scroll-mt-24">
-          <div className="p-8 sm:p-12 rounded-3xl neo-raised text-center space-y-6 relative overflow-hidden border border-white/[0.06]">
+          <div className="p-8 sm:p-12 rounded-3xl neo-raised bg-[var(--surface-2)] text-center space-y-6 relative overflow-hidden border border-white/[0.06]">
             
             {/* Ambient Waveform Accent */}
             <div className="flex items-center justify-center gap-1 h-4 mx-auto opacity-70">
               {[30, 60, 95, 45, 80, 100, 70, 50, 85, 40].map((h, i) => (
                 <span
                   key={i}
-                  className="w-1 bg-[var(--accent)] rounded-full animate-pulse"
+                  className="w-1 bg-[var(--accent-green)] rounded-full animate-pulse"
                   style={{ height: `${h}%`, animationDuration: `${0.9 + i * 0.15}s` }}
                 />
               ))}
@@ -997,35 +1157,31 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <button
                 onClick={() => handleOpenConsultation('Free Consultation')}
-                className="btn-primary text-sm px-8 py-3.5 shadow-[0_4px_18px_rgba(47,209,145,0.3)] font-semibold flex items-center gap-2"
+                className="btn-landing-primary text-sm px-8 py-3.5 font-semibold flex items-center gap-2"
               >
                 <span>Book a free consultation</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <a
-                href={whatsAppInquiryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary text-sm px-6 py-3.5 font-medium flex items-center gap-2"
-              >
-                <PlatformIcon platform="WHATSAPP" size={16} />
-                <span>Message on WhatsApp</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-              </a>
+              <TalkToUsControl
+                links={agencyLinks}
+                label="Direct chat & inquiry"
+                className="btn-secondary text-sm px-6 py-3.5 font-medium"
+                onFallbackOpenModal={() => handleOpenConsultation('Direct Inquiry')}
+              />
             </div>
 
             <div className="pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-6 text-xs text-[var(--text-muted)]">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
                 <span>Zero technical setup required</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
                 <span>48-hour onboarding</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-blue)]" />
                 <span>Personal agency account manager</span>
               </span>
             </div>
@@ -1036,7 +1192,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
       </main>
 
       {/* Public Footer */}
-      <footer className="w-full border-t border-white/[0.06] bg-[var(--surface)] py-12 text-xs text-[var(--text-muted)] transition-colors">
+      <footer className="w-full border-t border-white/[0.06] bg-[var(--surface-2)] py-12 text-xs text-[var(--text-muted)] transition-colors">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           <div className="space-y-2">
@@ -1067,21 +1223,36 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </ul>
           </div>
 
+          {/* Contact Agency — DYNAMICALLY pulls all active links from agency_payment_links table */}
           <div className="space-y-2">
             <div className="font-bold text-[var(--text-primary)] text-sm">Contact Agency</div>
             <p className="leading-relaxed">
-              Ready to eliminate missed calls? Reach out for a live consultation and personalized demonstration.
+              Ready to eliminate missed calls? Reach out to our team through any configured channel:
             </p>
-            <div className="pt-1">
-              <a
-                href={whatsAppInquiryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-medium"
-              >
-                <span>Direct WhatsApp inquiry</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <div className="space-y-1.5 pt-1">
+              {agencyLinks.length > 0 ? (
+                agencyLinks.map((link) => (
+                  <div key={link.id || link.label}>
+                    <a
+                      href={buildGeneralInquiryRedirectUrl(link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--accent-blue)] hover:underline inline-flex items-center gap-1.5 font-medium transition-colors"
+                    >
+                      <PlatformIcon platform={link.platform} size={14} />
+                      <span>{link.label}</span>
+                      <ExternalLink className="w-3 h-3 opacity-70" />
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <button
+                  onClick={() => handleOpenConsultation('General Inquiry')}
+                  className="text-[var(--accent-blue)] hover:underline font-medium"
+                >
+                  Book a consultation
+                </button>
+              )}
             </div>
           </div>
 
@@ -1104,11 +1275,11 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           ================================================================ */}
       {isConsultModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg neo-raised rounded-3xl p-6 sm:p-8 space-y-5 relative bg-[var(--surface)] text-[var(--text-primary)]">
+          <div className="w-full max-w-lg neo-modal rounded-3xl p-6 sm:p-8 space-y-5 relative bg-[var(--surface-2)] text-[var(--text-primary)]">
             
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
               <div>
-                <span className="text-[10px] uppercase font-mono text-[var(--accent)] font-semibold">Free consultation</span>
+                <span className="text-[10px] uppercase font-mono text-[var(--accent-green)] font-semibold">Free consultation</span>
                 <h3 className="text-lg font-bold text-[var(--text-primary)]">
                   {consultPlanName}
                 </h3>
@@ -1123,7 +1294,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
 
             {consultSubmitted ? (
               <div className="p-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl neo-inset text-[var(--accent)] flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl neo-inset text-[var(--accent-green)] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h4 className="text-base font-bold text-[var(--text-primary)]">Inquiry received!</h4>
@@ -1200,15 +1371,19 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <a
-                    href={whatsAppInquiryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[var(--accent)] hover:underline inline-flex items-center gap-1 font-medium"
-                  >
-                    <PlatformIcon platform="WHATSAPP" size={14} />
-                    <span>Prefer WhatsApp?</span>
-                  </a>
+                  <div className="flex items-center gap-1.5">
+                    {agencyLinks.find(l => l.platform === 'WHATSAPP') && (
+                      <a
+                        href={buildGeneralInquiryRedirectUrl(agencyLinks.find(l => l.platform === 'WHATSAPP')!)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--accent-blue)] hover:underline inline-flex items-center gap-1 font-medium"
+                      >
+                        <PlatformIcon platform="WHATSAPP" size={14} />
+                        <span>WhatsApp chat</span>
+                      </a>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-2">
                     <button

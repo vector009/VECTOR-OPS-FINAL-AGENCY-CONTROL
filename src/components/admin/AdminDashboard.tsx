@@ -44,182 +44,139 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      {/* FOCAL ELEMENT: AI Briefing Panel (Dominant visual weight, hero-level shadow, generous internal padding) */}
-      <div 
-        className="p-8 rounded-[20px] neo-briefing space-y-5 animate-in fade-in duration-300"
-        style={{
-          backgroundColor: '#1D1F23',
-          border: 'none',
-          borderRadius: '20px',
-          boxShadow: '-10px -10px 20px rgba(255,255,255,0.035), 10px 10px 20px rgba(0,0,0,0.65)'
-        }}
-      >
-        <div className="flex items-center justify-between">
+      {/* FOCAL ELEMENT: AI Briefing Panel (Surface-2 with Surface-3 nested stat card) */}
+      <div className="p-7 rounded-3xl neo-briefing space-y-5 animate-in fade-in duration-300 bg-[var(--surface-2)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#E2896A] shadow-[0_0_8px_rgba(226,137,106,0.5)]" />
-            <h2 className="text-base font-semibold text-[#EDEAE2] tracking-tight">Autonomous agency briefing</h2>
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-blue)]" />
+            <h2 className="text-base font-semibold text-[var(--text-primary)] tracking-tight">Autonomous agency briefing</h2>
           </div>
           <button
             onClick={() => setShowFullBrief(!showFullBrief)}
-            className="text-xs font-medium text-[#E2896A] hover:underline transition-colors px-2 py-1 rounded-lg neo-inset"
+            className="text-xs font-medium text-[var(--accent-blue)] hover:underline transition-colors px-2.5 py-1 rounded-lg neo-inset self-start sm:self-auto"
           >
             {showFullBrief ? 'Collapse brief' : 'View full brief'}
           </button>
         </div>
 
-        <p className="text-sm text-[#EDEAE2] leading-relaxed max-w-4xl">
-          {dailyBrief.executiveSummary}
-        </p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <p className="text-sm text-[var(--text-primary)] leading-relaxed max-w-3xl">
+            {dailyBrief.executiveSummary}
+          </p>
+
+          {/* SURFACE-3 Depth Tier: Subtly raised sub-card inside the briefing panel for the focal number */}
+          <div className="surface-3 px-5 py-3.5 rounded-2xl neo-surface-3 shrink-0 space-y-0.5 border border-white/[0.04]">
+            <span className="text-[11px] font-mono uppercase text-[var(--text-muted)] block tracking-wider">
+              Current MRR
+            </span>
+            <span className="text-2xl font-bold font-mono-numbers text-[var(--accent-green)] block">
+              {dailyBrief.mrrFormatted}
+            </span>
+            <span className="text-[10px] text-[var(--text-muted)] block">Authoritative integer ledger</span>
+          </div>
+        </div>
 
         {showFullBrief && (
-          <div className="pt-5 mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="pt-4 mt-2 border-t border-white/[0.06] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="p-3.5 rounded-xl neo-inset space-y-1">
-              <span className="text-[#8B8D93] block text-[11px]">Authoritative MRR</span>
-              <span className="font-mono-numbers text-base font-semibold text-[#4CAF7D]">{dailyBrief.mrrFormatted}</span>
+              <span className="text-[var(--text-muted)] block text-[11px]">Authoritative MRR</span>
+              <span className="font-mono-numbers text-base font-semibold text-[var(--accent-green)]">{dailyBrief.mrrFormatted}</span>
             </div>
             <div className="p-3.5 rounded-xl neo-inset space-y-1">
-              <span className="text-[#8B8D93] block text-[11px]">Collected this month</span>
-              <span className="font-mono-numbers text-base font-semibold text-[#EDEAE2]">{dailyBrief.collectedThisMonthFormatted}</span>
+              <span className="text-[var(--text-muted)] block text-[11px]">Collected this month</span>
+              <span className="font-mono-numbers text-base font-semibold text-[var(--accent-green)]">{dailyBrief.collectedThisMonthFormatted}</span>
             </div>
             <div className="p-3.5 rounded-xl neo-inset space-y-1">
-              <span className="text-[#8B8D93] block text-[11px]">Pending balance</span>
-              <span className="font-mono-numbers text-base font-semibold text-[#E0A94C]">{dailyBrief.outstandingFormatted}</span>
+              <span className="text-[var(--text-muted)] block text-[11px]">Pending balance</span>
+              <span className="font-mono-numbers text-base font-semibold text-[var(--accent-amber)]">{dailyBrief.outstandingFormatted}</span>
             </div>
             <div className="p-3.5 rounded-xl neo-inset space-y-1">
-              <span className="text-[#8B8D93] block text-[11px]">Overdue balance</span>
-              <span className="font-mono-numbers text-base font-semibold text-[#E2604F]">{dailyBrief.overdueFormatted}</span>
+              <span className="text-[var(--text-muted)] block text-[11px]">Overdue balance</span>
+              <span className="font-mono-numbers text-base font-semibold text-[var(--accent-red)]">{dailyBrief.overdueFormatted}</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* 6 KPI Cards — Primary vs Secondary visual hierarchy with true dual soft neumorphic shadows */}
+      {/* 6 KPI Cards — Surface-2 background, green strictly for money, blue for action links */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* 1. Active clients (Secondary) */}
-        <div 
-          className="neo-kpi-secondary p-4 rounded-[16px] space-y-1.5"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6)'
-          }}
-        >
-          <div className="text-xs text-[#8B8D93]">Active clients</div>
-          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[#EDEAE2]">
+        <div className="neo-kpi-secondary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5">
+          <div className="text-xs text-[var(--text-muted)]">Active clients</div>
+          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[var(--text-primary)]">
             {kpis.activeClientsCount}
           </div>
-          <div className="text-[10px] text-[#4CAF7D]">Verified accounts</div>
+          <div className="text-[10px] text-[var(--text-muted)]">Verified accounts</div>
         </div>
 
-        {/* 2. Monthly recurring revenue (VISUALLY PRIMARY: Accent glow, elevated weight) */}
-        <div 
-          className="neo-kpi-primary p-4 rounded-[16px] space-y-1.5 relative flex flex-col justify-between"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6), inset 0 0 16px rgba(226, 137, 106, 0.12)'
-          }}
-        >
+        {/* 2. Monthly recurring revenue (Money positive: Green) */}
+        <div className="neo-kpi-primary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5 relative flex flex-col justify-between">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-[#E2896A]">Monthly recurring revenue</div>
-              <span className="text-[9px] uppercase tracking-wider font-bold bg-[#E2896A]/20 text-[#E2896A] px-1.5 py-0.5 rounded">Key</span>
+              <div className="text-xs font-medium text-[var(--text-muted)]">Monthly recurring revenue</div>
+              <span className="text-[9px] uppercase tracking-wider font-bold bg-[var(--accent-green)]/15 text-[var(--accent-green)] px-1.5 py-0.5 rounded">MRR</span>
             </div>
-            <div className="text-2xl sm:text-[26px] font-semibold font-mono-numbers tracking-tight text-[#4CAF7D] flex items-center gap-1.5">
+            <div className="text-2xl sm:text-[26px] font-semibold font-mono-numbers tracking-tight text-[var(--accent-green)] flex items-center gap-1.5">
               <span>{formatUSD(kpis.mrrCents)}</span>
-              <TrendingUp className="w-4 h-4 text-[#4CAF7D] shrink-0" />
+              <TrendingUp className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
             </div>
-            <div className="text-[10px] text-[#8B8D93]">Primary recurring cashflow</div>
+            <div className="text-[10px] text-[var(--text-muted)]">Primary recurring cashflow</div>
           </div>
           <button
             onClick={() => onNavigateTab('revenue')}
-            className="pt-1.5 text-[11px] font-medium text-[#E2896A] hover:underline flex items-center gap-1 text-left cursor-pointer transition-colors"
+            className="pt-1.5 text-[11px] font-medium text-[var(--accent-blue)] hover:underline flex items-center gap-1 text-left cursor-pointer transition-colors"
           >
             <span>View revenue report</span>
             <span>&rarr;</span>
           </button>
         </div>
 
-        {/* 3. Collected this month (VISUALLY PRIMARY: Accent glow, elevated weight) */}
-        <div 
-          className="neo-kpi-primary p-4 rounded-[16px] space-y-1.5 relative flex flex-col justify-between"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6), inset 0 0 16px rgba(226, 137, 106, 0.12)'
-          }}
-        >
+        {/* 3. Collected this month (Money positive: Green) */}
+        <div className="neo-kpi-primary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5 relative flex flex-col justify-between">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-medium text-[#E2896A]">Collected this month</div>
-              <span className="text-[9px] uppercase tracking-wider font-bold bg-[#4CAF7D]/20 text-[#4CAF7D] px-1.5 py-0.5 rounded">Cash</span>
+              <div className="text-xs font-medium text-[var(--text-muted)]">Collected this month</div>
+              <span className="text-[9px] uppercase tracking-wider font-bold bg-[var(--accent-green)]/15 text-[var(--accent-green)] px-1.5 py-0.5 rounded">Cash</span>
             </div>
-            <div className="text-2xl sm:text-[26px] font-semibold font-mono-numbers tracking-tight text-[#EDEAE2]">
+            <div className="text-2xl sm:text-[26px] font-semibold font-mono-numbers tracking-tight text-[var(--accent-green)]">
               {formatUSD(kpis.collectedThisMonthCents)}
             </div>
-            <div className="text-[10px] text-[#4CAF7D]">Deposited MTD</div>
+            <div className="text-[10px] text-[var(--text-muted)]">Deposited MTD</div>
           </div>
           <button
             onClick={() => onNavigateTab('revenue')}
-            className="pt-1.5 text-[11px] font-medium text-[#E2896A] hover:underline flex items-center gap-1 text-left cursor-pointer transition-colors"
+            className="pt-1.5 text-[11px] font-medium text-[var(--accent-blue)] hover:underline flex items-center gap-1 text-left cursor-pointer transition-colors"
           >
             <span>View revenue report</span>
             <span>&rarr;</span>
           </button>
         </div>
 
-        {/* 4. Outstanding balance (Secondary) */}
-        <div 
-          className="neo-kpi-secondary p-4 rounded-[16px] space-y-1.5"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6)'
-          }}
-        >
-          <div className="text-xs text-[#8B8D93]">Outstanding balance</div>
-          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[#E0A94C]">
+        {/* 4. Outstanding balance (Warning: Amber) */}
+        <div className="neo-kpi-secondary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5">
+          <div className="text-xs text-[var(--text-muted)]">Outstanding balance</div>
+          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[var(--accent-amber)]">
             {formatUSD(kpis.outstandingCents)}
           </div>
-          <div className="text-[10px] text-[#8B8D93]">Pending collections</div>
+          <div className="text-[10px] text-[var(--text-muted)]">Pending collections</div>
         </div>
 
-        {/* 5. Overdue balance (Secondary) */}
-        <div 
-          className="neo-kpi-secondary p-4 rounded-[16px] space-y-1.5"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6)'
-          }}
-        >
-          <div className="text-xs text-[#8B8D93]">Overdue balance</div>
-          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[#E2604F]">
+        {/* 5. Overdue balance (Danger: Red) */}
+        <div className="neo-kpi-secondary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5">
+          <div className="text-xs text-[var(--text-muted)]">Overdue balance</div>
+          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[var(--accent-red)]">
             {formatUSD(kpis.overdueCents)}
           </div>
-          <div className="text-[10px] text-[#E2604F]">Requires follow-up</div>
+          <div className="text-[10px] text-[var(--accent-red)]">Requires follow-up</div>
         </div>
 
-        {/* 6. Setup fees (Secondary) */}
-        <div 
-          className="neo-kpi-secondary p-4 rounded-[16px] space-y-1.5"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '16px',
-            boxShadow: '-8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6)'
-          }}
-        >
-          <div className="text-xs text-[#8B8D93]">Setup fees collected</div>
-          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[#E2896A]">
+        {/* 6. Setup fees (Money: Green) */}
+        <div className="neo-kpi-secondary p-4 rounded-2xl bg-[var(--surface-2)] space-y-1.5">
+          <div className="text-xs text-[var(--text-muted)]">Setup fees collected</div>
+          <div className="text-2xl font-semibold font-mono-numbers tracking-tight text-[var(--accent-green)]">
             {formatUSD(kpis.setupFeePaymentsCents)}
           </div>
-          <div className="text-[10px] text-[#8B8D93]">One-time onboarding</div>
+          <div className="text-[10px] text-[var(--text-muted)]">One-time onboarding</div>
         </div>
       </div>
 

@@ -96,20 +96,20 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#17181B] text-[#EDEAE2] flex">
-      {/* Desktop Sidebar — Neumorphic Depth, Surface #1D1F23, Zero Borders */}
-      <aside className="hidden lg:flex flex-col w-64 neo-sidebar shrink-0 sticky top-0 h-screen select-none z-20">
+    <div className="min-h-screen bg-[var(--surface-1)] text-[var(--text-primary)] flex">
+      {/* Desktop Sidebar — Neumorphic Depth, Surface-2, Zero Borders */}
+      <aside className="hidden lg:flex flex-col w-64 bg-[var(--surface-2)] neo-sidebar shrink-0 sticky top-0 h-screen select-none z-20">
         {/* Brand Lockup */}
         <div className="h-16 px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#E2896A] text-[#17181B] font-semibold text-xs flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent-blue)] text-white font-semibold text-xs flex items-center justify-center shadow-sm">
               VO
             </div>
             <div>
-              <span className="font-semibold text-sm tracking-tight text-[#EDEAE2] block leading-none">
+              <span className="font-semibold text-sm tracking-tight text-[var(--text-primary)] block leading-none">
                 VectorOps
               </span>
-              <span className="text-[11px] text-[#8B8D93] mt-0.5 block">
+              <span className="text-[11px] text-[var(--text-muted)] mt-0.5 block">
                 Agency operating system
               </span>
             </div>
@@ -131,23 +131,23 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-normal transition-all duration-150 ${
                   isActive
-                    ? 'neo-inset text-[#EDEAE2] font-semibold'
-                    : 'text-[#8B8D93] hover:text-[#EDEAE2]'
+                    ? 'neo-inset text-[var(--accent-blue)] font-semibold'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#E2896A]' : 'text-[#8B8D93]'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`} />
                   <span>{item.label}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   {item.badge !== undefined && (
-                    <span className="font-mono-numbers text-[11px] text-[#8B8D93]">
+                    <span className="font-mono-numbers text-[11px] text-[var(--text-muted)]">
                       {item.badge}
                     </span>
                   )}
                   {item.alert && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E2604F]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-red)]" />
                   )}
                 </div>
               </button>
@@ -160,14 +160,14 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           {/* Active Operator Profile Card */}
           <div className="w-full p-2.5 rounded-xl neo-flat flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-[#E2896A]/20 text-[#E2896A] text-xs font-bold flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[var(--accent-blue)]/20 text-[var(--accent-blue)] text-xs font-bold flex items-center justify-center shrink-0">
                 {currentUser?.full_name ? currentUser.full_name[0] : 'A'}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-medium text-[#EDEAE2] truncate">
+                <div className="text-xs font-medium text-[var(--text-primary)] truncate">
                   {currentUser?.full_name || 'Sovereign Operator'}
                 </div>
-                <div className="text-[10px] text-[#8B8D93] truncate">
+                <div className="text-[10px] text-[var(--text-muted)] truncate">
                   {currentUser?.email || 'admin@vectorops.ai'}
                 </div>
               </div>
@@ -175,23 +175,23 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <button
               onClick={onLogout}
               title="Sign out"
-              className="p-1.5 rounded-lg text-[#8B8D93] hover:text-[#E2604F] transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors shrink-0"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* Quick link to client portal and landing page */}
-          <div className="flex items-center justify-between text-xs px-1 text-[#8B8D93]">
+          <div className="flex items-center justify-between text-xs px-1 text-[var(--text-muted)]">
             <button
               onClick={onSwitchToClient}
-              className="hover:text-[#EDEAE2] transition-colors"
+              className="hover:text-[var(--text-primary)] transition-colors"
             >
               Client portal
             </button>
             <button
               onClick={onBackToLanding}
-              className="hover:text-[#EDEAE2] transition-colors"
+              className="hover:text-[var(--text-primary)] transition-colors"
             >
               Landing page
             </button>
@@ -202,8 +202,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       {/* Main Content Layout */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Top Header Bar — Surface #1D1F23, Raised Shadow, Zero Border */}
-        <header className="h-16 px-6 bg-[#1D1F23] neo-raised sticky top-0 z-30 flex items-center justify-between gap-4">
+        {/* Top Header Bar — Surface-2, Raised Shadow, Zero Border */}
+        <header className="h-16 px-6 bg-[var(--surface-2)] neo-raised sticky top-0 z-30 flex items-center justify-between gap-4">
           
           {/* Mobile hamburger & Clean view title */}
           <div className="flex items-center gap-3">
@@ -284,9 +284,9 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <ThemeToggle />
 
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-              <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+              <span className="w-2 h-2 rounded-full bg-[var(--accent-blue)]" />
               <span className="text-[var(--text-primary)] font-medium">{currentUser?.full_name || 'Operator'}</span>
-              <span className="text-[10px] text-[var(--accent)] font-mono uppercase bg-[var(--accent)]/10 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] text-[var(--accent-blue)] font-mono uppercase bg-[var(--accent-blue)]/10 px-1.5 py-0.5 rounded">
                 Admin
               </span>
             </div>
