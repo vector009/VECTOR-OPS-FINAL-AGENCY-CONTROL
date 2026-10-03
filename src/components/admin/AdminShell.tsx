@@ -18,6 +18,7 @@ import {
   LogOut,
   TrendingUp
 } from 'lucide-react';
+import { ThemeToggle } from '../../context/ThemeContext';
 import { db } from '../../lib/database';
 import { Client, InvoiceWithMetrics, AuthUser } from '../../types';
 import { AdminDashboard } from './AdminDashboard';
@@ -278,12 +279,14 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             )}
           </div>
 
-          {/* Right Controls — User profile pill, Client Portal & Logout */}
+          {/* Right Controls — Theme toggle, User profile pill, Client Portal & Logout */}
           <div className="flex items-center gap-2.5">
+            <ThemeToggle />
+
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-              <span className="w-2 h-2 rounded-full bg-[#4CAF7D]" />
-              <span className="text-[#EDEAE2] font-medium">{currentUser?.full_name || 'Operator'}</span>
-              <span className="text-[10px] text-[#E2896A] font-mono uppercase bg-[#E2896A]/10 px-1.5 py-0.5 rounded">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+              <span className="text-[var(--text-primary)] font-medium">{currentUser?.full_name || 'Operator'}</span>
+              <span className="text-[10px] text-[var(--accent)] font-mono uppercase bg-[var(--accent)]/10 px-1.5 py-0.5 rounded">
                 Admin
               </span>
             </div>

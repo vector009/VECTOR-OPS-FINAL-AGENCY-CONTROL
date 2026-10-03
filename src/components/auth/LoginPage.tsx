@@ -9,6 +9,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from '../../context/ThemeContext';
 
 interface LoginPageProps {
   onNavigate: (path: string) => void;
@@ -44,36 +45,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const displayError = error || localError;
 
   return (
-    <div className="min-h-screen bg-[#17181B] text-[#EDEAE2] flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Top Header */}
       <div className="max-w-md mx-auto w-full flex items-center justify-between py-2">
         <button
           onClick={() => onNavigate('/landing')}
-          className="flex items-center gap-2 text-xs text-[#8B8D93] hover:text-[#EDEAE2] px-3 py-1.5 rounded-xl neo-raised transition-colors"
+          className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-xl neo-raised transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Public site</span>
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#E2896A] text-[#17181B] font-semibold text-xs flex items-center justify-center">
-            VO
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] text-[#0E1512] font-semibold text-xs flex items-center justify-center">
+              VO
+            </div>
+            <span className="font-semibold text-sm tracking-tight text-[var(--text-primary)]">VectorOps</span>
           </div>
-          <span className="font-semibold text-sm tracking-tight text-[#EDEAE2]">VectorOps</span>
         </div>
       </div>
 
-      {/* Main Login Card (No Role Selector — exact spec section 3) */}
+      {/* Main Login Card */}
       <div className="max-w-md w-full mx-auto my-auto py-6">
-        <div 
-          className="p-8 rounded-[24px] neo-focal space-y-6"
-          style={{
-            backgroundColor: '#1D1F23',
-            border: 'none',
-            borderRadius: '24px',
-            boxShadow: '-10px -10px 24px rgba(255,255,255,0.035), 10px 10px 28px rgba(0,0,0,0.65)'
-          }}
-        >
+        <div className="p-8 rounded-[24px] neo-focal space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight text-[#EDEAE2]">

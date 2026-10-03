@@ -23,6 +23,7 @@ import { db } from '../../lib/database';
 import { Client, Invoice, Appointment, Message, AuthUser } from '../../types';
 import { formatUSD, formatInTimezone } from '../../lib/timezone';
 import { StatusBadge } from '../common/StatusBadge';
+import { ThemeToggle } from '../../context/ThemeContext';
 
 interface ClientPortalProps {
   currentUser?: AuthUser | null;
@@ -185,6 +186,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
           {/* Switcher & Role Toggles */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
+
             {/* If Admin, show Client Switcher dropdown. If Client, show Company Name pill */}
             {currentUser?.role === 'ADMIN' ? (
               <div className="flex items-center gap-1.5 text-xs text-[#8B8D93]">

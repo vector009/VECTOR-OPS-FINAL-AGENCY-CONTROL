@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { LoginPage } from './components/auth/LoginPage';
 import { AdminRoute, ClientRoute } from './components/auth/RouteGuards';
 import { AdminShell } from './components/admin/AdminShell';
@@ -181,10 +182,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-[#17181B] text-[#EDEAE2]">
-        <AppContent />
-      </div>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+          <AppContent />
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

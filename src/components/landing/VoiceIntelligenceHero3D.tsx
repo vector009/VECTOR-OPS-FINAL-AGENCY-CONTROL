@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { formatUSD } from '../../lib/timezone';
 import { AuthUser, UserRole } from '../../types';
+import { ThemeToggle } from '../../context/ThemeContext';
 
 interface VoiceIntelligenceHero3DProps {
   currentUser?: AuthUser | null;
@@ -154,6 +155,8 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
 
           {/* Auth & Portal Controls */}
           <div className="flex items-center gap-2.5">
+            <ThemeToggle />
+
             {currentUser ? (
               <div className="flex items-center gap-2.5">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs bg-[#17181B]">

@@ -28,7 +28,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'COMPLETED':
       case 'COMPLETE':
       case 'LOW':
-        return { dot: 'bg-[#4CAF7D]', text: 'text-[#4CAF7D]' };
+        return { dot: 'bg-[var(--success)]', text: 'text-[var(--success)]' };
 
       case 'ONBOARDING':
       case 'CURRENT':
@@ -36,7 +36,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'IN_PROGRESS':
       case 'PROPOSED':
       case 'MEDIUM':
-        return { dot: 'bg-[#E0A94C]', text: 'text-[#E0A94C]' };
+        return { dot: 'bg-[var(--warning)]', text: 'text-[var(--warning)]' };
 
       case 'OVERDUE':
       case 'SUSPENDED':
@@ -44,20 +44,20 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'URGENT':
       case 'HIGH':
       case 'DECLINED':
-        return { dot: 'bg-[#E2604F]', text: 'text-[#E2604F]' };
+        return { dot: 'bg-[var(--danger)]', text: 'text-[var(--danger)]' };
 
       case 'PARTIALLY_PAID':
-        return { dot: 'bg-[#E2896A]', text: 'text-[#E2896A]' };
+        return { dot: 'bg-[var(--accent-blue)]', text: 'text-[var(--accent-blue)]' };
 
       case 'CANCELLED':
       case 'EXPIRED':
       case 'ARCHIVED':
       case 'VOID':
       case 'NO_SHOW':
-        return { dot: 'bg-[#8B8D93]', text: 'text-[#8B8D93] line-through' };
+        return { dot: 'bg-[var(--text-muted)]', text: 'text-[var(--text-muted)] line-through' };
 
       default:
-        return { dot: 'bg-[#8B8D93]', text: 'text-[#EDEAE2]' };
+        return { dot: 'bg-[var(--text-muted)]', text: 'text-[var(--text-primary)]' };
     }
   };
 

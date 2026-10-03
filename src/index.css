@@ -1,117 +1,168 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
-    --bg-main: #17181B;
-    --surface-main: #1D1F23;
-    --text-primary: #EDEAE2;
-    --text-muted: #8B8D93;
-    --accent: #E2896A;
-    --accent-hover: #EA9679;
-    --success: #4CAF7D;
-    --warning: #E0A94C;
+  /* ================================================================
+     NIGHT MODE (Default) — True Neumorphic Palette
+     ================================================================ */
+  :root,
+  [data-theme="dark"] {
+    --bg: #0E1512;              /* near-black, slight green undertone */
+    --surface: #141C19;          /* card/panel base */
+    --surface-raised: #16201C;   /* slightly lighter, for nested raised elements */
+    --text-primary: #E8F0EC;
+    --text-muted: #7C9289;
+    --accent: #2FD191;           /* premium emerald green */
+    --accent-soft: #1C7A56;      /* for secondary accent use, borders, icons */
+    --accent-blue: #3B9EFF;      /* secondary accent — informational states, links */
+    --success: #2FD191;
+    --warning: #E8B84B;
     --danger: #E2604F;
+    --shadow-light: rgba(255, 255, 255, 0.025);
+    --shadow-dark: rgba(0, 0, 0, 0.65);
+
+    /* Token aliases */
+    --bg-main: var(--bg);
+    --surface-main: var(--surface);
+  }
+
+  /* ================================================================
+     DAY MODE — True Neumorphic Soft Off-White Palette
+     ================================================================ */
+  [data-theme="light"] {
+    --bg: #EAF0ED;               /* soft off-white, green undertone, NOT pure white */
+    --surface: #EAF0ED;          /* same as bg — critical for true neumorphism */
+    --surface-raised: #F2F6F4;
+    --text-primary: #16231D;
+    --text-muted: #5C6F67;
+    --accent: #1C9A68;           /* deeper green for light-mode contrast/legibility */
+    --accent-soft: #BFE8D7;
+    --accent-blue: #2470C7;
+    --success: #1C9A68;
+    --warning: #B5831F;
+    --danger: #C44536;
+    --shadow-light: rgba(255, 255, 255, 0.9);
+    --shadow-dark: rgba(163, 177, 171, 0.55);   /* soft gray-green, NOT black, for light mode */
+
+    /* Token aliases */
+    --bg-main: var(--bg);
+    --surface-main: var(--surface);
+  }
+
+  * {
+    border-color: color-mix(in srgb, var(--text-muted) 12%, transparent);
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 400;
-    background-color: #17181B;
-    color: #EDEAE2;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    transition: background-color 200ms ease-out, color 200ms ease-out;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     font-weight: 600;
-    color: #EDEAE2;
+    color: var(--text-primary);
+    letter-spacing: -0.015em;
   }
 
   .font-mono-numbers {
-    font-family: 'JetBrains Mono', 'Plus Jakarta Sans', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* TRUE NEUMORPHISM (Exact specification: zero borders, dual soft shadows) */
+/* ================================================================
+   TRUE NEUMORPHISM — EXACT DUAL SHADOW RULES FOR BOTH MODES
+   The defining rule: a card's background must be the SAME color as
+   the page background (--surface equals --bg). The raised/pressed
+   effect comes entirely from dual shadows, never from a border.
+   ================================================================ */
 
-/* Raised card (KPI cards, briefing panel, list items, landing stat block):
-   background: #1D1F23; border: none; border-radius: 16px;
-   box-shadow: -8px -8px 16px rgba(255,255,255,0.03), 8px 8px 16px rgba(0,0,0,0.6); */
-.neo-raised, .neo-card, .neo-item-raised {
-  background-color: #1D1F23;
-  border: none !important;
-  border-radius: 16px;
-  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
-               8px  8px 16px rgba(0, 0, 0, 0.6);
-}
-
-/* Primary KPI cards: Monthly recurring revenue & Collected this month (accent glow & primary weight) */
-.neo-kpi-primary {
-  background-color: #1D1F23;
-  border: none !important;
-  border-radius: 16px;
-  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
-               8px  8px 16px rgba(0, 0, 0, 0.6),
-               inset 0 0 16px rgba(226, 137, 106, 0.12);
-  transform: translateY(-2px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Secondary KPI cards: Active clients, Outstanding, Overdue, Setup fees */
-.neo-kpi-secondary {
-  background-color: #1D1F23;
-  border: none !important;
-  border-radius: 16px;
-  box-shadow: -8px -8px 16px rgba(255, 255, 255, 0.03),
-               8px  8px 16px rgba(0, 0, 0, 0.6);
-  opacity: 0.94;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Hero-level element (Autonomous agency briefing panel only — strongest depth) */
-.neo-focal, .neo-hero, .neo-briefing {
-  background-color: #1D1F23;
+/* RAISED element (cards, buttons, panels) */
+.neo-raised, 
+.neo-card, 
+.neo-item-raised {
+  background-color: var(--surface) !important;
   border: none !important;
   border-radius: 20px;
-  box-shadow: -10px -10px 20px rgba(255, 255, 255, 0.035),
-               10px  10px 20px rgba(0, 0, 0, 0.65),
-              inset 0 0 24px rgba(226, 137, 106, 0.08);
+  box-shadow: -9px -9px 18px var(--shadow-light),
+               9px  9px 18px var(--shadow-dark) !important;
+  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+}
+
+/* RAISED — HERO/PRIMARY element (AI briefing panel, focal KPI) */
+.neo-focal, 
+.neo-hero, 
+.neo-briefing,
+.neo-kpi-primary {
+  background-color: var(--surface) !important;
+  border: none !important;
+  border-radius: 20px;
+  box-shadow: -12px -12px 24px var(--shadow-light),
+               12px  12px 24px var(--shadow-dark),
+               inset 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+}
+
+/* Secondary KPI card */
+.neo-kpi-secondary {
+  background-color: var(--surface) !important;
+  border: none !important;
+  border-radius: 20px;
+  box-shadow: -9px -9px 18px var(--shadow-light),
+               9px  9px 18px var(--shadow-dark) !important;
+  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
 }
 
 /* Modal depth: deep elevation, clean shadow boundary */
 .neo-modal {
-  background-color: #1D1F23;
+  background-color: var(--surface) !important;
   border: none !important;
-  border-radius: 20px;
-  box-shadow: -10px -10px 24px rgba(255, 255, 255, 0.035),
-               10px  10px 30px rgba(0, 0, 0, 0.7);
+  border-radius: 24px;
+  box-shadow: -14px -14px 28px var(--shadow-light),
+               14px  14px 34px var(--shadow-dark) !important;
 }
 
-/* Inset / pressed (active sidebar item, focused input):
-   box-shadow: inset -4px -4px 10px rgba(255,255,255,0.02),
-               inset 4px 4px 10px rgba(0,0,0,0.55); */
+/* PRESSED/INSET element (active nav item, focused input, selected tab, toggled switch) */
 .neo-inset {
-  background-color: #17181B;
+  background-color: var(--surface) !important;
   border: none !important;
-  box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.02),
-              inset  4px  4px 10px rgba(0, 0, 0, 0.55);
+  box-shadow: inset -5px -5px 12px var(--shadow-light),
+              inset  5px  5px 12px var(--shadow-dark) !important;
+  transition: box-shadow 120ms ease, background-color 150ms ease;
 }
 
 /* Sidebar elevation */
 .neo-sidebar {
-  background-color: #1D1F23;
+  background-color: var(--surface) !important;
   border: none !important;
-  box-shadow: 6px 0 18px rgba(0, 0, 0, 0.5);
+  box-shadow: 8px 0 20px var(--shadow-dark) !important;
 }
 
-/* Flat elements: simple utility rows with zero shadow */
-.neo-flat {
-  background-color: #1D1F23;
-  border: none !important;
+/* Toggle Thumb */
+.neo-toggle-thumb {
+  box-shadow: -3px -3px 7px var(--shadow-light),
+               3px  3px 7px var(--shadow-dark);
+}
+
+/* FLAT elements — NO shadow, by design (data tables, list rows, status badges, audit logs) */
+.neo-flat,
+.neo-table-row {
+  background-color: transparent !important;
   box-shadow: none !important;
+  border: none !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 12%, transparent) !important;
 }
 
-/* NEUMORPHIC BUTTONS (Tactile, dual soft shadows, zero borders) */
+/* ================================================================
+   NEUMORPHIC BUTTONS & INTERACTIVE PRESS STATES
+   Transition from raised to inset shadow over 120ms
+   ================================================================ */
+
+/* Primary Action Button (Accent gradient fill with tactile raised shadow) */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -120,29 +171,30 @@
   font-weight: 600;
   font-size: 0.8125rem;
   line-height: 1.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  background-color: #E2896A;
-  color: #17181B;
+  padding: 0.55rem 1.15rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 88%, #000)) !important;
+  color: #0E1512 !important; /* maximum legibility on vivid emerald */
   border: none !important;
-  box-shadow: -4px -4px 12px rgba(255, 255, 255, 0.03),
-               4px  4px 12px rgba(0, 0, 0, 0.55);
-  transition: all 0.15s ease-in-out;
+  box-shadow: -6px -6px 14px var(--shadow-light),
+               6px  6px 14px var(--shadow-dark) !important;
+  transition: box-shadow 120ms ease, transform 120ms ease, filter 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background-color: #EA9679;
-  box-shadow: -5px -5px 14px rgba(255, 255, 255, 0.04),
-               5px  5px 16px rgba(0, 0, 0, 0.65);
+  filter: brightness(1.06);
+  box-shadow: -8px -8px 18px var(--shadow-light),
+               8px  8px 18px var(--shadow-dark) !important;
 }
 
 .btn-primary:active {
-  box-shadow: inset -2px -2px 6px rgba(255, 255, 255, 0.03),
-              inset  2px  2px 6px rgba(0, 0, 0, 0.55);
-  transform: translateY(0px) scale(0.99);
+  box-shadow: inset -4px -4px 8px rgba(255, 255, 255, 0.25),
+              inset  4px  4px 8px rgba(0, 0, 0, 0.45) !important;
+  transform: translateY(1px) scale(0.985);
 }
 
+/* Secondary Button (Tactile raised on surface, inset on click) */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -151,28 +203,30 @@
   font-weight: 500;
   font-size: 0.8125rem;
   line-height: 1.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  background-color: #1D1F23;
-  color: #EDEAE2;
+  padding: 0.55rem 1.15rem;
+  border-radius: 14px;
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
   border: none !important;
-  box-shadow: -4px -4px 10px rgba(255, 255, 255, 0.025),
-               4px  4px 10px rgba(0, 0, 0, 0.5);
-  transition: all 0.15s ease-in-out;
+  box-shadow: -6px -6px 14px var(--shadow-light),
+               6px  6px 14px var(--shadow-dark) !important;
+  transition: box-shadow 120ms ease, transform 120ms ease, color 150ms ease;
   cursor: pointer;
 }
 
 .btn-secondary:hover {
-  color: #E2896A;
-  box-shadow: -5px -5px 12px rgba(255, 255, 255, 0.035),
-               5px  5px 14px rgba(0, 0, 0, 0.6);
+  color: var(--accent) !important;
+  box-shadow: -8px -8px 16px var(--shadow-light),
+               8px  8px 16px var(--shadow-dark) !important;
 }
 
 .btn-secondary:active {
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02),
-              inset  3px  3px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: inset -5px -5px 12px var(--shadow-light),
+              inset  5px  5px 12px var(--shadow-dark) !important;
+  transform: translateY(1px) scale(0.985);
 }
 
+/* Danger Button */
 .btn-danger {
   display: inline-flex;
   align-items: center;
@@ -181,26 +235,106 @@
   font-weight: 500;
   font-size: 0.8125rem;
   line-height: 1.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  background-color: #1D1F23;
-  color: #E2604F;
+  padding: 0.55rem 1.15rem;
+  border-radius: 14px;
+  background-color: var(--surface) !important;
+  color: var(--danger) !important;
   border: none !important;
-  box-shadow: -4px -4px 10px rgba(255, 255, 255, 0.02),
-               4px  4px 10px rgba(0, 0, 0, 0.5);
-  transition: all 0.15s ease-in-out;
+  box-shadow: -6px -6px 14px var(--shadow-light),
+               6px  6px 14px var(--shadow-dark) !important;
+  transition: box-shadow 120ms ease, transform 120ms ease, color 150ms ease;
   cursor: pointer;
 }
 
 .btn-danger:hover {
-  box-shadow: -5px -5px 12px rgba(255, 255, 255, 0.03),
-               5px  5px 14px rgba(0, 0, 0, 0.6);
-  color: #EA7060;
+  color: color-mix(in srgb, var(--danger) 85%, white) !important;
+  box-shadow: -8px -8px 16px var(--shadow-light),
+               8px  8px 16px var(--shadow-dark) !important;
 }
 
 .btn-danger:active {
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02),
-              inset  3px  3px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: inset -5px -5px 12px var(--shadow-light),
+              inset  5px  5px 12px var(--shadow-dark) !important;
+  transform: translateY(1px) scale(0.985);
+}
+
+/* ================================================================
+   AUTOMATIC THEME TOKEN ADAPTERS FOR ARBITRARY TAILWIND CLASSES
+   Ensures 100% of existing components adapt seamlessly to Day/Night
+   without touching any component business logic.
+   ================================================================ */
+.bg-\[\#17181B\], .bg-\[\#17181b\],
+.bg-\[\#0E1512\], .bg-\[\#0e1512\] {
+  background-color: var(--bg) !important;
+}
+
+.bg-\[\#1D1F23\], .bg-\[\#1d1f23\],
+.bg-\[\#141C19\], .bg-\[\#141c19\] {
+  background-color: var(--surface) !important;
+}
+
+.bg-\[\#16201C\], .bg-\[\#16201c\],
+.bg-\[\#25282E\], .bg-\[\#25282e\] {
+  background-color: var(--surface-raised) !important;
+}
+
+.text-\[\#EDEAE2\], .text-\[\#edeae2\],
+.text-\[\#E8F0EC\], .text-\[\#e8f0ec\] {
+  color: var(--text-primary) !important;
+}
+
+.text-\[\#8B8D93\], .text-\[\#8b8d93\],
+.text-\[\#7C9289\], .text-\[\#7c9289\],
+.text-\[\#5C6F67\], .text-\[\#5c6f67\] {
+  color: var(--text-muted) !important;
+}
+
+.text-\[\#E2896A\], .text-\[\#e2896a\],
+.text-\[\#EA9679\], .text-\[\#ea9679\],
+.text-\[\#4CAF7D\], .text-\[\#4caf7d\],
+.text-\[\#2FD191\], .text-\[\#2fd191\] {
+  color: var(--accent) !important;
+}
+
+.bg-\[\#E2896A\], .bg-\[\#e2896a\],
+.bg-\[\#4CAF7D\], .bg-\[\#4caf7d\],
+.bg-\[\#2FD191\], .bg-\[\#2fd191\] {
+  background-color: var(--accent) !important;
+}
+
+.bg-\[\#E2896A\]\/10, .bg-\[\#e2896a\]\/10,
+.bg-\[\#4CAF7D\]\/10, .bg-\[\#4caf7d\]\/10,
+.bg-\[\#2FD191\]\/10, .bg-\[\#2fd191\]\/10 {
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+}
+
+.bg-\[\#E2896A\]\/20, .bg-\[\#e2896a\]\/20,
+.bg-\[\#4CAF7D\]\/20, .bg-\[\#4caf7d\]\/20,
+.bg-\[\#2FD191\]\/20, .bg-\[\#2fd191\]\/20 {
+  background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+.border-white\/\[0\.04\], .border-white\/5, .border-white\/10 {
+  border-color: color-mix(in srgb, var(--text-muted) 12%, transparent) !important;
+}
+
+.hover\:bg-white\/\[0\.02\]:hover,
+.hover\:bg-white\/\[0\.04\]:hover {
+  background-color: color-mix(in srgb, var(--text-primary) 4%, transparent) !important;
+}
+
+/* Form input styling for neumorphic inset */
+input, select, textarea {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  box-shadow: inset -5px -5px 12px var(--shadow-light),
+              inset  5px  5px 12px var(--shadow-dark),
+              0 0 0 1.5px color-mix(in srgb, var(--accent) 30%, transparent) !important;
 }
 
 /* Subtle scrollbar */
@@ -209,12 +343,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #17181B;
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #25282E;
-  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-muted) 25%, transparent);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #33373E;
+  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
 }

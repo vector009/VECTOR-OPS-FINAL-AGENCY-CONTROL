@@ -16,7 +16,10 @@ import {
   Cloud,
   Check,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Calendar as CalendarIcon,
+  Video,
+  Unlink
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { POPULAR_TIMEZONES } from '../../lib/timezone';
@@ -28,6 +31,13 @@ import {
   testSupabaseConnection 
 } from '../../lib/supabase';
 import { SUPABASE_CONFIG } from '../../config/supabaseConfig';
+import {
+  isGoogleCalendarConnected,
+  getGoogleCalendarUser,
+  connectGoogleCalendar,
+  disconnectGoogleCalendar,
+  initCalendarAuth
+} from '../../lib/googleCalendar';
 
 interface SettingsViewProps {
   onOpenSupabaseModal?: () => void;
@@ -48,6 +58,54 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [buffer, setBuffer] = useState(currentSettings.meeting_buffer_minutes.toString());
   const [holdHours, setHoldHours] = useState(currentSettings.pending_hold_duration_hours.toString());
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Google Calendar Integration State (Admin-only)
+  const [calendarConnected, setCalendarConnected] = useState(isGoogleCalendarConnected());
+  const [calendarUser, setCalendarUser] = useState(getGoogleCalendarUser());
+  const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
+  const [calendarNotice, setCalendarNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = initCalendarAuth((connected, email) => {
+      setCalendarConnected(connected);
+      if (email) {
+        setCalendarUser({ email, displayName: email });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleConnectCalendar = async () => {
+    setIsConnectingCalendar(true);
+    setCalendarNotice(null);
+    const result = await connectGoogleCalendar();
+    setIsConnectingCalendar(false);
+    if (result.success) {
+      setCalendarConnected(true);
+      setCalendarUser({ email: result.email || 'operator@vectorops.ai' });
+      setCalendarNotice({
+        type: 'success',
+        message: `Successfully connected Google Calendar (${result.email})! Confirmed appointments will now automatically create calendar events with Google Meet video conferencing.`,
+      });
+    } else {
+      setCalendarNotice({
+        type: 'error',
+        message: result.error || 'Failed to authenticate Google Calendar. Please check permissions.',
+      });
+    }
+  };
+
+  const handleDisconnectCalendar = async () => {
+    if (window.confirm('Disconnect Google Calendar? Future confirmed appointments will require manual meeting links and will not auto-generate Google Meet links.')) {
+      await disconnectGoogleCalendar();
+      setCalendarConnected(false);
+      setCalendarUser(null);
+      setCalendarNotice({
+        type: 'success',
+        message: 'Google Calendar disconnected. Appointments can still be confirmed with manual URLs.',
+      });
+    }
+  };
 
   // Cloudflare & Supabase Configuration state
   const initialConfig = getStoredSupabaseConfig();
@@ -303,6 +361,131 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Google Calendar & Google Meet Integration (Admin-Only) */}
+      <div className="neo-raised p-6 rounded-2xl space-y-5 border border-white/[0.04]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <CalendarIcon className="w-5 h-5 text-blue-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-[#EDEAE2]">
+                  Google Calendar & Google Meet Video Conferencing
+                </h2>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  Admin Only
+                </span>
+              </div>
+              <p className="text-xs text-[#8B8D93] mt-0.5">
+                Automatically schedule confirmed appointments on your Google Calendar and auto-generate Google Meet links
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full neo-inset text-xs">
+            <span className={`w-2 h-2 rounded-full ${calendarConnected ? 'bg-[#4CAF7D] animate-pulse' : 'bg-[#8B8D93]'}`} />
+            <span className="font-medium text-[#EDEAE2]">
+              {calendarConnected ? 'Calendar Connected' : 'Not Connected (Manual Mode)'}
+            </span>
+          </div>
+        </div>
+
+        {calendarNotice && (
+          <div className={`p-3.5 rounded-xl neo-inset text-xs flex items-center gap-2.5 ${
+            calendarNotice.type === 'success' ? 'text-[#4CAF7D] border border-[#4CAF7D]/20' : 'text-[#E2604F] border border-[#E2604F]/20'
+          }`}>
+            {calendarNotice.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#4CAF7D]" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#E2604F]" />
+            )}
+            <span>{calendarNotice.message}</span>
+          </div>
+        )}
+
+        <div className="p-4 rounded-xl neo-inset space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="p-3 rounded-lg bg-[#17181B] border border-white/[0.03] space-y-1">
+              <span className="font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5 text-[#4CAF7D]" />
+                Auto-Generate Meet Links
+              </span>
+              <p className="text-[11px] text-[#8B8D93]">
+                When you click "Accept & confirm", Calendar generates a dedicated Google Meet video room automatically.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-lg bg-[#17181B] border border-white/[0.03] space-y-1">
+              <span className="font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-400" />
+                Direct Calendar Sync
+              </span>
+              <p className="text-[11px] text-[#8B8D93]">
+                The appointment is placed right on your primary Google Calendar, and the client's email is invited as an attendee.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-lg bg-[#17181B] border border-white/[0.03] space-y-1">
+              <span className="font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#E2896A]" />
+                Zero Client Google Login
+              </span>
+              <p className="text-[11px] text-[#8B8D93]">
+                Clients never connect Google accounts. They only see the resulting meeting link inside their portal.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-white/[0.04]">
+            {calendarConnected ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#4CAF7D]" />
+                  <span className="text-xs font-semibold text-[#EDEAE2]">Connected Account:</span>
+                  <span className="text-xs text-[#4CAF7D] font-mono">{calendarUser?.email}</span>
+                </div>
+                <p className="text-[11px] text-[#8B8D93]">
+                  All confirmed appointments will automatically sync and generate Meet links. Cancelling an appointment automatically cleans up the calendar event.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-[#8B8D93]">
+                Connect your Google Calendar once. If disconnected, confirming appointments still works with manual meeting links.
+              </p>
+            )}
+
+            <div className="flex items-center gap-3 shrink-0">
+              {calendarConnected ? (
+                <button
+                  type="button"
+                  onClick={handleDisconnectCalendar}
+                  className="btn-secondary text-xs px-3.5 py-2 text-[#E2604F] hover:text-[#E2604F] flex items-center gap-1.5"
+                >
+                  <Unlink className="w-3.5 h-3.5" />
+                  <span>Disconnect Calendar</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleConnectCalendar}
+                  disabled={isConnectingCalendar}
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-[#131417] text-xs font-semibold flex items-center gap-2.5 shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                >
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-4 h-4 shrink-0">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                  </svg>
+                  <span>{isConnectingCalendar ? 'Connecting Calendar...' : 'Connect Google Calendar'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Cloudflare Hosting & Supabase Database Architecture */}
       <div className="neo-raised p-6 rounded-2xl space-y-5">
