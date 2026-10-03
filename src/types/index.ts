@@ -182,6 +182,11 @@ export interface Client {
   service_status: ClientServiceStatus;
   portal_status: 'ENABLED' | 'DISABLED';
   preferred_payment_link_id?: string | null; // FK to agency_payment_links.id
+  website_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  x_url?: string | null;
+  other_social_url?: string | null;
   retell_workspace_url: string | null;
   retell_workspace_id: string | null;
   last_activity_at: string;

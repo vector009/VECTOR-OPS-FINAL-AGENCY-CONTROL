@@ -56,6 +56,11 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const [retellWorkspaceUrl, setRetellWorkspaceUrl] = useState('');
   const [retellWorkspaceId, setRetellWorkspaceId] = useState('');
   const [preferredPaymentLinkId, setPreferredPaymentLinkId] = useState<string>('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [xUrl, setXUrl] = useState('');
+  const [otherSocialUrl, setOtherSocialUrl] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -67,6 +72,16 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const plans = db.getPlans();
   const selectedPlan = plans.find(p => p.id === planId) || plans[0];
   const activePaymentLinks = db.getActivePaymentLinks();
+
+  const isValidHttpUrl = (str: string) => {
+    if (!str.trim()) return true;
+    try {
+      const u = new URL(str.trim());
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
 
   // Secure random password generator (12-14 characters with letters, numbers & special chars)
   const handleGeneratePassword = () => {
@@ -96,6 +111,32 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
       }
       if (!portalPassword.trim() || portalPassword.trim().length < 6) {
         setErrorMsg('Please enter a portal password of at least 6 characters (or click "Generate password").');
+        return;
+      }
+    }
+    if (step === 5) {
+      if (retellWorkspaceUrl.trim() && !isValidHttpUrl(retellWorkspaceUrl)) {
+        setErrorMsg('Please enter a valid Retell workspace URL (e.g. https://app.retellai.com/...).');
+        return;
+      }
+      if (websiteUrl.trim() && !isValidHttpUrl(websiteUrl)) {
+        setErrorMsg('Please enter a valid Website URL (starting with http:// or https://).');
+        return;
+      }
+      if (instagramUrl.trim() && !isValidHttpUrl(instagramUrl)) {
+        setErrorMsg('Please enter a valid Instagram URL (starting with http:// or https://).');
+        return;
+      }
+      if (facebookUrl.trim() && !isValidHttpUrl(facebookUrl)) {
+        setErrorMsg('Please enter a valid Facebook URL (starting with http:// or https://).');
+        return;
+      }
+      if (xUrl.trim() && !isValidHttpUrl(xUrl)) {
+        setErrorMsg('Please enter a valid X / Twitter URL (starting with http:// or https://).');
+        return;
+      }
+      if (otherSocialUrl.trim() && !isValidHttpUrl(otherSocialUrl)) {
+        setErrorMsg('Please enter a valid URL for Other online presence / social link.');
         return;
       }
     }
@@ -161,6 +202,11 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         retell_workspace_url: retellWorkspaceUrl,
         retell_workspace_id: retellWorkspaceId,
         preferred_payment_link_id: preferredPaymentLinkId || null,
+        website_url: websiteUrl,
+        instagram_url: instagramUrl,
+        facebook_url: facebookUrl,
+        x_url: xUrl,
+        other_social_url: otherSocialUrl,
         internal_notes: internalNotes,
       });
 
@@ -525,6 +571,91 @@ Note: Your account is active immediately. You can sign in right away.`;
                   />
                 </div>
 
+                {/* Client's online presence (optional) */}
+                <div className="pt-3 border-t border-white/5 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-[#4CAF7D]" />
+                      <span>Client's online presence (optional)</span>
+                    </h4>
+                    <p className="text-[11px] text-[#8B8D93] mt-0.5">
+                      Business website and social links kept on file for reference. Not an OAuth or login connection.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-[#8B8D93] flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-[#4CAF7D]" />
+                        <span>Website</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://company.com"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-[#8B8D93] flex items-center gap-1.5">
+                        <PlatformIcon platform="INSTAGRAM" size={14} />
+                        <span>Instagram</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://instagram.com/company"
+                        value={instagramUrl}
+                        onChange={(e) => setInstagramUrl(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-[#8B8D93] flex items-center gap-1.5">
+                        <PlatformIcon platform="FACEBOOK" size={14} />
+                        <span>Facebook</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://facebook.com/company"
+                        value={facebookUrl}
+                        onChange={(e) => setFacebookUrl(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-[#8B8D93] flex items-center gap-1.5">
+                        <PlatformIcon platform="X" size={14} />
+                        <span>X / Twitter</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://x.com/company"
+                        value={xUrl}
+                        onChange={(e) => setXUrl(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-[#8B8D93] flex items-center gap-1.5">
+                      <LinkIcon className="w-3.5 h-3.5 text-[#8B8D93]" />
+                      <span>Other (LinkedIn, Yelp, Linktree, etc.)</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://linkedin.com/company/..."
+                      value={otherSocialUrl}
+                      onChange={(e) => setOtherSocialUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#EDEAE2]">Internal agency notes</label>
                   <textarea
@@ -584,6 +715,20 @@ Note: Your account is active immediately. You can sign in right away.`;
                       : 'None (Hidden in portal)'}
                   </span>
                 </div>
+                {(websiteUrl || instagramUrl || facebookUrl || xUrl || otherSocialUrl) && (
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <span className="text-[#8B8D93]">Online presence:</span>
+                    <span className="text-[#EDEAE2] font-medium text-[11px] truncate max-w-[240px]">
+                      {[
+                        websiteUrl && 'Website',
+                        instagramUrl && 'Instagram',
+                        facebookUrl && 'Facebook',
+                        xUrl && 'X',
+                        otherSocialUrl && 'Other'
+                      ].filter(Boolean).join(', ')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-[#8B8D93]">Monthly retainer:</span>
                   <span className="font-mono-numbers font-semibold text-[#4CAF7D]">{formatUSD(selectedPlan.recurring_fee_cents)} / month</span>

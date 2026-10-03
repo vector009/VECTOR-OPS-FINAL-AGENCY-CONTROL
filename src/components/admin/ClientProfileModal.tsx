@@ -21,7 +21,8 @@ import {
   Archive,
   Send,
   Link as LinkIcon,
-  Check
+  Check,
+  Edit2
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { Client, ClientServiceStatus, ServiceStatus, Note, NoteType } from '../../types';
@@ -70,6 +71,64 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
     setIsUpdatingLink(false);
     setPaymentLinkNotice(true);
     setTimeout(() => setPaymentLinkNotice(false), 2500);
+  };
+
+  // Client online presence & social links editing
+  const [isEditingSocialLinks, setIsEditingSocialLinks] = useState(false);
+  const [editWebsite, setEditWebsite] = useState(client.website_url || '');
+  const [editInstagram, setEditInstagram] = useState(client.instagram_url || '');
+  const [editFacebook, setEditFacebook] = useState(client.facebook_url || '');
+  const [editX, setEditX] = useState(client.x_url || '');
+  const [editOther, setEditOther] = useState(client.other_social_url || '');
+  const [socialSavedNotice, setSocialSavedNotice] = useState(false);
+  const [socialError, setSocialError] = useState('');
+
+  const isValidHttpUrl = (str: string) => {
+    if (!str.trim()) return true;
+    try {
+      const u = new URL(str.trim());
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSaveSocialLinks = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSocialError('');
+
+    if (editWebsite.trim() && !isValidHttpUrl(editWebsite)) {
+      setSocialError('Website must be a valid URL (starting with http:// or https://)');
+      return;
+    }
+    if (editInstagram.trim() && !isValidHttpUrl(editInstagram)) {
+      setSocialError('Instagram must be a valid URL (starting with http:// or https://)');
+      return;
+    }
+    if (editFacebook.trim() && !isValidHttpUrl(editFacebook)) {
+      setSocialError('Facebook must be a valid URL (starting with http:// or https://)');
+      return;
+    }
+    if (editX.trim() && !isValidHttpUrl(editX)) {
+      setSocialError('X / Twitter must be a valid URL (starting with http:// or https://)');
+      return;
+    }
+    if (editOther.trim() && !isValidHttpUrl(editOther)) {
+      setSocialError('Other link must be a valid URL (starting with http:// or https://)');
+      return;
+    }
+
+    await db.updateClientSocialLinks(client.id, {
+      website_url: editWebsite,
+      instagram_url: editInstagram,
+      facebook_url: editFacebook,
+      x_url: editX,
+      other_social_url: editOther,
+    });
+
+    setIsEditingSocialLinks(false);
+    setSocialSavedNotice(true);
+    setTimeout(() => setSocialSavedNotice(false), 2500);
   };
 
   const handleAddNote = (e: React.FormEvent) => {
@@ -304,6 +363,228 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                 <p className="text-[11px] text-[#8B8D93] leading-relaxed">
                   When a payment link is assigned, the client sees a prominent "Pay now" card in their portal when within 7 days of their renewal. If WhatsApp is selected, their specific invoice number and amount are automatically pre-filled!
                 </p>
+              </div>
+
+              {/* Client Online Presence & Business Reference Links */}
+              <div className="p-4 rounded-xl neo-card space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-[#4CAF7D]" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8B8D93] font-mono-numbers">
+                      Client Online Presence & Business Links
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {socialSavedNotice && (
+                      <span className="text-[11px] text-[#4CAF7D] flex items-center gap-1 font-semibold animate-in fade-in">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Saved</span>
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingSocialLinks(!isEditingSocialLinks)}
+                      className="px-2.5 py-1 text-xs text-[#E2896A] hover:text-[#EA9679] flex items-center gap-1 font-medium transition-colors"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>{isEditingSocialLinks ? 'Cancel' : 'Edit links'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Display clickable buttons with exact same visual treatment as "Open Retell Workspace" */}
+                {!isEditingSocialLinks && (
+                  <div className="space-y-2">
+                    {(!client.website_url && !client.instagram_url && !client.facebook_url && !client.x_url && !client.other_social_url) ? (
+                      <div className="p-3 rounded-lg neo-flat bg-[#17181B] text-xs text-[#8B8D93] flex items-center justify-between">
+                        <span>No social or website reference links registered for this client.</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingSocialLinks(true)}
+                          className="text-[#E2896A] hover:underline font-medium text-xs"
+                        >
+                          + Add links
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        {client.website_url && (
+                          <a
+                            href={client.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-xs font-semibold text-[#17181B] bg-[#4CAF7D] hover:bg-[#5BC28C] rounded-lg transition-colors inline-flex items-center gap-2"
+                            title={client.website_url}
+                          >
+                            <Globe className="w-3.5 h-3.5 text-[#17181B]" />
+                            <span>Website</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        {client.instagram_url && (
+                          <a
+                            href={client.instagram_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-xs font-semibold text-[#17181B] bg-[#E2896A] hover:bg-[#EA9679] rounded-lg transition-colors inline-flex items-center gap-2"
+                            title={client.instagram_url}
+                          >
+                            <PlatformIcon platform="INSTAGRAM" size={14} className="text-[#17181B]" />
+                            <span>Instagram</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        {client.facebook_url && (
+                          <a
+                            href={client.facebook_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-xs font-semibold text-white bg-[#1877F2] hover:bg-[#2084ff] rounded-lg transition-colors inline-flex items-center gap-2"
+                            title={client.facebook_url}
+                          >
+                            <PlatformIcon platform="FACEBOOK" size={14} className="text-white" />
+                            <span>Facebook</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        {client.x_url && (
+                          <a
+                            href={client.x_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-xs font-semibold text-[#EDEAE2] bg-[#24272D] hover:bg-[#2e323a] border border-white/10 rounded-lg transition-colors inline-flex items-center gap-2"
+                            title={client.x_url}
+                          >
+                            <PlatformIcon platform="X" size={14} />
+                            <span>X / Twitter</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        {client.other_social_url && (
+                          <a
+                            href={client.other_social_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-xs font-semibold text-[#EDEAE2] bg-[#24272D] hover:bg-[#2e323a] border border-white/10 rounded-lg transition-colors inline-flex items-center gap-2"
+                            title={client.other_social_url}
+                          >
+                            <LinkIcon className="w-3.5 h-3.5 text-[#8B8D93]" />
+                            <span>Online reference</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-[#8B8D93] leading-relaxed pt-1">
+                      Reference records only. Not an OAuth connection or login credential.
+                    </p>
+                  </div>
+                )}
+
+                {/* Inline Editing Form */}
+                {isEditingSocialLinks && (
+                  <form onSubmit={handleSaveSocialLinks} className="space-y-3 pt-1 animate-in fade-in">
+                    {socialError && (
+                      <div className="p-2.5 rounded-lg bg-[#E2604F]/10 text-[#E2604F] text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{socialError}</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-[#8B8D93] flex items-center gap-1.5">
+                          <Globe className="w-3.5 h-3.5 text-[#4CAF7D]" />
+                          <span>Website (website_url)</span>
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://company.com"
+                          value={editWebsite}
+                          onChange={(e) => setEditWebsite(e.target.value)}
+                          className="w-full px-3 py-1.5 neo-inset rounded-lg text-[#EDEAE2] focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[#8B8D93] flex items-center gap-1.5">
+                          <PlatformIcon platform="INSTAGRAM" size={14} />
+                          <span>Instagram (instagram_url)</span>
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://instagram.com/company"
+                          value={editInstagram}
+                          onChange={(e) => setEditInstagram(e.target.value)}
+                          className="w-full px-3 py-1.5 neo-inset rounded-lg text-[#EDEAE2] focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[#8B8D93] flex items-center gap-1.5">
+                          <PlatformIcon platform="FACEBOOK" size={14} />
+                          <span>Facebook (facebook_url)</span>
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://facebook.com/company"
+                          value={editFacebook}
+                          onChange={(e) => setEditFacebook(e.target.value)}
+                          className="w-full px-3 py-1.5 neo-inset rounded-lg text-[#EDEAE2] focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[#8B8D93] flex items-center gap-1.5">
+                          <PlatformIcon platform="X" size={14} />
+                          <span>X / Twitter (x_url)</span>
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://x.com/company"
+                          value={editX}
+                          onChange={(e) => setEditX(e.target.value)}
+                          className="w-full px-3 py-1.5 neo-inset rounded-lg text-[#EDEAE2] focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <label className="text-[#8B8D93] flex items-center gap-1.5">
+                        <LinkIcon className="w-3.5 h-3.5 text-[#8B8D93]" />
+                        <span>Other (other_social_url)</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/company/..."
+                        value={editOther}
+                        onChange={(e) => setEditOther(e.target.value)}
+                        className="w-full px-3 py-1.5 neo-inset rounded-lg text-[#EDEAE2] focus:outline-none font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingSocialLinks(false)}
+                        className="px-3 py-1.5 rounded-lg neo-raised text-xs text-[#8B8D93] hover:text-[#EDEAE2]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn-primary text-xs px-4 py-1.5"
+                      >
+                        Save links
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           )}

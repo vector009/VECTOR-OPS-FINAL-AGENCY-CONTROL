@@ -1849,6 +1849,44 @@ class VectorOpsDatabase {
     return true;
   }
 
+  public async updateClientSocialLinks(
+    clientId: string,
+    links: {
+      website_url?: string | null;
+      instagram_url?: string | null;
+      facebook_url?: string | null;
+      x_url?: string | null;
+      other_social_url?: string | null;
+    }
+  ): Promise<boolean> {
+    const client = this.clients.find(c => c.id === clientId);
+    if (!client) return false;
+
+    if (links.website_url !== undefined) client.website_url = links.website_url?.trim() || null;
+    if (links.instagram_url !== undefined) client.instagram_url = links.instagram_url?.trim() || null;
+    if (links.facebook_url !== undefined) client.facebook_url = links.facebook_url?.trim() || null;
+    if (links.x_url !== undefined) client.x_url = links.x_url?.trim() || null;
+    if (links.other_social_url !== undefined) client.other_social_url = links.other_social_url?.trim() || null;
+
+    this.saveToStorage();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('clients').update({
+          website_url: client.website_url,
+          instagram_url: client.instagram_url,
+          facebook_url: client.facebook_url,
+          x_url: client.x_url,
+          other_social_url: client.other_social_url,
+        }).eq('id', clientId);
+      } catch (err) {
+        console.warn('Supabase updateClientSocialLinks notice:', err);
+      }
+    }
+    return true;
+  }
+
   // --- REAL-TIME RENEWAL & BILLING COUNTDOWN ---
   public days_until_billing(subscription_id: string): number {
     const sub = this.subscriptions.find(s => s.id === subscription_id);
@@ -1892,6 +1930,11 @@ class VectorOpsDatabase {
     retell_workspace_url?: string;
     retell_workspace_id?: string;
     preferred_payment_link_id?: string | null;
+    website_url?: string | null;
+    instagram_url?: string | null;
+    facebook_url?: string | null;
+    x_url?: string | null;
+    other_social_url?: string | null;
     internal_notes?: string;
   }): { success: boolean; error?: string; client?: Client } {
     const plan = this.plans.find(p => p.id === params.plan_id);
@@ -1915,6 +1958,11 @@ class VectorOpsDatabase {
       service_status: 'ONBOARDING',
       portal_status: 'ENABLED',
       preferred_payment_link_id: params.preferred_payment_link_id || null,
+      website_url: params.website_url?.trim() || null,
+      instagram_url: params.instagram_url?.trim() || null,
+      facebook_url: params.facebook_url?.trim() || null,
+      x_url: params.x_url?.trim() || null,
+      other_social_url: params.other_social_url?.trim() || null,
       retell_workspace_url: params.retell_workspace_url?.trim() || null,
       retell_workspace_id: params.retell_workspace_id?.trim() || null,
       last_activity_at: nowIso,
