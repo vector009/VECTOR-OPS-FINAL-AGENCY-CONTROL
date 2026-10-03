@@ -65,17 +65,25 @@ function AppContent() {
     };
   }, []);
 
-  // Handle Root Redirect
+  // Handle Root and Login Redirects
   useEffect(() => {
-    if (!isLoading && (currentPath === '/' || currentPath === '')) {
-      if (!profile) {
-        navigate('/landing');
-      } else if (profile.role === 'ADMIN') {
-        navigate('/admin/dashboard');
-      } else if (profile.role === 'CLIENT') {
-        navigate('/portal/dashboard');
-      } else {
-        navigate('/landing');
+    if (!isLoading) {
+      if (currentPath === '/' || currentPath === '') {
+        if (!profile) {
+          navigate('/landing');
+        } else if (profile.role === 'ADMIN') {
+          navigate('/admin/dashboard');
+        } else if (profile.role === 'CLIENT') {
+          navigate('/portal/dashboard');
+        } else {
+          navigate('/landing');
+        }
+      } else if (currentPath === '/login' && profile) {
+        if (profile.role === 'ADMIN') {
+          navigate('/admin/dashboard');
+        } else if (profile.role === 'CLIENT') {
+          navigate('/portal/dashboard');
+        }
       }
     }
   }, [currentPath, profile, isLoading]);
@@ -83,11 +91,11 @@ function AppContent() {
   // Loading state during initial profile fetch
   if (isLoading && currentPath !== '/landing') {
     return (
-      <div className="min-h-screen bg-[#17181B] flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 rounded-2xl neo-raised flex items-center justify-center">
-          <span className="w-6 h-6 border-2 border-[#E2896A] border-t-transparent rounded-full animate-spin" />
+          <span className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
         </div>
-        <div className="text-xs text-[#8B8D93] font-medium tracking-wide">
+        <div className="text-xs text-[var(--text-secondary)] font-medium tracking-wide">
           Loading VectorOps session...
         </div>
       </div>
@@ -96,15 +104,9 @@ function AppContent() {
 
   // 1. Route: /login
   if (currentPath === '/login') {
-    // If already logged in, redirect to respective dashboard
+    // If already logged in, wait for redirect effect
     if (profile) {
-      if (profile.role === 'ADMIN') {
-        navigate('/admin/dashboard');
-        return null;
-      } else if (profile.role === 'CLIENT') {
-        navigate('/portal/dashboard');
-        return null;
-      }
+      return null;
     }
     return <LoginPage onNavigate={navigate} />;
   }
