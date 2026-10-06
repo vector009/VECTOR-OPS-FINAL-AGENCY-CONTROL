@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { 
   Search, 
   Plus, 
-  Archive, 
-  Eye, 
-  Bot, 
-  AlertCircle, 
-  ExternalLink
+  X, 
+  MessageCircle, 
+  Edit3, 
+  ExternalLink,
+  Bot
 } from 'lucide-react';
 import { db } from '../../lib/database';
-import { Client } from '../../types';
+import { Client, Subscription } from '../../types';
 import { formatUSD } from '../../lib/timezone';
 import { StatusBadge } from '../common/StatusBadge';
-import { ConfirmationModal } from '../common/ConfirmationModal';
+import { PlatformIcon } from '../common/PlatformIcon';
 
 interface ClientManagementProps {
   onSelectClient: (client: Client) => void;
@@ -24,274 +24,303 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
   onOpenOnboarding,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [showArchived, setShowArchived] = useState(false);
-  const [archiveTargetClient, setArchiveTargetClient] = useState<Client | null>(null);
+  const [filterPill, setFilterPill] = useState<'ALL' | 'ACTIVE' | 'TRIAL' | 'ARCHIVED'>('ALL');
+  const [detailClient, setDetailClient] = useState<Client | null>(null);
 
-  const allClients = showArchived 
-    ? db.getAllClientsIncludingArchived() 
-    : db.getClients();
-
+  const allClients = db.getAllClientsIncludingArchived();
   const subscriptions = db.getSubscriptions();
+  const payments = db.getPayments();
+  const paymentLinks = db.getPaymentLinks();
 
-  // Search and filter
+  // Filter clients based on search and selected pill
   const filteredClients = allClients.filter(c => {
-    const matchesSearch = 
-      c.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase().trim();
+    const matchesSearch = !term || 
+      c.company_name.toLowerCase().includes(term) ||
+      c.contact_name.toLowerCase().includes(term) ||
+      (c.phone && c.phone.toLowerCase().includes(term)) ||
+      c.email.toLowerCase().includes(term);
 
-    const matchesStatus = statusFilter === 'ALL' || c.service_status === statusFilter;
+    if (!matchesSearch) return false;
 
-    return matchesSearch && matchesStatus;
+    if (filterPill === 'ACTIVE') {
+      return !c.archived_at && c.service_status === 'ACTIVE';
+    }
+    if (filterPill === 'TRIAL') {
+      return !c.archived_at && (c.service_status === 'ONBOARDING' || c.service_status === 'PROSPECT');
+    }
+    if (filterPill === 'ARCHIVED') {
+      return !!c.archived_at;
+    }
+    // 'ALL' shows all non-archived clients unless searched
+    return !c.archived_at || term.length > 0;
   });
 
-  const handleArchiveConfirm = () => {
-    if (!archiveTargetClient) return;
-    db.archive_client(archiveTargetClient.id);
-    setArchiveTargetClient(null);
+  const getClientActiveSub = (clientId: string): Subscription | undefined => {
+    return subscriptions.find(s => s.client_id === clientId && s.status === 'ACTIVE');
   };
 
-  const statusFilterOptions = [
+  const getClientTotalPaid = (clientId: string): number => {
+    return payments
+      .filter(p => p.client_id === clientId && !p.is_reversed)
+      .reduce((sum, p) => sum + p.amount_cents, 0);
+  };
+
+  const getClientPaymentMode = (client: Client): string => {
+    if (client.preferred_payment_link_id) {
+      const link = paymentLinks.find(l => l.id === client.preferred_payment_link_id);
+      if (link) return link.label;
+    }
+    return 'Bank ACH / Wire';
+  };
+
+  const handleOpenWhatsApp = (client: Client, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const cleanPhone = client.phone ? client.phone.replace(/[^0-9]/g, '') : '';
+    const message = encodeURIComponent(`Hi ${client.contact_name}, this is VectorOps regarding ${client.company_name}.`);
+    
+    // Check if agency has WhatsApp link or use wa.me direct
+    const agencyWa = paymentLinks.find(l => l.platform === 'WHATSAPP' && l.is_active);
+    let targetUrl = '';
+    if (cleanPhone) {
+      targetUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+    } else if (agencyWa) {
+      targetUrl = `${agencyWa.url.split('?')[0]}?text=${message}`;
+    } else {
+      targetUrl = `https://wa.me/?text=${message}`;
+    }
+
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const filterTabs: Array<{ id: 'ALL' | 'ACTIVE' | 'TRIAL' | 'ARCHIVED'; label: string }> = [
     { id: 'ALL', label: 'All' },
     { id: 'ACTIVE', label: 'Active' },
-    { id: 'ONBOARDING', label: 'Onboarding' },
-    { id: 'PAYMENT_DUE', label: 'Payment due' },
-    { id: 'SUSPENDED', label: 'Suspended' },
+    { id: 'TRIAL', label: 'Trial' },
+    { id: 'ARCHIVED', label: 'Archived' },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Top action header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#EDEAE2]">Clients</h1>
-          <p className="text-xs text-[#8B8D93] mt-1">
-            Voice-agent production subscriptions, billing statuses, and external Retell links
-          </p>
-        </div>
-
-        {/* Single canonical onboard button */}
-        <button
-          onClick={onOpenOnboarding}
-          className="btn-primary text-xs px-4 py-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Onboard client</span>
-        </button>
+      {/* Page Title & Context */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Clients</h1>
+        <p className="text-xs text-[var(--text-muted)] mt-1">
+          Client accounts, active AI voice agent subscriptions, and renewal status
+        </p>
       </div>
 
-      {/* Search, Filter Tabs & Archived Toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 text-[#8B8D93] absolute left-3.5 top-1/2 -translate-y-1/2" />
+      {/* TOP: Search Bar with "+" Add Button beside it */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search clients by company, contact, or email..."
+            placeholder="Search by name, business, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs neo-inset rounded-xl text-[#EDEAE2] placeholder-[#8B8D93] focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 text-xs neo-inset rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] bg-[var(--surface-1)] focus:outline-none transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-          {/* Status segmented filters */}
-          <div className="flex items-center p-1 bg-[#1D1F23] rounded-xl text-xs space-x-0.5">
-            {statusFilterOptions.map((st) => (
-              <button
-                key={st.id}
-                onClick={() => setStatusFilter(st.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  statusFilter === st.id
-                    ? 'neo-inset text-[#EDEAE2] font-semibold'
-                    : 'text-[#8B8D93] hover:text-[#EDEAE2]'
-                }`}
-              >
-                {st.label}
-              </button>
-            ))}
+        <button
+          onClick={onOpenOnboarding}
+          title="Onboard client"
+          className="btn-primary w-10 h-10 rounded-xl flex items-center justify-center shrink-0 p-0 shadow-sm"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* BELOW: Horizontal row of filter pills — selected pill filled, others outlined */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {filterTabs.map((tab) => {
+          const isSelected = filterPill === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setFilterPill(tab.id)}
+              className={`px-4 py-1.5 rounded-full text-xs transition-all whitespace-nowrap ${
+                isSelected
+                  ? 'bg-[var(--accent-blue)] text-white font-semibold shadow-sm'
+                  : 'neo-flat bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-white/[0.08]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* BELOW: Vertical list of compact cards */}
+      <div className="space-y-2.5">
+        {filteredClients.length === 0 ? (
+          <div className="neo-raised bg-[var(--surface-2)] p-12 text-center rounded-2xl text-[var(--text-muted)] text-xs space-y-3">
+            <p className="font-semibold text-[var(--text-primary)] text-sm">No clients match this filter</p>
+            <p className="text-[var(--text-muted)]">Try adjusting your search query or onboard a new client account.</p>
+            <button
+              onClick={onOpenOnboarding}
+              className="text-xs text-[var(--accent-blue)] hover:underline font-medium pt-1"
+            >
+              + Onboard client now
+            </button>
           </div>
+        ) : (
+          filteredClients.map((client) => {
+            const sub = getClientActiveSub(client.id);
+            const planName = sub?.service_name || 'Voice Agent';
+            const identifier = client.phone || client.contact_name || 'No phone on file';
 
-          {/* Toggle archived view */}
-          <button
-            onClick={() => setShowArchived(!showArchived)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-              showArchived
-                ? 'text-[#E2896A] font-semibold'
-                : 'text-[#8B8D93] hover:text-[#EDEAE2]'
-            }`}
+            // Relative / date detail with semantic color
+            let dateDetailText = '';
+            let dateColorClass = 'text-[var(--text-muted)]';
+
+            if (sub?.next_billing_date) {
+              const days = db.days_until_billing(sub.id);
+              if (days < 0) {
+                dateDetailText = `Expires ${sub.next_billing_date} · ${Math.abs(days)}d overdue`;
+                dateColorClass = 'text-[var(--accent-red)] font-semibold';
+              } else if (days <= 7) {
+                dateDetailText = `${days}d left · Renewing ${sub.next_billing_date}`;
+                dateColorClass = 'text-[var(--accent-amber)] font-semibold';
+              } else {
+                dateDetailText = `${days}d left · Renewing ${sub.next_billing_date}`;
+                dateColorClass = 'text-[var(--accent-green)] font-medium';
+              }
+            } else if (client.archived_at) {
+              dateDetailText = `Archived ${client.archived_at.split('T')[0]}`;
+              dateColorClass = 'text-[var(--text-muted)]';
+            } else {
+              dateDetailText = `Onboarded ${client.created_at?.split('T')[0] || 'Recently'}`;
+              dateColorClass = 'text-[var(--text-muted)]';
+            }
+
+            return (
+              <div
+                key={client.id}
+                onClick={() => setDetailClient(client)}
+                className="neo-raised bg-[var(--surface-2)] p-4 rounded-2xl cursor-pointer hover:brightness-105 active:scale-[0.995] transition-all flex items-center justify-between gap-4"
+              >
+                {/* Left: 3 Lines */}
+                <div className="space-y-1 min-w-0 flex-1">
+                  {/* Line 1: Name (bold) */}
+                  <div className="font-bold text-sm text-[var(--text-primary)] truncate">
+                    {client.company_name}
+                  </div>
+
+                  {/* Line 2: Secondary detail · identifier */}
+                  <div className="text-xs text-[var(--text-muted)] truncate">
+                    {planName} · {identifier}
+                  </div>
+
+                  {/* Line 3: Relative / date detail with semantic color */}
+                  <div className={`text-xs ${dateColorClass}`}>
+                    {dateDetailText}
+                  </div>
+                </div>
+
+                {/* Right Side: Status Pill & Small Circular Icon Button */}
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <StatusBadge status={client.archived_at ? 'ARCHIVED' : client.service_status} type="service" />
+
+                  {/* Small circular WhatsApp / Message icon button */}
+                  <button
+                    onClick={(e) => handleOpenWhatsApp(client, e)}
+                    title="Send WhatsApp message"
+                    className="w-8 h-8 rounded-full neo-flat bg-[var(--surface-1)] hover:bg-[var(--surface-3)] text-[var(--accent-green)] flex items-center justify-center transition-all shadow-sm shrink-0"
+                  >
+                    <PlatformIcon platform="WHATSAPP" size={15} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DETAIL SHEET PATTERN: Bottom Sheet / Modal */}
+      {detailClient && (
+        <div 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setDetailClient(null)}
+        >
+          <div 
+            className="w-full max-w-lg bg-[var(--surface-2)] neo-modal rounded-t-3xl sm:rounded-3xl p-6 space-y-5 text-left border border-white/[0.08] shadow-2xl animate-in slide-in-from-bottom duration-200"
+            onClick={(e) => e.stopPropagation()}
           >
-            {showArchived ? 'Showing archived' : 'Show archived'}
-          </button>
+            {/* Header: "[Entity] Details" with X to close */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
+                Client Details
+              </h2>
+              <button
+                onClick={() => setDetailClient(null)}
+                className="w-8 h-8 rounded-full neo-flat text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body: Each field as its own full-width rounded bar, label faded/muted on left, value bold on right */}
+            <div className="space-y-2">
+              {(() => {
+                const sub = getClientActiveSub(detailClient.id);
+                const totalPaid = getClientTotalPaid(detailClient.id);
+                const paymentMode = getClientPaymentMode(detailClient);
+                const startDate = detailClient.created_at ? detailClient.created_at.split('T')[0] : '—';
+                const nextBilling = sub?.next_billing_date || '—';
+
+                const fields = [
+                  { label: 'Name', value: detailClient.contact_name },
+                  { label: 'Business', value: detailClient.company_name },
+                  { label: 'Phone', value: detailClient.phone || '—' },
+                  { label: 'Plan', value: sub?.service_name || 'Active Retainer' },
+                  { label: 'Amount Paid', value: formatUSD(totalPaid) },
+                  { label: 'Payment Mode', value: paymentMode },
+                  { label: 'Start Date', value: startDate },
+                  { label: 'Next Billing Date', value: nextBilling },
+                  { label: 'Status', value: detailClient.service_status },
+                ];
+
+                return fields.map((f, idx) => (
+                  <div
+                    key={idx}
+                    className="w-full h-11 px-4 rounded-xl bg-[var(--surface-3)] neo-flat flex items-center justify-between text-xs transition-colors"
+                  >
+                    <span className="text-[var(--text-muted)] font-normal">{f.label}</span>
+                    <span className="text-[var(--text-primary)] font-bold truncate max-w-[220px]">{f.value}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            {/* Footer: Two pill-shaped action buttons side by side ("WhatsApp" + "Edit") */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => handleOpenWhatsApp(detailClient)}
+                className="w-full py-2.5 rounded-full neo-flat bg-[var(--surface-1)] hover:brightness-105 text-[var(--accent-green)] font-semibold text-xs flex items-center justify-center gap-2 border border-white/[0.06]"
+              >
+                <PlatformIcon platform="WHATSAPP" size={15} />
+                <span>WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const clientToEdit = detailClient;
+                  setDetailClient(null);
+                  onSelectClient(clientToEdit);
+                }}
+                className="w-full py-2.5 rounded-full btn-primary text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Clients Data Table — Raised Neumorphic Container */}
-      <div className="neo-raised bg-[#1D1F23] rounded-[16px] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#17181B] text-[#8B8D93] text-xs font-normal">
-              <tr>
-                <th className="py-3 px-4 font-normal">Client</th>
-                <th className="py-3 px-4 font-normal">Service status</th>
-                <th className="py-3 px-4 font-normal">Voice plan</th>
-                <th className="py-3 px-4 font-normal text-right">Monthly fee</th>
-                <th className="py-3 px-4 font-normal">Next billing</th>
-                <th className="py-3 px-4 font-normal">Billing status</th>
-                <th className="py-3 px-4 font-normal">Retell workspace</th>
-                <th className="py-3 px-4 font-normal text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.05]">
-              {filteredClients.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#8B8D93]">
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-[#EDEAE2]">No clients match your filter</p>
-                      <button
-                        onClick={onOpenOnboarding}
-                        className="text-xs text-[#E2896A] hover:underline"
-                      >
-                        Onboard a new client
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredClients.map((client) => {
-                  const sub = subscriptions.find(s => s.client_id === client.id && s.status === 'ACTIVE');
-                  const hasRetell = !!client.retell_workspace_url;
-
-                  return (
-                    <tr
-                      key={client.id}
-                      className="hover:bg-white/[0.02] transition-colors cursor-pointer"
-                      onClick={() => onSelectClient(client)}
-                    >
-                      {/* Client info */}
-                      <td className="py-3.5 px-4">
-                        <div>
-                          <div className="font-semibold text-[#EDEAE2] flex items-center gap-1.5">
-                            <span>{client.company_name}</span>
-                            {client.archived_at && (
-                              <span className="text-[10px] text-[#8B8D93] px-1 rounded bg-white/5">
-                                Archived
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-[#8B8D93]">
-                            {client.contact_name} · {client.timezone}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Service Status */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <StatusBadge status={client.service_status} type="service" />
-                      </td>
-
-                      {/* Plan */}
-                      <td className="py-3.5 px-4 text-[#EDEAE2]">
-                        {sub?.service_name || 'No plan'}
-                      </td>
-
-                      {/* Monthly Fee */}
-                      <td className="py-3.5 px-4 text-right font-mono-numbers font-semibold text-[#EDEAE2]">
-                        {sub ? formatUSD(sub.recurring_fee_cents) : '—'}
-                      </td>
-
-                      {/* Next Billing & Real-Time Renewal Countdown */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        {sub?.next_billing_date ? (
-                          <div className="space-y-0.5">
-                            <div className="font-mono-numbers text-[#EDEAE2]">{sub.next_billing_date}</div>
-                            {(() => {
-                              const days = db.days_until_billing(sub.id);
-                              const isUrgent = days <= 7;
-                              return (
-                                <span className={`inline-flex items-center gap-1 text-[10px] font-mono-numbers font-medium px-1.5 py-0.5 rounded ${
-                                  isUrgent 
-                                    ? 'bg-[#E0A94C]/15 text-[#E0A94C] font-semibold' 
-                                    : 'bg-white/5 text-[#8B8D93]'
-                                }`}>
-                                  {days > 0 ? `${days}d left` : days === 0 ? 'Due today' : `${Math.abs(days)}d overdue`}
-                                </span>
-                              );
-                            })()}
-                          </div>
-                        ) : (
-                          <span className="text-[#8B8D93] font-mono-numbers">—</span>
-                        )}
-                      </td>
-
-                      {/* Billing Status */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <StatusBadge status={db.getClientBillingStatus(client.id)} type="billing" />
-                      </td>
-
-                      {/* Retell Workspace */}
-                      <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
-                        {hasRetell ? (
-                          <a
-                            href={client.retell_workspace_url!}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-[#E2896A] hover:underline"
-                          >
-                            <Bot className="w-3.5 h-3.5 text-[#E2896A]" />
-                            <span>Open Retell</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <span className="text-xs text-[#E0A94C] flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            <span>Retell missing</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => onSelectClient(client)}
-                            className="p-1.5 text-[#8B8D93] hover:text-[#EDEAE2] rounded-md transition-colors"
-                            title="View full client record"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          
-                          {!client.archived_at && (
-                            <button
-                              onClick={() => setArchiveTargetClient(client)}
-                              className="p-1.5 text-[#8B8D93] hover:text-[#E2604F] rounded-md transition-colors"
-                              title="Archive client"
-                            >
-                              <Archive className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Confirmation Modal for Client Archiving */}
-      <ConfirmationModal
-        isOpen={!!archiveTargetClient}
-        title={`Archive ${archiveTargetClient?.company_name}?`}
-        description="Archiving this client will disable active portal access and cancel future automated subscription renewals. All historical invoices, payments, and audit logs will be permanently retained."
-        confirmLabel="Archive client"
-        isDestructive={true}
-        requiredConfirmationPhrase={archiveTargetClient ? 'ARCHIVE' : undefined}
-        onConfirm={handleArchiveConfirm}
-        onCancel={() => setArchiveTargetClient(null)}
-      />
+      )}
     </div>
   );
 };

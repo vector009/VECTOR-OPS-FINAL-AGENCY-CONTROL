@@ -10,7 +10,9 @@ import {
   Calendar, 
   X,
   TrendingUp,
-  Clock
+  Clock,
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { db } from '../../lib/database';
 import { SubscriptionPlan, Subscription, Client } from '../../types';
@@ -88,6 +90,12 @@ export const SubscriptionManagement: React.FC = () => {
     setIsEditPlanOpen(false);
   };
 
+  const handleDeletePlan = (id: string) => {
+    if (confirm('Delete this subscription plan template? Active client subscriptions will retain their snapshotted terms.')) {
+      db.deletePlan(id);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Header */}
@@ -121,73 +129,80 @@ export const SubscriptionManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Plan Templates Cards Grid */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-[#EDEAE2]">
-          Active plan templates ({plans.length})
-        </h2>
+      {/* SETTINGS / PACKAGES PATTERN — Subscription Plans */}
+      <div className="neo-raised p-6 rounded-2xl space-y-5 bg-[var(--surface-2)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Layers className="w-5 h-5 text-[var(--accent-blue)]" />
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                Subscription Plans
+              </h2>
+              <p className="text-xs text-[var(--text-muted)]">
+                Package tiers for recurring AI phone agent retainers and setup fees
+              </p>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.map((p) => {
-            const subscribersCount = subscriptions.filter(s => s.plan_id === p.id && s.status === 'ACTIVE').length;
+          <button
+            type="button"
+            onClick={() => handleOpenEdit()}
+            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New</span>
+          </button>
+        </div>
 
-            return (
-              <div
-                key={p.id}
-                className="neo-raised p-5 rounded-2xl flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-base text-[#EDEAE2]">{p.name}</span>
-                    <span className="text-xs text-[#4CAF7D] flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF7D]" />
-                      Active
-                    </span>
-                  </div>
+        {/* Group plans under category headers (e.g. "Voice Agent Plans") */}
+        <div className="space-y-4 pt-1">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] font-mono pb-2">
+              Voice Agent Plans
+            </div>
 
-                  <p className="text-xs text-[#8B8D93] leading-relaxed min-h-[36px]">
-                    {p.description}
-                  </p>
+            <div className="space-y-2">
+              {plans.map((p) => {
+                const duration = p.billing_interval ? p.billing_interval.toLowerCase() : 'monthly';
+                const typeText = p.included_service_description || p.description || 'Voice Agent Retainer';
 
-                  <div className="pt-2 border-t border-white/5 space-y-2">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-xs text-[#8B8D93]">Monthly retainer:</span>
-                      <span className="text-xl font-semibold font-mono-numbers text-[#4CAF7D]">
-                        {formatUSD(p.recurring_fee_cents)}
-                        <span className="text-xs font-normal text-[#8B8D93]"> / mo</span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-[#8B8D93]">
-                      <span>Setup fee:</span>
-                      <span className="font-mono-numbers text-[#E2896A] font-semibold">
-                        {formatUSD(p.setup_fee_cents)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-[#8B8D93]">
-                      <span>Grace period:</span>
-                      <span className="font-mono-numbers text-[#EDEAE2]">{p.grace_period_days} days</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-                  <span className="font-mono-numbers text-[11px] text-[#8B8D93]">
-                    {subscribersCount} active {subscribersCount === 1 ? 'client' : 'clients'}
-                  </span>
-
-                  <button
-                    onClick={() => handleOpenEdit(p)}
-                    className="px-3 py-1 text-xs text-[#8B8D93] hover:text-[#EDEAE2] neo-raised rounded-md transition-colors flex items-center gap-1"
+                return (
+                  <div
+                    key={p.id}
+                    className="p-3.5 rounded-xl neo-flat bg-[var(--surface-3)] flex items-center justify-between gap-4 transition-all"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Edit template</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="font-bold text-xs text-[var(--text-primary)] truncate">
+                        {p.name}
+                      </div>
+                      <div className="text-[11px] text-[var(--text-muted)] truncate">
+                        <span className="font-semibold text-[var(--accent-green)] font-mono-numbers">{formatUSD(p.recurring_fee_cents)}/mo</span> · <span className="capitalize">{duration}</span> · {typeText}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(p)}
+                        title="Edit plan"
+                        className="p-1.5 rounded-lg neo-raised text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-[var(--accent-blue)]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePlan(p.id)}
+                        title="Delete plan"
+                        className="p-1.5 rounded-lg neo-raised text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

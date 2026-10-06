@@ -319,7 +319,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
         {/* Mobile Flyout Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#1D1F23] p-4 space-y-1 neo-raised">
+          <div className="lg:hidden bg-[var(--surface-2)] p-4 space-y-1 neo-raised border-b border-white/[0.08]">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -328,7 +328,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center justify-between p-2.5 rounded-lg text-xs ${
-                  activeTab === item.id ? 'neo-inset text-[#EDEAE2] font-semibold' : 'text-[#8B8D93]'
+                  activeTab === item.id ? 'neo-inset text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <span>{item.label}</span>
@@ -337,8 +337,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           </div>
         )}
 
-        {/* Tab Viewport Content */}
-        <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        {/* Tab Viewport Content — pb-24 on mobile/tablet to account for native bottom tab bar */}
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
           {activeTab === 'dashboard' && (
             <AdminDashboard
               onNavigateTab={(tab) => setActiveTab(tab)}
@@ -388,6 +388,49 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <SettingsView onOpenSupabaseModal={onOpenSupabaseModal} />
           )}
         </main>
+
+        {/* Native Mobile / Tablet Bottom Tab Bar (Dashboard / Clients / Billing / Appointments / Settings) */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface-2)]/95 backdrop-blur-lg border-t border-white/[0.08] shadow-2xl px-2 py-1.5 flex items-center justify-around select-none">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'clients', label: 'Clients', icon: Users, badge: kpis.activeClientsCount },
+            { id: 'invoices', label: 'Billing', icon: Receipt, alert: kpis.overdueInvoicesCount > 0 },
+            { id: 'appointments', label: 'Appointments', icon: Calendar, alert: kpis.pendingAppointmentsCount > 0 },
+            { id: 'settings', label: 'Settings', icon: Settings },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all relative ${
+                  isActive
+                    ? 'text-[var(--accent-blue)] font-semibold'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <div className="relative">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`} />
+                  {item.alert && (
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent-red)] absolute -top-0.5 -right-0.5 ring-2 ring-[var(--surface-2)]" />
+                  )}
+                  {item.badge !== undefined && item.badge > 0 && !item.alert && (
+                    <span className="absolute -top-1 -right-2 px-1 text-[9px] font-mono rounded-full bg-[var(--accent-blue)] text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[10px] mt-1 truncate ${isActive ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-muted)]'}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       {/* Global Client Profile Modal */}

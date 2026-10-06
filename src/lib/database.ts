@@ -1065,6 +1065,12 @@ class VectorOpsDatabase {
     return plan;
   }
 
+  public deletePlan(id: string) {
+    this.plans = this.plans.filter(p => p.id !== id);
+    this.saveToStorage();
+    return true;
+  }
+
   // --- ADMIN KPIS (Authoritative numbers from DB) ---
   public getAdminKPIs() {
     const activeClients = this.clients.filter(c => !c.archived_at && c.service_status === 'ACTIVE');

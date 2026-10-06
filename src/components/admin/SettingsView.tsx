@@ -19,11 +19,13 @@ import {
   ExternalLink,
   Plus,
   Edit2,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Layers,
+  Pencil
 } from 'lucide-react';
 import { db } from '../../lib/database';
-import { POPULAR_TIMEZONES } from '../../lib/timezone';
-import { AgencySettings, AgencyPaymentLink, PaymentPlatform } from '../../types';
+import { POPULAR_TIMEZONES, formatUSD, parseDollarsToCents } from '../../lib/timezone';
+import { AgencySettings, AgencyPaymentLink, PaymentPlatform, SubscriptionPlan } from '../../types';
 import { PlatformIcon } from '../common/PlatformIcon';
 import { 
   getStoredSupabaseConfig, 
@@ -147,6 +149,86 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     if (confirm('Delete this payment link? Any client assigned to it will no longer display a Pay now redirect button until reassigned.')) {
       await db.deletePaymentLink(id);
     }
+  };
+
+  // Subscription Plans / Packages pattern state
+  const plans = db.getPlans();
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [planName, setPlanName] = useState('');
+  const [planRecurringDollars, setPlanRecurringDollars] = useState('499.00');
+  const [planSetupDollars, setPlanSetupDollars] = useState('499.00');
+  const [planDuration, setPlanDuration] = useState('Monthly');
+  const [planType, setPlanType] = useState('Inbound AI Voice Receptionist');
+  const [planGraceDays, setPlanGraceDays] = useState('7');
+  const [planError, setPlanError] = useState('');
+
+  const handleOpenNewPlan = () => {
+    setEditingPlanId(null);
+    setPlanName('');
+    setPlanRecurringDollars('499.00');
+    setPlanSetupDollars('499.00');
+    setPlanDuration('Monthly');
+    setPlanType('Inbound AI Voice Receptionist');
+    setPlanGraceDays('7');
+    setPlanError('');
+    setIsPlanModalOpen(true);
+  };
+
+  const handleEditPlan = (plan: SubscriptionPlan) => {
+    setEditingPlanId(plan.id);
+    setPlanName(plan.name);
+    setPlanRecurringDollars((plan.recurring_fee_cents / 100).toFixed(2));
+    setPlanSetupDollars((plan.setup_fee_cents / 100).toFixed(2));
+    setPlanDuration(plan.billing_interval === 'MONTHLY' ? 'Monthly' : plan.billing_interval);
+    setPlanType(plan.included_service_description || plan.description || 'Voice Agent Retainer');
+    setPlanGraceDays(plan.grace_period_days.toString());
+    setPlanError('');
+    setIsPlanModalOpen(true);
+  };
+
+  const handleDeletePlan = (id: string) => {
+    if (confirm('Delete this subscription plan template? Active client subscriptions will retain their snapshotted contractual terms.')) {
+      db.deletePlan(id);
+    }
+  };
+
+  const handleSavePlan = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPlanError('');
+    if (!planName.trim()) {
+      setPlanError('Please provide a plan name.');
+      return;
+    }
+
+    const recurringCents = parseDollarsToCents(planRecurringDollars);
+    const setupCents = parseDollarsToCents(planSetupDollars);
+    const grace = parseInt(planGraceDays, 10) || 7;
+
+    if (editingPlanId) {
+      db.updatePlan(editingPlanId, {
+        name: planName.trim(),
+        description: planType.trim(),
+        setup_fee_cents: setupCents,
+        recurring_fee_cents: recurringCents,
+        grace_period_days: grace,
+        included_service_description: planType.trim(),
+      });
+    } else {
+      db.createPlan({
+        name: planName.trim(),
+        description: planType.trim(),
+        setup_fee_cents: setupCents,
+        recurring_fee_cents: recurringCents,
+        billing_interval: 'MONTHLY',
+        grace_period_days: grace,
+        included_service_description: planType.trim(),
+        notes: null,
+        is_active: true,
+      });
+    }
+
+    setIsPlanModalOpen(false);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -508,6 +590,180 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* SETTINGS / PACKAGES PATTERN — Subscription Plans */}
+      <div className="neo-raised p-6 rounded-2xl space-y-5 bg-[var(--surface-2)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Layers className="w-5 h-5 text-[var(--accent-blue)]" />
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                Subscription Plans
+              </h2>
+              <p className="text-xs text-[var(--text-muted)]">
+                Package tiers for recurring AI phone agent retainers and setup fees
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenNewPlan}
+            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New</span>
+          </button>
+        </div>
+
+        {/* Group plans under category headers (e.g. "Voice Agent Plans") */}
+        <div className="space-y-4 pt-1">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] font-mono pb-2">
+              Voice Agent Plans
+            </div>
+
+            <div className="space-y-2">
+              {plans.map((plan) => {
+                const duration = plan.billing_interval ? plan.billing_interval.toLowerCase() : 'monthly';
+                const typeText = plan.included_service_description || plan.description || 'Voice Agent Retainer';
+
+                return (
+                  <div
+                    key={plan.id}
+                    className="p-3.5 rounded-xl neo-flat bg-[var(--surface-3)] flex items-center justify-between gap-4 transition-all"
+                  >
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="font-bold text-xs text-[var(--text-primary)] truncate">
+                        {plan.name}
+                      </div>
+                      <div className="text-[11px] text-[var(--text-muted)] truncate">
+                        <span className="font-semibold text-[var(--accent-green)] font-mono-numbers">{formatUSD(plan.recurring_fee_cents)}/mo</span> · <span className="capitalize">{duration}</span> · {typeText}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleEditPlan(plan)}
+                        title="Edit plan"
+                        className="p-1.5 rounded-lg neo-raised text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-[var(--accent-blue)]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePlan(plan.id)}
+                        title="Delete plan"
+                        className="p-1.5 rounded-lg neo-raised text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Plan Add / Edit Modal */}
+      {isPlanModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150 text-left border border-white/[0.08]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-[var(--accent-blue)]" />
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                  {editingPlanId ? 'Edit subscription package' : 'New subscription package'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPlanModalOpen(false)}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs p-1"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {planError && (
+              <div className="p-3 rounded-xl neo-inset text-xs text-[var(--accent-red)] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{planError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePlan} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-[var(--text-primary)]">Package Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Growth AI Voice Agent"
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                  className="w-full px-3.5 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-[var(--text-primary)]">Monthly Retainer ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="499.00"
+                    value={planRecurringDollars}
+                    onChange={(e) => setPlanRecurringDollars(e.target.value)}
+                    className="w-full px-3.5 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none font-mono-numbers"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-[var(--text-primary)]">Setup Fee ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="499.00"
+                    value={planSetupDollars}
+                    onChange={(e) => setPlanSetupDollars(e.target.value)}
+                    className="w-full px-3.5 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none font-mono-numbers"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-[var(--text-primary)]">Service Type / Inclusions</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Inbound Receptionist · Calendar Bookings"
+                  value={planType}
+                  onChange={(e) => setPlanType(e.target.value)}
+                  className="w-full px-3.5 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setIsPlanModalOpen(false)}
+                  className="px-4 py-2 font-normal text-[var(--text-muted)] hover:text-[var(--text-primary)] neo-raised rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5 rounded-xl font-semibold"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{editingPlanId ? 'Save changes' : 'Create package'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Payment Link Add / Edit Modal */}
       {isLinkModalOpen && (
