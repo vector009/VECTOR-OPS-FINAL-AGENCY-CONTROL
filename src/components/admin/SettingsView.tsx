@@ -670,8 +670,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Plan Add / Edit Modal */}
       {isPlanModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150 text-left border border-white/[0.08]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsPlanModalOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 text-left modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[var(--accent-blue)]" />
@@ -767,19 +773,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Payment Link Add / Edit Modal */}
       {isLinkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsLinkModalOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md p-6 space-y-5 modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <PlatformIcon platform={linkPlatform} size={20} />
-                <h3 className="text-sm font-semibold text-[#EDEAE2]">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">
                   {editingLinkId ? 'Edit payment link' : 'Add new payment link'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsLinkModalOpen(false)}
-                className="text-[#8B8D93] hover:text-[#EDEAE2] text-xs p-1"
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs p-1"
               >
                 Cancel
               </button>

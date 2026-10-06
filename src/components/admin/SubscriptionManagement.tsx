@@ -264,13 +264,19 @@ export const SubscriptionManagement: React.FC = () => {
 
       {/* Plan Edit Modal */}
       {isEditPlanOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between">
-              <h2 className="text-base font-semibold text-[#EDEAE2]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsEditPlanOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">
                 {editingPlan ? `Edit ${editingPlan.name}` : 'New plan template'}
               </h2>
-              <button onClick={() => setIsEditPlanOpen(false)} className="p-1 text-[#8B8D93] hover:text-[#EDEAE2]">
+              <button onClick={() => setIsEditPlanOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                 <X className="w-5 h-5" />
               </button>
             </div>

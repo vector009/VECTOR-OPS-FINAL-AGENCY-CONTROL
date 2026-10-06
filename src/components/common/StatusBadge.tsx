@@ -20,7 +20,7 @@ function toSentenceCase(str: string): string {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const getDotAndTextColor = () => {
+  const getBadgeStyle = () => {
     switch (status) {
       case 'ACTIVE':
       case 'PAID':
@@ -28,15 +28,24 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'COMPLETED':
       case 'COMPLETE':
       case 'LOW':
-        return { dot: 'bg-[var(--success)]', text: 'text-[var(--success)]' };
+        return {
+          bg: 'bg-[var(--accent-green)]/15',
+          text: 'text-[var(--accent-green)]',
+          dot: 'bg-[var(--accent-green)]',
+        };
 
       case 'ONBOARDING':
       case 'CURRENT':
       case 'DUE_SOON':
       case 'IN_PROGRESS':
       case 'PROPOSED':
+      case 'REQUESTED':
       case 'MEDIUM':
-        return { dot: 'bg-[var(--warning)]', text: 'text-[var(--warning)]' };
+        return {
+          bg: 'bg-[var(--accent-amber)]/15',
+          text: 'text-[var(--accent-amber)]',
+          dot: 'bg-[var(--accent-amber)]',
+        };
 
       case 'OVERDUE':
       case 'SUSPENDED':
@@ -44,27 +53,37 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'URGENT':
       case 'HIGH':
       case 'DECLINED':
-        return { dot: 'bg-[var(--danger)]', text: 'text-[var(--danger)]' };
+      case 'CANCELLED':
+      case 'NO_SHOW':
+        return {
+          bg: 'bg-[var(--accent-red)]/15',
+          text: 'text-[var(--accent-red)]',
+          dot: 'bg-[var(--accent-red)]',
+        };
 
       case 'PARTIALLY_PAID':
-        return { dot: 'bg-[var(--accent-blue)]', text: 'text-[var(--accent-blue)]' };
+        return {
+          bg: 'bg-[var(--accent-blue)]/15',
+          text: 'text-[var(--accent-blue)]',
+          dot: 'bg-[var(--accent-blue)]',
+        };
 
-      case 'CANCELLED':
       case 'EXPIRED':
       case 'ARCHIVED':
       case 'VOID':
-      case 'NO_SHOW':
-        return { dot: 'bg-[var(--text-muted)]', text: 'text-[var(--text-muted)] line-through' };
-
       default:
-        return { dot: 'bg-[var(--text-muted)]', text: 'text-[var(--text-primary)]' };
+        return {
+          bg: 'bg-white/[0.08]',
+          text: 'text-[var(--text-muted)]',
+          dot: 'bg-[var(--text-muted)]',
+        };
     }
   };
 
-  const { dot, text } = getDotAndTextColor();
+  const { bg, text, dot } = getBadgeStyle();
 
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs ${text} font-normal select-none`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${bg} ${text} select-none transition-all`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
       <span>{toSentenceCase(status)}</span>
     </span>

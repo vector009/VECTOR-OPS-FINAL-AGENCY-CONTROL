@@ -155,11 +155,17 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col modal-sheet-enter shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between">
+        <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#24272D] flex items-center justify-center font-semibold text-lg text-[#E2896A]">
               {client.company_name.charAt(0)}

@@ -326,11 +326,11 @@ export const AppointmentsView: React.FC = () => {
       {/* DETAIL SHEET PATTERN: Bottom Sheet / Modal */}
       {detailAppointment && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
           onClick={() => setDetailAppointment(null)}
         >
           <div 
-            className="w-full max-w-lg bg-[var(--surface-2)] neo-modal rounded-t-3xl sm:rounded-3xl p-6 space-y-5 text-left border border-white/[0.08] shadow-2xl animate-in slide-in-from-bottom duration-200"
+            className="w-full max-w-lg bg-[var(--surface-2)] neo-modal rounded-t-3xl sm:rounded-3xl p-6 space-y-5 text-left modal-sheet-enter shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header: "Appointment Details" with X to close */}
@@ -391,7 +391,7 @@ export const AppointmentsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleCancelAppointment(detailAppointment)}
-                className="w-full py-2.5 rounded-full neo-flat bg-[var(--surface-1)] hover:brightness-105 text-[var(--accent-red)] font-semibold text-xs flex items-center justify-center gap-2 border border-white/[0.06]"
+                className="w-full py-2.5 rounded-full neo-flat bg-[var(--surface-1)] hover:brightness-105 text-[var(--accent-red)] font-semibold text-xs flex items-center justify-center gap-2"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancel</span>
@@ -403,8 +403,14 @@ export const AppointmentsView: React.FC = () => {
 
       {/* Reschedule Modal */}
       {isRescheduleOpen && detailAppointment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left border border-white/[0.08]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsRescheduleOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Reschedule appointment</h2>
               <button onClick={() => setIsRescheduleOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
@@ -463,8 +469,14 @@ export const AppointmentsView: React.FC = () => {
 
       {/* Attach Meeting Link Modal */}
       {isAttachLinkOpen && detailAppointment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left border border-white/[0.08]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsAttachLinkOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Attach meeting link</h2>
               <button onClick={() => setIsAttachLinkOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
@@ -521,8 +533,14 @@ export const AppointmentsView: React.FC = () => {
 
       {/* Schedule New Appointment Modal */}
       {isBookModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left border border-white/[0.08]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsBookModalOpen(false)}
+        >
+          <div 
+            className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden text-left modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Schedule appointment</h2>
               <button onClick={() => setIsBookModalOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">

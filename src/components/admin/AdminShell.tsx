@@ -339,54 +339,56 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
         {/* Tab Viewport Content — pb-24 on mobile/tablet to account for native bottom tab bar */}
         <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
-          {activeTab === 'dashboard' && (
-            <AdminDashboard
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onOpenOnboarding={() => setIsOnboardingOpen(true)}
-            />
-          )}
+          <div key={activeTab} className="screen-enter w-full">
+            {activeTab === 'dashboard' && (
+              <AdminDashboard
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
+              />
+            )}
 
-          {activeTab === 'clients' && (
-            <ClientManagement
-              onSelectClient={(c) => setSelectedClientForProfile(c)}
-              onOpenOnboarding={() => setIsOnboardingOpen(true)}
-            />
-          )}
+            {activeTab === 'clients' && (
+              <ClientManagement
+                onSelectClient={(c) => setSelectedClientForProfile(c)}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
+              />
+            )}
 
-          {activeTab === 'invoices' && (
-            <InvoicesView
-              onRecordPaymentForInvoice={handleSelectInvoiceForPayment}
-            />
-          )}
+            {activeTab === 'invoices' && (
+              <InvoicesView
+                onRecordPaymentForInvoice={handleSelectInvoiceForPayment}
+              />
+            )}
 
-          {activeTab === 'payments' && (
-            <PaymentsView
-              preselectedInvoice={preselectedPaymentInvoice}
-              onClearPreselectedInvoice={() => setPreselectedPaymentInvoice(null)}
-            />
-          )}
+            {activeTab === 'payments' && (
+              <PaymentsView
+                preselectedInvoice={preselectedPaymentInvoice}
+                onClearPreselectedInvoice={() => setPreselectedPaymentInvoice(null)}
+              />
+            )}
 
-          {activeTab === 'appointments' && <AppointmentsView />}
+            {activeTab === 'appointments' && <AppointmentsView />}
 
-          {activeTab === 'messages' && <MessagesView />}
+            {activeTab === 'messages' && <MessagesView />}
 
-          {activeTab === 'subscriptions' && <SubscriptionManagement />}
+            {activeTab === 'subscriptions' && <SubscriptionManagement />}
 
-          {activeTab === 'revenue' && <RevenueView />}
+            {activeTab === 'revenue' && <RevenueView />}
 
-          {activeTab === 'tasks' && <TasksView />}
+            {activeTab === 'tasks' && <TasksView />}
 
-          {activeTab === 'copilot' && <AICopilotView />}
+            {activeTab === 'copilot' && <AICopilotView />}
 
-          {activeTab === 'audit' && <AuditLogView />}
+            {activeTab === 'audit' && <AuditLogView />}
 
-          {activeTab === 'health' && (
-            <SystemHealthView onOpenSupabaseModal={onOpenSupabaseModal} />
-          )}
+            {activeTab === 'health' && (
+              <SystemHealthView onOpenSupabaseModal={onOpenSupabaseModal} />
+            )}
 
-          {activeTab === 'settings' && (
-            <SettingsView onOpenSupabaseModal={onOpenSupabaseModal} />
-          )}
+            {activeTab === 'settings' && (
+              <SettingsView onOpenSupabaseModal={onOpenSupabaseModal} />
+            )}
+          </div>
         </main>
 
         {/* Native Mobile / Tablet Bottom Tab Bar (Dashboard / Clients / Billing / Appointments / Settings) */}

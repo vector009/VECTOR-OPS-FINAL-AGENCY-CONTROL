@@ -2,80 +2,78 @@
 
 @layer base {
   /* ================================================================
-     NIGHT MODE (Default) — True Neumorphic Palette with Surface Tiers
+     NIGHT MODE (Default) — True Neumorphic Palette with Tinted Navy
      ================================================================ */
   :root,
   [data-theme="dark"] {
-    /* 3 Surface Depth Tiers */
-    --surface-1: #0E1512;          /* page background */
-    --surface-2: #141C19;          /* card/panel background */
-    --surface-3: #1B2622;          /* nested/raised-within-raised depth tier */
+    /* Page & Card Surface — MUST be the same color for true neumorphism */
+    --surface-1: #0B0F17;          /* page background: rich near-black navy tint */
+    --surface-2: #0B0F17;          /* card background: IDENTICAL to page background */
+    --surface-3: #111724;          /* nested raised tier (within 2-3% lightness) */
 
     --bg: var(--surface-1);
     --surface: var(--surface-2);
     --surface-raised: var(--surface-3);
 
-    --text-primary: #E8F0EC;
-    --text-muted: #7C9289;
+    --text-primary: #F0F4F8;
+    --text-muted: #8292A6;
 
-    /* Semantic Color Accents (Color Means Something Rule) */
-    --accent-green: #2FD191;       /* ONLY for success, money-positive states, revenue */
-    --accent-blue: #3B9EFF;        /* PRIMARY interactive/navigation color in Admin */
-    --accent-amber: #E8B84B;       /* ONLY for warning, pending, due soon <=7d */
-    --accent-red: #E2604F;         /* ONLY for danger, overdue, void */
+    /* Semantic Color Accents (+15-20% Vivid Saturation against dark surface) */
+    --accent-green: #1AE598;       /* Vivid emerald green for money/revenue/success */
+    --accent-blue: #2994FF;        /* Vivid electric blue for primary interactive action */
+    --accent-amber: #FFA726;       /* Vivid warm amber for warning, pending, due soon <=7d */
+    --accent-red: #FF4D4D;         /* Vivid coral red for danger, overdue, void */
 
     /* Token aliases */
-    --accent: var(--accent-green);
-    --accent-soft: #1C7A56;
+    --accent: var(--accent-blue);
+    --accent-soft: #126ACC;
     --success: var(--accent-green);
     --warning: var(--accent-amber);
     --danger: var(--accent-red);
 
-    --shadow-light: rgba(255, 255, 255, 0.025);
-    --shadow-dark: rgba(0, 0, 0, 0.65);
+    /* Neumorphic Dual Shadows (Tinted toward background navy hue) */
+    --shadow-light: rgba(255, 255, 255, 0.045);
+    --shadow-dark: rgba(2, 4, 8, 0.78);
 
     --bg-main: var(--bg);
     --surface-main: var(--surface);
   }
 
   /* ================================================================
-     DAY MODE — True Neumorphic Soft Off-White Palette with Surface Tiers
+     DAY MODE — True Neumorphic Soft Slate Off-White Palette
      ================================================================ */
   [data-theme="light"] {
-    /* 3 Surface Depth Tiers */
-    --surface-1: #EAF0ED;          /* soft off-white page background */
-    --surface-2: #E1E8E4;          /* card background */
-    --surface-3: #F2F7F4;          /* nested/raised-within-raised depth tier */
+    /* Page & Card Surface — MUST be the same color for true neumorphism */
+    --surface-1: #EFF3F8;          /* soft slate off-white page background */
+    --surface-2: #EFF3F8;          /* card background: IDENTICAL to page background */
+    --surface-3: #F6F9FC;          /* nested raised tier (within 2% lightness) */
 
     --bg: var(--surface-1);
     --surface: var(--surface-2);
     --surface-raised: var(--surface-3);
 
-    --text-primary: #16231D;
-    --text-muted: #5C6F67;
+    --text-primary: #121A26;
+    --text-muted: #5E6E82;
 
-    /* Semantic Color Accents (Color Means Something Rule) */
-    --accent-green: #1C9A68;       /* ONLY for success, money-positive states, revenue */
-    --accent-blue: #2470C7;        /* PRIMARY interactive/navigation color in Admin */
-    --accent-amber: #B5831F;       /* ONLY for warning, pending, due soon <=7d */
-    --accent-red: #C44536;         /* ONLY for danger, overdue, void */
+    /* Semantic Color Accents (+15% Vivid Saturation) */
+    --accent-green: #059669;       /* Vivid emerald green */
+    --accent-blue: #1A75EB;        /* Vivid royal blue */
+    --accent-amber: #D97706;       /* Vivid warm amber */
+    --accent-red: #E11D48;         /* Vivid rose red */
 
     /* Token aliases */
-    --accent: var(--accent-green);
-    --accent-soft: #BFE8D7;
+    --accent: var(--accent-blue);
+    --accent-soft: #BFD7F5;
     --success: var(--accent-green);
     --warning: var(--accent-amber);
     --danger: var(--accent-red);
 
-    --shadow-light: rgba(255, 255, 255, 0.9);
-    --shadow-dark: rgba(163, 177, 171, 0.55);
+    /* Neumorphic Dual Shadows */
+    --shadow-light: rgba(255, 255, 255, 0.95);
+    --shadow-dark: rgba(162, 177, 198, 0.52);
 
     --bg-main: var(--bg);
     --surface-main: var(--surface);
-  }
-
-  * {
-    border-color: color-mix(in srgb, var(--text-muted) 12%, transparent);
   }
 
   body {
@@ -102,9 +100,8 @@
 
 /* ================================================================
    TRUE NEUMORPHISM — EXACT DUAL SHADOW RULES FOR BOTH MODES
-   The defining rule: a card's background must be the SAME color as
-   the page background (--surface equals --bg). The raised/pressed
-   effect comes entirely from dual shadows, never from a border.
+   Every card's background is the SAME color as the page background.
+   No borders. Depth comes strictly from dual top-left / bottom-right shadows.
    ================================================================ */
 
 /* RAISED element (cards, buttons, panels) */
@@ -113,51 +110,72 @@
 .neo-item-raised {
   background-color: var(--surface) !important;
   border: none !important;
+  outline: none !important;
   border-radius: 20px;
-  box-shadow: -9px -9px 18px var(--shadow-light),
-               9px  9px 18px var(--shadow-dark) !important;
-  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+  box-shadow: -8px -8px 20px var(--shadow-light),
+               8px  8px 20px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease;
 }
 
-/* RAISED — HERO/PRIMARY element (AI briefing panel, focal KPI) */
+/* Hover on raised element */
+.neo-raised:hover,
+.neo-card:hover {
+  box-shadow: -10px -10px 24px var(--shadow-light),
+               10px  10px 24px var(--shadow-dark) !important;
+}
+
+/* PRESSED / ACTIVE state inverts shadow to inset and springs to scale 0.97 */
+.neo-raised:active,
+.neo-card:active,
+.tappable:active {
+  box-shadow: inset -5px -5px 14px var(--shadow-light),
+              inset  5px  5px 14px var(--shadow-dark) !important;
+  transform: scale(0.97) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out !important;
+}
+
+/* RAISED — HERO/PRIMARY element */
 .neo-focal, 
 .neo-hero, 
 .neo-briefing,
 .neo-kpi-primary {
   background-color: var(--surface) !important;
   border: none !important;
+  outline: none !important;
   border-radius: 20px;
-  box-shadow: -12px -12px 24px var(--shadow-light),
-               12px  12px 24px var(--shadow-dark),
-               inset 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent) !important;
-  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+  box-shadow: -10px -10px 24px var(--shadow-light),
+               10px  10px 24px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Secondary KPI card */
 .neo-kpi-secondary {
   background-color: var(--surface) !important;
   border: none !important;
+  outline: none !important;
   border-radius: 20px;
-  box-shadow: -9px -9px 18px var(--shadow-light),
-               9px  9px 18px var(--shadow-dark) !important;
-  transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+  box-shadow: -8px -8px 20px var(--shadow-light),
+               8px  8px 20px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Modal depth: deep elevation, clean shadow boundary */
+/* Modal depth: deep elevation, clean shadow boundary, no border */
 .neo-modal {
   background-color: var(--surface) !important;
   border: none !important;
+  outline: none !important;
   border-radius: 24px;
-  box-shadow: -14px -14px 28px var(--shadow-light),
-               14px  14px 34px var(--shadow-dark) !important;
+  box-shadow: -14px -14px 32px var(--shadow-light),
+               14px  14px 38px var(--shadow-dark) !important;
 }
 
 /* PRESSED/INSET element (active nav item, focused input, selected tab, toggled switch) */
 .neo-inset {
   background-color: var(--surface) !important;
   border: none !important;
-  box-shadow: inset -5px -5px 12px var(--shadow-light),
-              inset  5px  5px 12px var(--shadow-dark) !important;
+  outline: none !important;
+  box-shadow: inset -5px -5px 14px var(--shadow-light),
+              inset  5px  5px 14px var(--shadow-dark) !important;
   transition: box-shadow 120ms ease, background-color 150ms ease;
 }
 
@@ -165,22 +183,22 @@
 .neo-sidebar {
   background-color: var(--surface) !important;
   border: none !important;
-  box-shadow: 8px 0 20px var(--shadow-dark) !important;
+  outline: none !important;
+  box-shadow: 8px 0 24px var(--shadow-dark) !important;
 }
 
 /* Toggle Thumb */
 .neo-toggle-thumb {
-  box-shadow: -3px -3px 7px var(--shadow-light),
-               3px  3px 7px var(--shadow-dark);
+  box-shadow: -3px -3px 8px var(--shadow-light),
+               3px  3px 8px var(--shadow-dark);
 }
 
-/* FLAT elements — NO shadow, by design (data tables, list rows, status badges, audit logs) */
+/* FLAT elements — NO shadow, by design (transparent base for nested lists) */
 .neo-flat,
 .neo-table-row {
   background-color: transparent !important;
   box-shadow: none !important;
   border: none !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 12%, transparent) !important;
 }
 
 /* Surface Depth Tiers */
@@ -195,17 +213,26 @@
 .surface-3,
 .neo-surface-3 {
   background-color: var(--surface-3) !important;
+  border: none !important;
   border-radius: 16px;
-  box-shadow: -5px -5px 12px var(--shadow-light),
-               5px  5px 12px var(--shadow-dark) !important;
+  box-shadow: inset -3px -3px 8px var(--shadow-light),
+              inset  3px  3px 8px var(--shadow-dark) !important;
 }
 
 /* ================================================================
-   NEUMORPHIC BUTTONS & INTERACTIVE PRESS STATES
-   Transition from raised to inset shadow over 120ms
+   NEUMORPHIC BUTTONS & TACTILE SPRING PRESS FEEDBACK
+   scale to 0.97 on press (active state), spring back on release
    ================================================================ */
 
-/* Primary Action Button inside Admin & App (Flat solid Blue, NO GRADIENTS!) */
+button {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease, background-color 150ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+/* Primary Action Button (Flat solid vivid Blue, tactile raised shadow) */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -219,25 +246,26 @@
   background-color: var(--accent-blue) !important;
   color: #FFFFFF !important;
   border: none !important;
-  box-shadow: -6px -6px 14px var(--shadow-light),
-               6px  6px 14px var(--shadow-dark) !important;
-  transition: box-shadow 120ms ease, transform 120ms ease, filter 150ms ease;
+  outline: none !important;
+  box-shadow: -6px -6px 16px var(--shadow-light),
+               6px  6px 16px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary:hover {
   filter: brightness(1.08);
-  box-shadow: -8px -8px 18px var(--shadow-light),
-               8px  8px 18px var(--shadow-dark) !important;
+  box-shadow: -8px -8px 20px var(--shadow-light),
+               8px  8px 20px var(--shadow-dark) !important;
 }
 
 .btn-primary:active {
-  box-shadow: inset -4px -4px 8px rgba(255, 255, 255, 0.25),
-              inset  4px  4px 8px rgba(0, 0, 0, 0.45) !important;
-  transform: translateY(1px) scale(0.985);
+  box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.3),
+              inset  4px  4px 10px rgba(0, 0, 0, 0.5) !important;
+  transform: scale(0.97) !important;
 }
 
-/* Landing Page Conversion CTA Button (Green with subtle gradient specifically permitted for public persuasion surface) */
+/* Landing Page Conversion CTA Button */
 .btn-landing-primary {
   display: inline-flex;
   align-items: center;
@@ -249,20 +277,25 @@
   padding: 0.75rem 1.5rem;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--accent-green), color-mix(in srgb, var(--accent-green) 85%, #000)) !important;
-  color: #0E1512 !important;
+  color: #0B0F17 !important;
   border: none !important;
+  outline: none !important;
   box-shadow: 0 4px 18px color-mix(in srgb, var(--accent-green) 35%, transparent),
-              -6px -6px 14px var(--shadow-light),
-               6px  6px 14px var(--shadow-dark) !important;
-  transition: box-shadow 120ms ease, transform 120ms ease, filter 150ms ease;
+              -6px -6px 16px var(--shadow-light),
+               6px  6px 16px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease;
   cursor: pointer;
 }
 
 .btn-landing-primary:hover {
   filter: brightness(1.08);
   box-shadow: 0 6px 24px color-mix(in srgb, var(--accent-green) 45%, transparent),
-              -8px -8px 18px var(--shadow-light),
-               8px  8px 18px var(--shadow-dark) !important;
+              -8px -8px 20px var(--shadow-light),
+               8px  8px 20px var(--shadow-dark) !important;
+}
+
+.btn-landing-primary:active {
+  transform: scale(0.97) !important;
 }
 
 /* Secondary Button (Tactile raised on surface, inset on click) */
@@ -279,22 +312,23 @@
   background-color: var(--surface) !important;
   color: var(--text-primary) !important;
   border: none !important;
-  box-shadow: -6px -6px 14px var(--shadow-light),
-               6px  6px 14px var(--shadow-dark) !important;
-  transition: box-shadow 120ms ease, transform 120ms ease, color 150ms ease;
+  outline: none !important;
+  box-shadow: -6px -6px 16px var(--shadow-light),
+               6px  6px 16px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms ease;
   cursor: pointer;
 }
 
 .btn-secondary:hover {
-  color: var(--accent) !important;
-  box-shadow: -8px -8px 16px var(--shadow-light),
-               8px  8px 16px var(--shadow-dark) !important;
+  color: var(--accent-blue) !important;
+  box-shadow: -8px -8px 18px var(--shadow-light),
+               8px  8px 18px var(--shadow-dark) !important;
 }
 
 .btn-secondary:active {
-  box-shadow: inset -5px -5px 12px var(--shadow-light),
-              inset  5px  5px 12px var(--shadow-dark) !important;
-  transform: translateY(1px) scale(0.985);
+  box-shadow: inset -5px -5px 14px var(--shadow-light),
+              inset  5px  5px 14px var(--shadow-dark) !important;
+  transform: scale(0.97) !important;
 }
 
 /* Danger Button */
@@ -311,28 +345,113 @@
   background-color: var(--surface) !important;
   color: var(--danger) !important;
   border: none !important;
-  box-shadow: -6px -6px 14px var(--shadow-light),
-               6px  6px 14px var(--shadow-dark) !important;
-  transition: box-shadow 120ms ease, transform 120ms ease, color 150ms ease;
+  outline: none !important;
+  box-shadow: -6px -6px 16px var(--shadow-light),
+               6px  6px 16px var(--shadow-dark) !important;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms ease;
   cursor: pointer;
 }
 
 .btn-danger:hover {
   color: color-mix(in srgb, var(--danger) 85%, white) !important;
-  box-shadow: -8px -8px 16px var(--shadow-light),
-               8px  8px 16px var(--shadow-dark) !important;
+  box-shadow: -8px -8px 18px var(--shadow-light),
+               8px  8px 18px var(--shadow-dark) !important;
 }
 
 .btn-danger:active {
-  box-shadow: inset -5px -5px 12px var(--shadow-light),
-              inset  5px  5px 12px var(--shadow-dark) !important;
-  transform: translateY(1px) scale(0.985);
+  box-shadow: inset -5px -5px 14px var(--shadow-light),
+              inset  5px  5px 14px var(--shadow-dark) !important;
+  transform: scale(0.97) !important;
 }
 
 /* ================================================================
-   AUTOMATIC THEME TOKEN ADAPTERS FOR ARBITRARY TAILWIND CLASSES
-   Ensures 100% of existing components adapt seamlessly to Day/Night
-   without touching any component business logic.
+   SCREEN TRANSITIONS & MOTION SPECIFICATIONS
+   - Tab switches: fades in and slides up 10px over 200ms ease-out
+   - Detail modal/sheet: slides up (mobile) or scales 96%->100% (desktop) over 250ms cubic-bezier(0.16, 1, 0.3, 1)
+   - Filtered list items: fade in with 4px upward slide over 180ms
+   ================================================================ */
+
+@keyframes screenFadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-enter {
+  animation: screenFadeSlideUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes cardItemFadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-item-enter {
+  animation: cardItemFadeSlideUp 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes sheetSlideUpMobile {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalScaleDesktop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-sheet-enter {
+  animation: sheetSlideUpMobile 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@media (min-width: 640px) {
+  .modal-sheet-enter {
+    animation: modalScaleDesktop 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes backdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop-enter {
+  animation: backdropFade 220ms ease-out forwards;
+}
+
+/* ================================================================
+   AUTOMATIC THEME TOKEN ADAPTERS FOR LEGACY HARDCODED CLASSES
    ================================================================ */
 .bg-\[\#17181B\], .bg-\[\#17181b\],
 .bg-\[\#0E1512\], .bg-\[\#0e1512\] {
@@ -360,52 +479,19 @@
   color: var(--text-muted) !important;
 }
 
-.text-\[\#E2896A\], .text-\[\#e2896a\],
-.text-\[\#EA9679\], .text-\[\#ea9679\],
-.text-\[\#4CAF7D\], .text-\[\#4caf7d\],
-.text-\[\#2FD191\], .text-\[\#2fd191\] {
-  color: var(--accent) !important;
-}
-
-.bg-\[\#E2896A\], .bg-\[\#e2896a\],
-.bg-\[\#4CAF7D\], .bg-\[\#4caf7d\],
-.bg-\[\#2FD191\], .bg-\[\#2fd191\] {
-  background-color: var(--accent) !important;
-}
-
-.bg-\[\#E2896A\]\/10, .bg-\[\#e2896a\]\/10,
-.bg-\[\#4CAF7D\]\/10, .bg-\[\#4caf7d\]\/10,
-.bg-\[\#2FD191\]\/10, .bg-\[\#2fd191\]\/10 {
-  background-color: color-mix(in srgb, var(--accent) 12%, transparent) !important;
-}
-
-.bg-\[\#E2896A\]\/20, .bg-\[\#e2896a\]\/20,
-.bg-\[\#4CAF7D\]\/20, .bg-\[\#4caf7d\]\/20,
-.bg-\[\#2FD191\]\/20, .bg-\[\#2fd191\]\/20 {
-  background-color: color-mix(in srgb, var(--accent) 20%, transparent) !important;
-}
-
-.border-white\/\[0\.04\], .border-white\/5, .border-white\/10 {
-  border-color: color-mix(in srgb, var(--text-muted) 12%, transparent) !important;
-}
-
-.hover\:bg-white\/\[0\.02\]:hover,
-.hover\:bg-white\/\[0\.04\]:hover {
-  background-color: color-mix(in srgb, var(--text-primary) 4%, transparent) !important;
-}
-
 /* Form input styling for neumorphic inset */
 input, select, textarea {
   background-color: var(--surface) !important;
   color: var(--text-primary) !important;
   border: none !important;
+  outline: none !important;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none !important;
-  box-shadow: inset -5px -5px 12px var(--shadow-light),
-              inset  5px  5px 12px var(--shadow-dark),
-              0 0 0 1.5px color-mix(in srgb, var(--accent) 30%, transparent) !important;
+  box-shadow: inset -5px -5px 14px var(--shadow-light),
+              inset  5px  5px 14px var(--shadow-dark),
+              0 0 0 1.5px color-mix(in srgb, var(--accent-blue) 35%, transparent) !important;
 }
 
 /* Subtle scrollbar */

@@ -199,7 +199,7 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
               <div
                 key={client.id}
                 onClick={() => setDetailClient(client)}
-                className="neo-raised bg-[var(--surface-2)] p-4 rounded-2xl cursor-pointer hover:brightness-105 active:scale-[0.995] transition-all flex items-center justify-between gap-4"
+                className="neo-raised bg-[var(--surface-2)] p-4 rounded-2xl cursor-pointer card-item-enter flex items-center justify-between gap-4"
               >
                 {/* Left: 3 Lines */}
                 <div className="space-y-1 min-w-0 flex-1">
@@ -241,11 +241,11 @@ export const ClientManagement: React.FC<ClientManagementProps> = ({
       {/* DETAIL SHEET PATTERN: Bottom Sheet / Modal */}
       {detailClient && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm modal-backdrop-enter"
           onClick={() => setDetailClient(null)}
         >
           <div 
-            className="w-full max-w-lg bg-[var(--surface-2)] neo-modal rounded-t-3xl sm:rounded-3xl p-6 space-y-5 text-left border border-white/[0.08] shadow-2xl animate-in slide-in-from-bottom duration-200"
+            className="w-full max-w-lg bg-[var(--surface-2)] neo-modal rounded-t-3xl sm:rounded-3xl p-6 space-y-5 text-left modal-sheet-enter"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header: "[Entity] Details" with X to close */}
