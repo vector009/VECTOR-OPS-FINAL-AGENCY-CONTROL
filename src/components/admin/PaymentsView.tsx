@@ -217,7 +217,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
                       <td className="py-3.5 px-4 font-semibold text-[#EDEAE2]">
                         {client?.company_name || 'Client'}
                       </td>
-                      <td className="py-3.5 px-4 font-mono-numbers text-[#E2896A]">
+                      <td className="py-3.5 px-4 font-mono-numbers text-[#00C6FF] font-medium">
                         {invoice?.invoice_number || 'INV'}
                       </td>
                       <td className="py-3.5 px-4 font-mono-numbers text-[#8B8D93]">

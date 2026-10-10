@@ -118,7 +118,7 @@ export const AuditLogView: React.FC = () => {
                       {new Date(log.created_at).toLocaleString()}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-xs whitespace-nowrap">
-                      <span className="text-[#E2896A]">{log.action.replace(/_/g, ' ').toLowerCase()}</span>
+                      <span className="text-[#00C6FF] font-mono">{log.action.replace(/_/g, ' ').toLowerCase()}</span>
                     </td>
                     <td className="py-3.5 px-4 text-[#8B8D93] text-xs">
                       {log.entity_type.toLowerCase()}

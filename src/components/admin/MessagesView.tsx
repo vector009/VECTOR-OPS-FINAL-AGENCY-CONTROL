@@ -175,12 +175,12 @@ export const MessagesView: React.FC = () => {
 
                     <div className="flex items-center gap-2 mt-2">
                       {unreadCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold text-[#E2896A]">
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#00C6FF]/15 text-[#00C6FF] border border-[#00C6FF]/30 font-mono">
                           {unreadCount} unread
                         </span>
                       )}
                       {needsReply && unreadCount === 0 && (
-                        <span className="text-[11px] text-[#E0A94C]">
+                        <span className="text-[11px] text-[var(--warning)]">
                           Needs reply
                         </span>
                       )}
@@ -193,15 +193,15 @@ export const MessagesView: React.FC = () => {
         </div>
 
         {/* Right 8 Cols: Active Conversation & AI Assistant */}
-        <div className="md:col-span-8 flex flex-col justify-between bg-[#1D1F23]">
+        <div className="md:col-span-8 flex flex-col justify-between bg-[var(--card-bg)]">
           
           {selectedClient ? (
             <>
               {/* Thread Header */}
-              <div className="p-4 bg-[#17181B] flex items-center justify-between">
+              <div className="p-4 bg-white/[0.02] border-b border-[var(--card-border)] flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-sm text-[#EDEAE2]">{selectedClient.company_name}</h3>
-                  <p className="text-xs text-[#8B8D93]">
+                  <h3 className="font-semibold text-sm text-white">{selectedClient.company_name}</h3>
+                  <p className="text-xs text-[var(--text-muted)]">
                     {selectedClient.contact_name} · Local time: {formatInTimezone(new Date().toISOString(), selectedClient.timezone, 'time')} ({selectedClient.timezone})
                   </p>
                 </div>
@@ -213,33 +213,33 @@ export const MessagesView: React.FC = () => {
 
               {/* AI Message Assistant Box */}
               {latestClientMessage && (latestClientMessage.ai_suggested_reply || latestClientMessage.ai_category) && (
-                <div className="m-4 p-3.5 rounded-xl neo-inset space-y-2.5">
+                <div className="m-4 p-3.5 rounded-2xl neo-inset space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-[#E2896A]" />
-                      <span className="font-semibold text-[#EDEAE2] text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#00C6FF]" />
+                      <span className="font-semibold text-white text-xs">
                         AI copilot message analysis
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-[#E0A94C]">
+                      <span className="text-[var(--warning)] font-mono">
                         {latestClientMessage.ai_category || 'General'}
                       </span>
-                      <span className="text-[#8B8D93]">·</span>
-                      <span className="text-[#E2896A]">
+                      <span className="text-[var(--text-muted)]">·</span>
+                      <span className="text-[#00C6FF] font-mono">
                         Priority: {latestClientMessage.ai_priority ? latestClientMessage.ai_priority.toLowerCase() : 'medium'}
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-[#8B8D93] leading-relaxed">
-                    <span className="font-semibold text-[#EDEAE2]">Summary: </span>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                    <span className="font-semibold text-white">Summary: </span>
                     {latestClientMessage.ai_summary || latestClientMessage.body}
                   </p>
 
                   {latestClientMessage.ai_suggested_reply && (
-                    <div className="p-2.5 rounded-lg bg-[#1D1F23] text-xs text-[#EDEAE2] leading-relaxed">
-                      <span className="text-[11px] text-[#8B8D93] block mb-1">
+                    <div className="p-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-xs text-white leading-relaxed">
+                      <span className="text-[11px] text-[var(--text-muted)] block mb-1">
                         AI suggested draft (propose only):
                       </span>
                       "{latestClientMessage.ai_suggested_reply}"
@@ -249,7 +249,7 @@ export const MessagesView: React.FC = () => {
                   <div className="flex items-center justify-between pt-1 text-xs">
                     <button
                       onClick={() => handleCreateTaskFromMessage(latestClientMessage)}
-                      className="text-[#8B8D93] hover:text-[#EDEAE2] inline-flex items-center gap-1 text-xs transition-colors"
+                      className="text-[var(--text-muted)] hover:text-white inline-flex items-center gap-1 text-xs transition-colors cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Create task from message</span>
@@ -258,7 +258,7 @@ export const MessagesView: React.FC = () => {
                     {latestClientMessage.ai_suggested_reply && (
                       <button
                         onClick={() => handleUseDraft(latestClientMessage.ai_suggested_reply || '')}
-                        className="px-3 py-1 font-semibold text-[#17181B] bg-[#E2896A] hover:bg-[#EA9679] rounded-md transition-colors text-xs"
+                        className="btn-primary px-3 py-1 text-xs cursor-pointer"
                       >
                         Use draft
                       </button>

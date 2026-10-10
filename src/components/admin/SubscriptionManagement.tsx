@@ -117,12 +117,12 @@ export const SubscriptionManagement: React.FC = () => {
       </div>
 
       {/* Price Snapshotting Invariant Notice — Raised Neumorphic Container */}
-      <div className="p-5 rounded-[16px] neo-raised bg-[#1D1F23] flex items-center justify-between gap-4 text-xs">
+      <div className="p-5 rounded-2xl neo-raised bg-[var(--card-bg)] flex items-center justify-between gap-4 text-xs border border-[var(--card-border)]">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-[#E2896A] shrink-0" />
+          <ShieldCheck className="w-5 h-5 text-[#00C6FF] shrink-0" />
           <div className="space-y-0.5">
-            <span className="font-semibold text-[#EDEAE2]">Snapshot protection:</span>
-            <span className="text-[#8B8D93] ml-1">
+            <span className="font-semibold text-white">Snapshot protection:</span>
+            <span className="text-[var(--text-muted)] ml-1">
               Modifying a plan template will never alter existing client subscriptions. Clients retain their contractual snapshotted price.
             </span>
           </div>
@@ -238,10 +238,10 @@ export const SubscriptionManagement: React.FC = () => {
                       <td className="py-3.5 px-4 text-[#EDEAE2]">
                         {sub.service_name}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-mono-numbers font-semibold text-[#4CAF7D]">
+                      <td className="py-3.5 px-4 text-right font-mono-numbers font-semibold text-[var(--success)]">
                         {formatUSD(sub.recurring_fee_cents)}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-mono-numbers font-semibold text-[#E2896A]">
+                      <td className="py-3.5 px-4 text-right font-mono-numbers font-semibold text-[#00C6FF]">
                         {formatUSD(sub.setup_fee_cents)}
                       </td>
                       <td className="py-3.5 px-4 font-mono-numbers text-[#8B8D93]">

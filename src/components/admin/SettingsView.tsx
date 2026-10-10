@@ -387,8 +387,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="space-y-1">
-              <label className="font-semibold text-[#EDEAE2] flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#E2896A]" />
+              <label className="font-semibold text-white flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#00C6FF]" />
                 <span>Admin timezone (default: Asia/Kolkata)</span>
               </label>
               <select
@@ -478,12 +478,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="neo-raised p-6 rounded-2xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <LinkIcon className="w-5 h-5 text-[#E2896A]" />
+            <LinkIcon className="w-5 h-5 text-[#00C6FF]" />
             <div>
-              <h2 className="text-sm font-semibold text-[#EDEAE2]">
+              <h2 className="text-sm font-semibold text-white">
                 Agency payment links
               </h2>
-              <p className="text-xs text-[#8B8D93]">
+              <p className="text-xs text-[var(--text-muted)]">
                 Manage direct payment destinations (WhatsApp, PayPal, Telegram, etc.) assignable per client
               </p>
             </div>
@@ -492,7 +492,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <button
             type="button"
             onClick={handleOpenAddLink}
-            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto"
+            className="btn-primary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add payment link</span>
@@ -500,12 +500,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {paymentLinks.length === 0 ? (
-          <div className="p-8 text-center rounded-xl neo-flat bg-[#1D1F23] text-xs text-[#8B8D93] space-y-3">
+          <div className="p-8 text-center rounded-2xl neo-flat bg-[var(--card-bg)] text-xs text-[var(--text-muted)] space-y-3">
             <p>No payment links configured. Click "Add payment link" to register your agency's WhatsApp, PayPal, or custom link.</p>
             <button
               type="button"
               onClick={handleOpenAddLink}
-              className="text-xs text-[#E2896A] hover:underline font-medium"
+              className="text-xs text-[#00C6FF] hover:underline font-medium cursor-pointer"
             >
               + Create your first payment link
             </button>
@@ -515,7 +515,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {paymentLinks.map((link) => (
               <div
                 key={link.id}
-                className="p-4 rounded-xl neo-flat bg-[#1D1F23] flex items-start justify-between gap-3 transition-colors"
+                className="p-4 rounded-2xl neo-flat bg-[var(--card-bg)] flex items-start justify-between gap-3 transition-colors"
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl neo-raised flex items-center justify-center shrink-0">
@@ -524,24 +524,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-[#EDEAE2] truncate">
+                      <span className="text-xs font-semibold text-white truncate">
                         {link.label}
                       </span>
-                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#8B8D93]">
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-white/5 text-[var(--text-muted)]">
                         {link.platform}
                       </span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${link.is_active ? 'bg-[#4CAF7D]/10 text-[#4CAF7D]' : 'bg-white/5 text-[#8B8D93]'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${link.is_active ? 'bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/30' : 'bg-white/5 text-[var(--text-muted)]'}`}>
                         {link.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[11px] text-[#8B8D93] truncate">
+                    <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] truncate">
                       <span className="truncate font-mono">{link.url}</span>
                       <a
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#E2896A] hover:text-[#EA9679] shrink-0 p-0.5"
+                        className="text-[#00C6FF] hover:brightness-125 shrink-0 p-0.5"
                         title="Test link in new tab"
                       >
                         <ExternalLink className="w-3 h-3" />
@@ -869,9 +869,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   id="link-is-active"
                   checked={linkIsActive}
                   onChange={(e) => setLinkIsActive(e.target.checked)}
-                  className="rounded accent-[#E2896A]"
+                  className="rounded accent-[#7662FA]"
                 />
-                <label htmlFor="link-is-active" className="text-xs text-[#EDEAE2] cursor-pointer">
+                <label htmlFor="link-is-active" className="text-xs text-white cursor-pointer">
                   Link is active (visible in onboarding & client assignment)
                 </label>
               </div>
@@ -880,13 +880,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsLinkModalOpen(false)}
-                  className="px-4 py-2 rounded-xl neo-raised text-xs text-[#8B8D93] hover:text-[#EDEAE2]"
+                  className="btn-secondary text-xs px-4 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5"
+                  className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{editingLinkId ? 'Save changes' : 'Create link'}</span>
@@ -901,19 +901,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="neo-raised p-6 rounded-2xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <Cloud className="w-5 h-5 text-[#E2896A]" />
+            <Cloud className="w-5 h-5 text-[#00C6FF]" />
             <div>
-              <h2 className="text-sm font-semibold text-[#EDEAE2]">
+              <h2 className="text-sm font-semibold text-white">
                 Cloudflare Hosting & Supabase Backend Connection
               </h2>
-              <p className="text-xs text-[#8B8D93]">
+              <p className="text-xs text-[var(--text-muted)]">
                 Zero-friction backend connectivity for Cloudflare Pages deployment
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-3 py-1 rounded-full neo-inset text-xs">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[#4CAF7D] animate-pulse' : 'bg-[#E2896A]'}`} />
-            <span className="font-medium text-[#EDEAE2]">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[var(--success)] animate-pulse' : 'bg-[#00C6FF]'}`} />
+            <span className="font-medium text-white">
               {isConnected ? 'Supabase Remote Cluster Active' : 'Local Enterprise Ledger'}
             </span>
           </div>
@@ -922,37 +922,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Cloudflare Integration Architecture Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl neo-inset space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#EDEAE2]">
-              <div className="w-5 h-5 rounded-md bg-[#E2896A]/20 text-[#E2896A] flex items-center justify-center text-[10px] font-bold">1</div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-white">
+              <div className="w-5 h-5 rounded-md bg-[#00C6FF]/20 text-[#00C6FF] flex items-center justify-center text-[10px] font-bold">1</div>
               <span>Cloudflare Pages Environment Variables</span>
             </div>
-            <p className="text-[11px] text-[#8B8D93] leading-relaxed">
+            <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
               When hosting on Cloudflare Pages, go to <strong>Pages Dashboard &rarr; Settings &rarr; Environment Variables</strong>, then add:
             </p>
-            <div className="bg-[#17181B] p-2.5 rounded-lg font-mono text-[11px] text-[#EDEAE2] space-y-1">
-              <div><span className="text-[#E2896A]">VITE_SUPABASE_URL</span>=https://your-id.supabase.co</div>
-              <div><span className="text-[#E2896A]">VITE_SUPABASE_ANON_KEY</span>=your-anon-public-key</div>
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-2.5 rounded-lg font-mono text-[11px] text-white space-y-1">
+              <div><span className="text-[#00C6FF]">VITE_SUPABASE_URL</span>=https://your-id.supabase.co</div>
+              <div><span className="text-[#00C6FF]">VITE_SUPABASE_ANON_KEY</span>=your-anon-public-key</div>
             </div>
-            <p className="text-[10px] text-[#8B8D93]">
+            <p className="text-[10px] text-[var(--text-muted)]">
               Cloudflare Pages automatically injects these during build. Frontend connects with zero setup.
             </p>
           </div>
 
           <div className="p-4 rounded-xl neo-inset space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#EDEAE2]">
-              <div className="w-5 h-5 rounded-md bg-[#4CAF7D]/20 text-[#4CAF7D] flex items-center justify-center text-[10px] font-bold">2</div>
-              <span>Frontend Code Config (<code className="text-[#EDEAE2]">src/config/supabaseConfig.ts</code>)</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-white">
+              <div className="w-5 h-5 rounded-md bg-[var(--success)]/20 text-[var(--success)] flex items-center justify-center text-[10px] font-bold">2</div>
+              <span>Frontend Code Config (<code className="text-white">src/config/supabaseConfig.ts</code>)</span>
             </div>
-            <p className="text-[11px] text-[#8B8D93] leading-relaxed">
-              Alternatively, open <code className="text-[#EDEAE2]">src/config/supabaseConfig.ts</code> in your project codebase and write your Supabase URL & Anon Key directly:
+            <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+              Alternatively, open <code className="text-white">src/config/supabaseConfig.ts</code> in your project codebase and write your Supabase URL & Anon Key directly:
             </p>
-            <div className="bg-[#17181B] p-2.5 rounded-lg font-mono text-[11px] text-[#EDEAE2] space-y-1">
-              <div><span className="text-[#8B8D93]">export const</span> SUPABASE_CONFIG = &#123;</div>
-              <div className="pl-4">url: <span className="text-[#4CAF7D]">'https://your-id.supabase.co'</span>,</div>
-              <div className="pl-4">anonKey: <span className="text-[#4CAF7D]">'your-anon-key'</span></div>
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-2.5 rounded-lg font-mono text-[11px] text-white space-y-1">
+              <div><span className="text-[var(--text-muted)]">export const</span> SUPABASE_CONFIG = &#123;</div>
+              <div className="pl-4">url: <span className="text-[var(--success)]">'https://your-id.supabase.co'</span>,</div>
+              <div className="pl-4">anonKey: <span className="text-[var(--success)]">'your-anon-key'</span></div>
               <div>&#125;;</div>
             </div>
-            <p className="text-[10px] text-[#8B8D93]">
+            <p className="text-[10px] text-[var(--text-muted)]">
               When you push code to GitHub/Git and deploy to Cloudflare, it connects immediately.
             </p>
           </div>
@@ -961,8 +961,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Live Browser Override & Health Verification Form */}
         <form onSubmit={handleVerifyAndSaveSupabase} className="p-4 rounded-xl neo-flat space-y-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-2">
-              <Database className="w-4 h-4 text-[#E2896A]" />
+            <span className="text-xs font-semibold text-white flex items-center gap-2">
+              <Database className="w-4 h-4 text-[#00C6FF]" />
               Active Supabase Credentials (Current Environment)
             </span>
             {isConnected && (
@@ -1031,33 +1031,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="neo-raised p-6 rounded-2xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <Server className="w-4 h-4 text-[#E2896A]" />
-            <h2 className="text-sm font-semibold text-[#EDEAE2]">
+            <Server className="w-4 h-4 text-[#00C6FF]" />
+            <h2 className="text-sm font-semibold text-white">
               Production Database Lifecycle & Data State
             </h2>
           </div>
-          <span className="text-xs text-[#8B8D93]">
-            Active records: <strong className="text-[#EDEAE2] font-mono-numbers">{clientsCount}</strong> clients · <strong className="text-[#EDEAE2] font-mono-numbers">{invoicesCount}</strong> invoices · <strong className="text-[#EDEAE2] font-mono-numbers">{appointmentsCount}</strong> bookings
+          <span className="text-xs text-[var(--text-muted)]">
+            Active records: <strong className="text-white font-mono-numbers">{clientsCount}</strong> clients · <strong className="text-white font-mono-numbers">{invoicesCount}</strong> invoices · <strong className="text-white font-mono-numbers">{appointmentsCount}</strong> bookings
           </span>
         </div>
 
-        <p className="text-xs text-[#8B8D93] leading-relaxed">
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
           VectorOps operates with real database schemas and zero mock reliance. You can wipe all initial sample datasets and operate with a 100% clean production store to onboard your actual clients, or restore the baseline verification dataset anytime.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div className="p-4 rounded-xl neo-inset space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#EDEAE2]">
-              <Sparkles className="w-4 h-4 text-[#E2896A]" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-white">
+              <Sparkles className="w-4 h-4 text-[#00C6FF]" />
               <span>Clean Slate Production Mode</span>
             </div>
-            <p className="text-[11px] text-[#8B8D93]">
+            <p className="text-[11px] text-[var(--text-muted)]">
               Resets client list, invoices, appointments, payments, and messages to empty (0 records). Gives a completely fresh slate to enter your real enterprise accounts.
             </p>
             <button
               type="button"
               onClick={handleClearToEmptyProduction}
-              className="btn-secondary text-xs px-4 py-2 text-[#E2604F] hover:text-[#E2604F] flex items-center gap-2 w-full justify-center"
+              className="btn-secondary text-xs px-4 py-2 text-[var(--danger)] hover:text-[var(--danger)] flex items-center gap-2 w-full justify-center cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Wipe sample records & start clean</span>

@@ -167,13 +167,13 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
   if (!client) {
     return (
-      <div className="min-h-screen bg-[#17181B] text-[#EDEAE2] flex items-center justify-center p-6">
-        <div className="max-w-md w-full neo-focal rounded-3xl p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#E2896A]/20 text-[#E2896A] mx-auto flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] text-white flex items-center justify-center p-6">
+        <div className="max-w-md w-full neo-modal rounded-3xl p-8 text-center space-y-4 border border-[var(--card-border)] bg-[var(--card-bg)] shadow-2xl">
+          <div className="w-12 h-12 rounded-2xl bg-[#00C6FF]/15 text-[#00C6FF] border border-[#00C6FF]/30 mx-auto flex items-center justify-center">
             <Building2 className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-semibold text-[#EDEAE2]">No Client Account Active</h2>
-          <p className="text-xs text-[#8B8D93] leading-relaxed">
+          <h2 className="text-xl font-bold text-white">No Client Account Active</h2>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
             There are currently no registered client profiles in the operational database. Use the Admin Console to onboard a client or register a client credentials profile.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -190,19 +190,37 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-1)] text-[var(--text-primary)] flex flex-col transition-colors">
-      {/* Top Bar for Client Portal — Surface-2, Raised, Zero Border */}
-      <header className="bg-[var(--surface-2)] neo-raised sticky top-0 z-40">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col transition-colors selection:bg-[#7662FA]/30 selection:text-white">
+      {/* Top Bar for Client Portal — Glass Panel */}
+      <header className="bg-[var(--card-bg)]/80 backdrop-blur-2xl border-b border-[var(--card-border)] sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent-green)] text-[#0E1512] font-bold text-xs flex items-center justify-center shadow-sm">
-              VO
+          <button
+            onClick={onBackToLanding}
+            className="flex items-center gap-2.5 text-left cursor-pointer hover:opacity-85 transition-opacity"
+            title="Return to Public Landing Page"
+          >
+            <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.1] flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.5L2.5 20.5H21.5L12 2.5Z" fill="url(#client-nav-delta)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinejoin="round" />
+                <path d="M12 7.5L6.5 18H17.5L12 7.5Z" fill="#0B0F17" opacity="0.6" />
+                <defs>
+                  <linearGradient id="client-nav-delta" x1="2.5" y1="2.5" x2="21.5" y2="20.5" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#9B51E0" />
+                    <stop offset="0.5" stopColor="#7662FA" />
+                    <stop offset="1" stopColor="#00C6FF" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
-            <span className="text-sm font-semibold text-[var(--text-primary)]">VectorOps</span>
-            <span className="text-xs text-[var(--text-muted)] pl-2 hidden sm:inline-block">
-              Client portal
-            </span>
-          </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold tracking-tight text-white">
+                Vector<span className="text-gradient-purple-blue">Ops</span>
+              </span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[var(--text-muted)] pl-1.5 font-mono hidden sm:inline-block">
+                Client Portal
+              </span>
+            </div>
+          </button>
 
           {/* Switcher & Role Toggles */}
           <div className="flex items-center gap-3">
@@ -215,7 +233,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                 <select
                   value={activeClientId}
                   onChange={(e) => setActiveClientId(e.target.value)}
-                  className="px-3 py-1.5 text-xs neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none"
+                  className="px-3 py-1.5 text-xs rounded-xl text-white bg-[var(--card-bg)] focus:outline-none"
                 >
                   {clients.map(c => (
                     <option key={c.id} value={c.id}>{c.company_name}</option>
@@ -223,27 +241,26 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                 </select>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-                <span className="w-2 h-2 rounded-full bg-[var(--accent-green)]" />
-                <span className="text-[var(--text-primary)] font-medium">{client.company_name}</span>
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-[var(--card-border)] text-xs">
+                <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)]" />
+                <span className="text-white font-medium">{client.company_name}</span>
                 <span className="text-[var(--text-muted)]">({client.contact_name})</span>
               </div>
             )}
 
             <button
               onClick={onSwitchToAdmin}
-              className="btn-secondary text-xs px-3.5 py-1.5"
+              className="btn-secondary text-xs px-3.5 py-1.5 cursor-pointer"
             >
               Admin console
             </button>
 
             <button
               onClick={onLogout}
-              className="px-3 py-1.5 rounded-xl neo-raised text-xs text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors flex items-center gap-1.5"
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Sign out of client portal"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
@@ -253,7 +270,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
       <main className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full space-y-6">
         
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 pb-2 text-xs">
+        <div className="flex items-center gap-2 pb-2 text-xs overflow-x-auto">
           {[
             { id: 'dashboard', label: 'Overview' },
             { id: 'billing', label: `Billing & invoices (${invoices.length})` },
@@ -263,10 +280,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'neo-inset text-[var(--accent-green)] font-semibold'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                  ? 'bg-gradient-to-r from-[#9B51E0]/20 via-[#7662FA]/15 to-[#00C6FF]/15 text-white font-semibold border border-[#7662FA]/40 shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               {tab.label}
@@ -722,76 +739,76 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
       {/* Book Appointment Modal */}
       {isBookModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Request strategy meeting</h2>
-              <button onClick={() => setIsBookModalOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter">
+          <div className="bg-[var(--card-bg)] neo-modal border border-[var(--card-border)] rounded-2xl w-full max-w-md overflow-hidden modal-sheet-enter shadow-2xl">
+            <div className="px-6 py-4 bg-[var(--card-bg)]/80 flex items-center justify-between border-b border-[var(--card-border)]">
+              <h2 className="text-base font-bold text-white">Request strategy meeting</h2>
+              <button onClick={() => setIsBookModalOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleRequestBooking} className="p-6 space-y-4 text-xs">
               {bookingError && (
-                <div className="p-3 rounded-lg neo-inset text-[var(--accent-red)]">
+                <div className="p-3 rounded-xl bg-[var(--danger)]/15 border border-[var(--danger)]/30 text-[var(--danger)]">
                   {bookingError}
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="font-semibold text-[var(--text-primary)]">Meeting topic *</label>
+                <label className="font-semibold text-white">Meeting topic *</label>
                 <input
                   type="text"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none focus:border-[#7662FA]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-[var(--text-primary)]">Date *</label>
+                  <label className="font-semibold text-white">Date *</label>
                   <input
                     type="date"
                     value={bookDate}
                     onChange={(e) => setBookDate(e.target.value)}
-                    className="w-full px-3 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none font-mono-numbers"
+                    className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none focus:border-[#7662FA] font-mono-numbers"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-[var(--text-primary)]">Time ({client.timezone}) *</label>
+                  <label className="font-semibold text-white">Time ({client.timezone}) *</label>
                   <input
                     type="time"
                     value={bookTime}
                     onChange={(e) => setBookTime(e.target.value)}
-                    className="w-full px-3 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none font-mono-numbers"
+                    className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none focus:border-[#7662FA] font-mono-numbers"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-[var(--text-primary)]">Agenda / notes</label>
+                <label className="font-semibold text-white">Agenda / notes</label>
                 <textarea
                   rows={2}
                   placeholder="What would you like to review or tune in your voice agent?"
                   value={bookReason}
                   onChange={(e) => setBookReason(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#7662FA]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-white/5">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[var(--card-border)]">
                 <button
                   type="button"
                   onClick={() => setIsBookModalOpen(false)}
-                  className="px-4 py-2 font-normal text-[var(--text-muted)] hover:text-[var(--text-primary)] neo-raised rounded-lg"
+                  className="btn-secondary text-xs px-4 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-[#0E1512] bg-[var(--accent-green)] hover:brightness-105 rounded-lg transition-colors"
+                  className="btn-primary text-xs px-4 py-2 cursor-pointer"
                 >
                   Transmit request
                 </button>
@@ -803,11 +820,11 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
 
       {/* Wire Reference Modal */}
       {isWireModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[var(--surface-2)] neo-modal rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Submit payment reference</h2>
-              <button onClick={() => setIsWireModalOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter">
+          <div className="bg-[var(--card-bg)] neo-modal border border-[var(--card-border)] rounded-2xl w-full max-w-md overflow-hidden modal-sheet-enter shadow-2xl">
+            <div className="px-6 py-4 bg-[var(--card-bg)]/80 flex items-center justify-between border-b border-[var(--card-border)]">
+              <h2 className="text-base font-bold text-white">Submit payment reference</h2>
+              <button onClick={() => setIsWireModalOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -818,28 +835,28 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
               </p>
 
               <div className="space-y-1">
-                <label className="font-semibold text-[var(--text-primary)]">Settlement reference code *</label>
+                <label className="font-semibold text-white">Settlement reference code *</label>
                 <input
                   type="text"
                   placeholder="e.g. FED-WIRE-99214, WISE-TRX-88102"
                   value={wireRef}
                   onChange={(e) => setWireRef(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[var(--text-primary)] bg-[var(--surface-1)] focus:outline-none font-mono"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#7662FA] font-mono"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-white/5">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[var(--card-border)]">
                 <button
                   type="button"
                   onClick={() => setIsWireModalOpen(false)}
-                  className="px-4 py-2 font-normal text-[var(--text-muted)] hover:text-[var(--text-primary)] neo-raised rounded-lg"
+                  className="btn-secondary text-xs px-4 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!wireRef.trim()}
-                  className="px-4 py-2 font-semibold text-[#0E1512] bg-[var(--accent-green)] hover:brightness-105 rounded-lg transition-colors disabled:opacity-50"
+                  className="btn-primary text-xs px-4 py-2 cursor-pointer disabled:opacity-50"
                 >
                   Submit reference
                 </button>

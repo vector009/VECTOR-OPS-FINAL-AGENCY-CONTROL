@@ -238,7 +238,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       className="btn-secondary text-xs px-3.5 py-1.5 whitespace-nowrap shrink-0 flex items-center gap-1.5"
                     >
                       <span>{item.actionText}</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-[#E2896A]" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-[#00C6FF]" />
                     </button>
                   </div>
                 );
@@ -253,7 +253,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               className="p-4 rounded-[16px] neo-raised bg-[#1D1F23] text-left transition-all hover:translate-y-[-1px] cursor-pointer"
             >
               <div className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#E2896A]" />
+                <Calendar className="w-3.5 h-3.5 text-[#00C6FF]" />
                 <span>Appointments</span>
               </div>
               <div className="text-xs text-[#8B8D93] mt-1 font-mono-numbers">
@@ -303,7 +303,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 className="p-3.5 rounded-xl neo-inset space-y-1.5"
               >
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-xs text-[#E2896A]">
+                  <span className="font-semibold text-xs text-[#00C6FF]">
                     {log.action.replace(/_/g, ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}
                   </span>
                   <span className="text-[11px] text-[#8B8D93] font-mono-numbers">

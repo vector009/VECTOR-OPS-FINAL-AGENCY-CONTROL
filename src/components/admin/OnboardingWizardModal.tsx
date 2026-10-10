@@ -237,7 +237,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#E2896A', '#4CAF7D', '#EDEAE2'],
+        colors: ['#00C6FF', '#7662FA', '#9B51E0'],
       });
 
       onClientCreated(client);
@@ -291,31 +291,31 @@ Note: Your account is active immediately. You can sign in right away.`;
       >
         
         {/* Wizard Header */}
-        <div className="px-6 py-4 bg-[var(--surface-1)] flex items-center justify-between border-b border-white/[0.06]">
+        <div className="px-6 py-4 bg-[var(--card-bg)]/80 flex items-center justify-between border-b border-[var(--card-border)]">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-[#E2896A]/10 text-[#E2896A]">
+            <div className="p-1.5 rounded-lg bg-[#7662FA]/15 text-[#00C6FF]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#EDEAE2]">Onboard client account</h2>
-              <p className="text-xs text-[#8B8D93]">
+              <h2 className="text-base font-bold text-white">Onboard client account</h2>
+              <p className="text-xs text-[var(--text-muted)]">
                 {step < 7 ? `Step ${step} of 6: Direct password setup & instant provisioning` : 'Client credentials ready to share'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-[#8B8D93] hover:text-[#EDEAE2] rounded-md transition-colors"
+            className="p-1.5 text-[var(--text-muted)] hover:text-white rounded-md transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Step Progress Bar */}
         {step < 7 && (
-          <div className="w-full bg-[#17181B] h-1">
+          <div className="w-full bg-white/[0.04] h-1.5">
             <div
-              className="bg-[#E2896A] h-1 transition-all duration-300"
+              className="bg-gradient-to-r from-[#9B51E0] via-[#7662FA] to-[#00C6FF] h-1.5 transition-all duration-300 shadow-[0_0_8px_rgba(0,194,255,0.5)]"
               style={{ width: `${(step / 6) * 100}%` }}
             />
           </div>
@@ -410,15 +410,15 @@ Note: Your account is active immediately. You can sign in right away.`;
                 {/* PORTAL PASSWORD FIELD & GENERATE PASSWORD BUTTON */}
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
-                      <KeyRound className="w-3.5 h-3.5 text-[#E2896A]" />
+                    <label className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-[#00C6FF]" />
                       <span>Portal password *</span>
                     </label>
                     
                     <button
                       type="button"
                       onClick={handleGeneratePassword}
-                      className="text-[11px] text-[#E2896A] hover:text-[#EA9679] flex items-center gap-1 font-medium transition-colors"
+                      className="text-[11px] text-[#00C6FF] hover:brightness-125 flex items-center gap-1 font-medium transition-colors cursor-pointer"
                     >
                       <RefreshCw className="w-3 h-3" />
                       <span>Generate password</span>
@@ -505,8 +505,8 @@ Note: Your account is active immediately. You can sign in right away.`;
                       </span>
                     </div>
                     <p className="text-xs text-[#8B8D93] mt-1 leading-relaxed">{p.description}</p>
-                    <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-xs text-[#8B8D93]">
-                      <span>Setup fee: <span className="text-[#E2896A] font-mono-numbers font-semibold">{formatUSD(p.setup_fee_cents)}</span></span>
+                    <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                      <span>Setup fee: <span className="text-[#00C6FF] font-mono-numbers font-semibold">{formatUSD(p.setup_fee_cents)}</span></span>
                       <span>Grace: {p.grace_period_days} days</span>
                     </div>
                   </div>
@@ -515,8 +515,8 @@ Note: Your account is active immediately. You can sign in right away.`;
                 {/* PART 2: Payment redirect selector */}
                 <div className="pt-3 border-t border-white/5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-[#EDEAE2] flex items-center gap-1.5">
-                      <LinkIcon className="w-3.5 h-3.5 text-[#E2896A]" />
+                    <label className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      <LinkIcon className="w-3.5 h-3.5 text-[#00C6FF]" />
                       <span>Payment redirect (optional)</span>
                     </label>
                     <span className="text-[10px] text-[#8B8D93]">Portal "Pay now" action</span>
@@ -696,22 +696,22 @@ Note: Your account is active immediately. You can sign in right away.`;
                   <span className="text-[#EDEAE2]">{contactName} ({email})</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[#8B8D93]">Portal password:</span>
-                  <span className="font-mono text-[#E2896A]">
+                  <span className="text-[var(--text-muted)]">Portal password:</span>
+                  <span className="font-mono text-[#00C6FF]">
                     {showPassword ? portalPassword : '••••••••••••'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[#8B8D93]">Client timezone:</span>
-                  <span className="font-mono-numbers text-[#EDEAE2]">{timezone}</span>
+                  <span className="text-[var(--text-muted)]">Client timezone:</span>
+                  <span className="font-mono-numbers text-white">{timezone}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[#8B8D93]">Assigned plan:</span>
-                  <span className="font-semibold text-[#EDEAE2]">{selectedPlan.name}</span>
+                  <span className="text-[var(--text-muted)]">Assigned plan:</span>
+                  <span className="font-semibold text-white">{selectedPlan.name}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-[#8B8D93]">Setup fee invoice:</span>
-                  <span className="font-mono-numbers font-semibold text-[#E2896A]">{formatUSD(selectedPlan.setup_fee_cents)}</span>
+                  <span className="text-[var(--text-muted)]">Setup fee invoice:</span>
+                  <span className="font-mono-numbers font-semibold text-[#00C6FF]">{formatUSD(selectedPlan.setup_fee_cents)}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <span className="text-[#8B8D93]">Payment redirect:</span>
@@ -768,46 +768,46 @@ Note: Your account is active immediately. You can sign in right away.`;
               </div>
 
               {/* HIGH-CONTRAST CREDENTIALS DISPLAY CARD */}
-              <div className="p-5 rounded-2xl bg-[#17181B] border border-[#E2896A]/30 shadow-xl space-y-4">
+              <div className="p-5 rounded-2xl bg-[var(--card-bg)] border border-[#00C6FF]/30 shadow-xl space-y-4">
                 
                 <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                   <div className="flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-[#E2896A]" />
-                    <span className="text-xs font-semibold text-[#EDEAE2]">Client portal login credentials</span>
+                    <KeyRound className="w-4 h-4 text-[#00C6FF]" />
+                    <span className="text-xs font-semibold text-white">Client portal login credentials</span>
                   </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider bg-[#4CAF7D]/15 text-[#4CAF7D] px-2 py-0.5 rounded">
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/30 px-2 py-0.5 rounded-full font-mono">
                     Active & Confirmed
                   </span>
                 </div>
 
                 <div className="space-y-2.5 text-xs">
                   {/* Portal URL */}
-                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
-                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Portal URL:</span>
-                    <span className="font-mono text-[#EDEAE2] truncate select-all">
+                  <div className="p-2.5 rounded-xl bg-white/[0.02] border border-[var(--card-border)] flex items-center justify-between gap-2">
+                    <span className="text-[var(--text-muted)] text-[11px] whitespace-nowrap">Portal URL:</span>
+                    <span className="font-mono text-white truncate select-all">
                       {window.location.origin}/login
                     </span>
                   </div>
 
                   {/* Email */}
-                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
-                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Login Email:</span>
-                    <span className="font-mono font-semibold text-[#EDEAE2] truncate select-all">
+                  <div className="p-2.5 rounded-xl bg-white/[0.02] border border-[var(--card-border)] flex items-center justify-between gap-2">
+                    <span className="text-[var(--text-muted)] text-[11px] whitespace-nowrap">Login Email:</span>
+                    <span className="font-mono font-semibold text-white truncate select-all">
                       {createdClient.email}
                     </span>
                   </div>
 
                   {/* Password */}
-                  <div className="p-2.5 rounded-xl bg-[#1D1F23] flex items-center justify-between gap-2">
-                    <span className="text-[#8B8D93] text-[11px] whitespace-nowrap">Password:</span>
+                  <div className="p-2.5 rounded-xl bg-white/[0.02] border border-[var(--card-border)] flex items-center justify-between gap-2">
+                    <span className="text-[var(--text-muted)] text-[11px] whitespace-nowrap">Password:</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-semibold text-[#E2896A] select-all">
+                      <span className="font-mono font-semibold text-[#00C6FF] select-all">
                         {showPassword ? portalPassword : '••••••••••••'}
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="text-[#8B8D93] hover:text-[#EDEAE2] p-0.5 transition-colors"
+                        className="text-[var(--text-muted)] hover:text-white p-0.5 transition-colors cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>

@@ -38,7 +38,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
     const result = await signIn(email, password);
     if (result.success && result.redirect) {
-      onNavigate(result.redirect);
+      const target = result.redirect.startsWith('/admin') ? '/admin' : '/client';
+      onNavigate(target);
     }
   };
 
@@ -49,8 +50,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       {/* Top Header */}
       <div className="max-w-md mx-auto w-full flex items-center justify-between py-2">
         <button
-          onClick={() => onNavigate('/landing')}
-          className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-xl neo-raised transition-colors"
+          onClick={() => onNavigate('/')}
+          className="btn-secondary text-xs px-3.5 py-1.5 flex items-center gap-2 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Public site</span>
@@ -58,45 +59,66 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] text-[#0E1512] font-semibold text-xs flex items-center justify-center">
-              VO
+          <button
+            onClick={() => onNavigate('/')}
+            className="flex items-center gap-2.5 text-left cursor-pointer hover:opacity-85 transition-opacity"
+            title="Return to Public Site"
+          >
+            <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.1] flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.5L2.5 20.5H21.5L12 2.5Z" fill="url(#login-delta)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinejoin="round" />
+                <path d="M12 7.5L6.5 18H17.5L12 7.5Z" fill="#0B0F17" opacity="0.6" />
+                <defs>
+                  <linearGradient id="login-delta" x1="2.5" y1="2.5" x2="21.5" y2="20.5" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#9B51E0" />
+                    <stop offset="0.5" stopColor="#7662FA" />
+                    <stop offset="1" stopColor="#00C6FF" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
-            <span className="font-semibold text-sm tracking-tight text-[var(--text-primary)]">VectorOps</span>
-          </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm tracking-tight text-white leading-none">
+                Vector<span className="text-gradient-purple-blue">Ops</span>
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.2em] uppercase text-[var(--text-muted)] mt-0.5 leading-none font-mono">
+                AI AUTOMATION AGENCY
+              </span>
+            </div>
+          </button>
         </div>
       </div>
 
       {/* Main Login Card */}
       <div className="max-w-md w-full mx-auto my-auto py-6">
-        <div className="p-8 rounded-[24px] neo-focal space-y-6">
+        <div className="p-8 rounded-[24px] glass-card bg-[var(--card-bg)] border border-[var(--card-border)] space-y-6 shadow-2xl">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-[#EDEAE2]">
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">
               Sign in to VectorOps
             </h1>
-            <p className="text-xs text-[#8B8D93]">
+            <p className="text-xs text-[var(--text-muted)]">
               Enter your email and password to access your autonomous workspace.
             </p>
           </div>
 
           {/* Error Banner */}
           {displayError && (
-            <div className="p-3.5 rounded-xl neo-inset text-xs text-[#E2604F] flex items-center gap-2.5">
+            <div className="p-3.5 rounded-xl bg-[var(--danger)]/15 border border-[var(--danger)]/30 text-xs text-[var(--danger)] flex items-center gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="font-medium leading-relaxed">{displayError}</span>
             </div>
           )}
 
-          {/* Single Form: Just Email + Password (NO role selector) */}
+          {/* Single Form: Just Email + Password */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#EDEAE2] block">
+              <label className="text-xs font-semibold text-[var(--text)] block">
                 Email address
               </label>
               <div className="relative flex items-center">
-                <Mail className="w-4 h-4 absolute left-3.5 text-[#8B8D93] pointer-events-none" />
+                <Mail className="w-4 h-4 absolute left-3.5 text-[var(--text-muted)] pointer-events-none" />
                 <input
                   type="email"
                   required
@@ -104,7 +126,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   placeholder="name@company.com"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setLocalError(null); }}
-                  className="w-full pl-10 pr-3.5 py-2.5 neo-inset rounded-xl text-xs text-[#EDEAE2] placeholder-[#8B8D93]/60 focus:outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-xs text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none"
                 />
               </div>
             </div>
@@ -112,12 +134,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             {/* Password Field */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#EDEAE2] block">
+                <label className="text-xs font-semibold text-[var(--text)] block">
                   Password
                 </label>
               </div>
               <div className="relative flex items-center">
-                <Lock className="w-4 h-4 absolute left-3.5 text-[#8B8D93] pointer-events-none" />
+                <Lock className="w-4 h-4 absolute left-3.5 text-[var(--text-muted)] pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -125,12 +147,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setLocalError(null); }}
-                  className="w-full pl-10 pr-10 py-2.5 neo-inset rounded-xl text-xs text-[#EDEAE2] placeholder-[#8B8D93]/60 focus:outline-none"
+                  className="w-full pl-10 pr-10 py-2.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-xs text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-[#8B8D93] hover:text-[#EDEAE2] transition-colors"
+                  className="absolute right-3 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -142,11 +164,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full btn-primary py-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold"
+                className="w-full btn-primary py-3 rounded-full flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shadow-lg"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-[#17181B] border-t-transparent rounded-full animate-spin" />
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Signing in...</span>
                   </div>
                 ) : (
@@ -162,7 +184,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Footer */}
-      <div className="text-center text-[11px] text-[#8B8D93] py-2">
+      <div className="text-center text-[11px] text-[var(--text-muted)] py-2 font-mono">
         VectorOps &copy; 2026. Automated role detection and enterprise security.
       </div>
     </div>

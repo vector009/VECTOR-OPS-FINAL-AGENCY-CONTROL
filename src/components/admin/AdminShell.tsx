@@ -96,24 +96,38 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[var(--surface-1)] text-[var(--text-primary)] flex">
-      {/* Desktop Sidebar — Neumorphic Depth, Surface-2, Zero Borders */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[var(--surface-2)] neo-sidebar shrink-0 sticky top-0 h-screen select-none z-20">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex selection:bg-[#7662FA]/30 selection:text-white">
+      {/* Desktop Sidebar — Glassmorphism, Navy Backdrop, Subtle Border */}
+      <aside className="hidden lg:flex flex-col w-64 bg-[var(--card-bg)]/85 backdrop-blur-2xl border-r border-[var(--card-border)] shrink-0 sticky top-0 h-screen select-none z-20 shadow-2xl">
         {/* Brand Lockup */}
-        <div className="h-16 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent-blue)] text-white font-semibold text-xs flex items-center justify-center shadow-sm">
-              VO
+        <div className="h-16 px-6 flex items-center justify-between border-b border-[var(--card-border)]">
+          <button
+            onClick={onBackToLanding}
+            className="flex items-center gap-3 text-left cursor-pointer hover:opacity-85 transition-opacity"
+            title="Return to Public Landing Page"
+          >
+            <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.1] flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.5L2.5 20.5H21.5L12 2.5Z" fill="url(#admin-nav-delta)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinejoin="round" />
+                <path d="M12 7.5L6.5 18H17.5L12 7.5Z" fill="#0B0F17" opacity="0.6" />
+                <defs>
+                  <linearGradient id="admin-nav-delta" x1="2.5" y1="2.5" x2="21.5" y2="20.5" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#9B51E0" />
+                    <stop offset="0.5" stopColor="#7662FA" />
+                    <stop offset="1" stopColor="#00C6FF" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
             <div>
-              <span className="font-semibold text-sm tracking-tight text-[var(--text-primary)] block leading-none">
-                VectorOps
+              <span className="font-bold text-sm tracking-tight text-white block leading-none">
+                Vector<span className="text-gradient-purple-blue">Ops</span>
               </span>
-              <span className="text-[11px] text-[var(--text-muted)] mt-0.5 block">
-                Agency operating system
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--text-muted)] mt-1 block font-mono">
+                Admin Console
               </span>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -129,14 +143,14 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   setActiveTab(item.id);
                   setMobileMenuOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-normal transition-all duration-150 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? 'neo-inset text-[var(--accent-blue)] font-semibold'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    ? 'bg-gradient-to-r from-[#9B51E0]/20 via-[#7662FA]/15 to-[#00C6FF]/15 text-white font-semibold border border-[#7662FA]/40 shadow-sm'
+                    : 'text-[var(--text-muted)] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#00C6FF]' : 'text-[var(--text-muted)]'}`} />
                   <span>{item.label}</span>
                 </div>
 
@@ -147,7 +161,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                     </span>
                   )}
                   {item.alert && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-red)]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--danger)]" />
                   )}
                 </div>
               </button>
@@ -156,15 +170,15 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         </nav>
 
         {/* Database & Operator Footer */}
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-3 border-t border-[var(--card-border)]">
           {/* Active Operator Profile Card */}
-          <div className="w-full p-2.5 rounded-xl neo-flat flex items-center justify-between">
+          <div className="w-full p-2.5 rounded-xl glass-card flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-[var(--accent-blue)]/20 text-[var(--accent-blue)] text-xs font-bold flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#7662FA]/20 text-[#00C6FF] text-xs font-bold flex items-center justify-center shrink-0">
                 {currentUser?.full_name ? currentUser.full_name[0] : 'A'}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-medium text-[var(--text-primary)] truncate">
+                <div className="text-xs font-medium text-white truncate">
                   {currentUser?.full_name || 'Sovereign Operator'}
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] truncate">
@@ -175,7 +189,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <button
               onClick={onLogout}
               title="Sign out"
-              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors shrink-0 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -185,13 +199,13 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           <div className="flex items-center justify-between text-xs px-1 text-[var(--text-muted)]">
             <button
               onClick={onSwitchToClient}
-              className="hover:text-[var(--text-primary)] transition-colors"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Client portal
             </button>
             <button
               onClick={onBackToLanding}
-              className="hover:text-[var(--text-primary)] transition-colors"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Landing page
             </button>
@@ -202,26 +216,26 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       {/* Main Content Layout */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Top Header Bar — Surface-2, Raised Shadow, Zero Border */}
-        <header className="h-16 px-6 bg-[var(--surface-2)] neo-raised sticky top-0 z-30 flex items-center justify-between gap-4">
+        {/* Top Header Bar — Glass Panel with subtle border */}
+        <header className="h-16 px-6 bg-[var(--card-bg)]/80 backdrop-blur-2xl border-b border-[var(--card-border)] sticky top-0 z-30 flex items-center justify-between gap-4">
           
           {/* Mobile hamburger & Clean view title */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 text-[#8B8D93] hover:text-[#EDEAE2] rounded-md"
+              className="lg:hidden p-1.5 text-[var(--text-muted)] hover:text-white rounded-md cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <div className="hidden sm:block text-xs font-semibold text-[#EDEAE2] capitalize">
+            <div className="hidden sm:block text-xs font-semibold text-white capitalize font-mono">
               {navItems.find(n => n.id === activeTab)?.label || activeTab}
             </div>
           </div>
 
           {/* Center: Global Search with Inset Depth */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-3.5 h-3.5 text-[#8B8D93] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search clients, invoices, appointments..."
@@ -229,15 +243,15 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               onChange={(e) => setGlobalSearchTerm(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl text-[#EDEAE2] placeholder-[#8B8D93] focus:outline-none neo-inset transition-all"
+              className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none transition-all"
             />
 
             {/* Live Global Search Dropdown */}
             {isSearchFocused && searchResults && (
-              <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-[#1D1F23] rounded-xl neo-raised z-50 space-y-2 text-xs">
+              <div className="absolute top-full left-0 right-0 mt-2 p-3 rounded-xl glass-panel z-50 space-y-2 text-xs shadow-2xl">
                 {searchResults.clients.length > 0 && (
                   <div>
-                    <div className="text-[11px] text-[#8B8D93] px-2 py-0.5">
+                    <div className="text-[11px] text-[var(--text-muted)] px-2 py-0.5 font-mono">
                       Clients
                     </div>
                     {searchResults.clients.map(c => (
@@ -247,7 +261,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                           setSelectedClientForProfile(c);
                           setGlobalSearchTerm('');
                         }}
-                        className="px-2 py-1.5 hover:bg-white/[0.04] rounded-lg cursor-pointer text-[#EDEAE2]"
+                        className="px-2 py-1.5 hover:bg-white/[0.06] rounded-lg cursor-pointer text-white"
                       >
                         {c.company_name} ({c.contact_name})
                       </div>
@@ -257,7 +271,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
                 {searchResults.invoices.length > 0 && (
                   <div>
-                    <div className="text-[11px] text-[#8B8D93] px-2 py-0.5">
+                    <div className="text-[11px] text-[var(--text-muted)] px-2 py-0.5 font-mono">
                       Invoices
                     </div>
                     {searchResults.invoices.map(i => (
@@ -267,10 +281,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                           setActiveTab('invoices');
                           setGlobalSearchTerm('');
                         }}
-                        className="px-2 py-1.5 hover:bg-white/[0.04] rounded-lg cursor-pointer text-[#EDEAE2] flex justify-between"
+                        className="px-2 py-1.5 hover:bg-white/[0.06] rounded-lg cursor-pointer text-white flex justify-between"
                       >
                         <span>{i.invoice_number}</span>
-                        <span className="font-mono-numbers text-[#E2896A]">${(i.balance_due_cents / 100).toFixed(2)} due</span>
+                        <span className="font-mono-numbers text-[var(--warning)]">${(i.balance_due_cents / 100).toFixed(2)} due</span>
                       </div>
                     ))}
                   </div>
@@ -283,17 +297,17 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           <div className="flex items-center gap-2.5">
             <ThemeToggle />
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-              <span className="w-2 h-2 rounded-full bg-[var(--accent-blue)]" />
-              <span className="text-[var(--text-primary)] font-medium">{currentUser?.full_name || 'Operator'}</span>
-              <span className="text-[10px] text-[var(--accent-blue)] font-mono uppercase bg-[var(--accent-blue)]/10 px-1.5 py-0.5 rounded">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-[var(--card-border)] text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#00C6FF] shadow-[0_0_8px_#00C6FF]" />
+              <span className="text-white font-medium">{currentUser?.full_name || 'Operator'}</span>
+              <span className="text-[10px] text-[#00C6FF] font-mono uppercase bg-[#00C6FF]/10 px-1.5 py-0.5 rounded border border-[#00C6FF]/20">
                 Admin
               </span>
             </div>
 
             <button
               onClick={onBackToLanding}
-              className="btn-secondary text-xs px-3 py-1.5"
+              className="btn-secondary text-xs px-3 py-1.5 cursor-pointer"
               title="View public landing page"
             >
               Landing page
@@ -301,18 +315,17 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
             <button
               onClick={onSwitchToClient}
-              className="btn-secondary text-xs px-3 py-1.5"
+              className="btn-secondary text-xs px-3 py-1.5 cursor-pointer"
             >
               Client portal
             </button>
 
             <button
               onClick={onLogout}
-              className="px-3 py-1.5 rounded-xl neo-raised text-xs text-[#8B8D93] hover:text-[#E2604F] transition-colors flex items-center gap-1.5"
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Sign out of VectorOps"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </header>
@@ -392,7 +405,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         </main>
 
         {/* Native Mobile / Tablet Bottom Tab Bar (Dashboard / Clients / Billing / Appointments / Settings) */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface-2)]/95 backdrop-blur-lg border-t border-white/[0.08] shadow-2xl px-2 py-1.5 flex items-center justify-around select-none">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--card-bg)]/90 backdrop-blur-2xl border-t border-[var(--card-border)] shadow-2xl px-2 py-1.5 flex items-center justify-around select-none">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { id: 'clients', label: 'Clients', icon: Users, badge: kpis.activeClientsCount },
@@ -411,8 +424,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                 }}
                 className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all relative ${
                   isActive
-                    ? 'text-[var(--accent-blue)] font-semibold'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    ? 'text-[#00C6FF] font-semibold'
+                    : 'text-[var(--text-muted)] hover:text-white'
                 }`}
               >
                 <div className="relative">

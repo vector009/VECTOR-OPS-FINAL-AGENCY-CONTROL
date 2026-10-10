@@ -8,23 +8,26 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   UserCheck, 
-  Building2, 
-  Stethoscope, 
-  Truck, 
-  Wrench, 
   DollarSign, 
   Users, 
   Sparkles, 
   Volume2, 
-  Play, 
-  Pause, 
   LogIn, 
   LogOut, 
-  Send, 
   X, 
   Check, 
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Moon,
+  Target,
+  Repeat,
+  CreditCard,
+  Headphones,
+  Bot,
+  SlidersHorizontal,
+  Activity,
+  LineChart,
+  ShoppingBag
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { db } from '../../lib/database';
@@ -32,6 +35,7 @@ import { AuthUser, UserRole, SubscriptionPlan, AgencyPaymentLink } from '../../t
 import { ThemeToggle } from '../../context/ThemeContext';
 import { PlatformIcon } from '../common/PlatformIcon';
 import { buildGeneralInquiryRedirectUrl } from '../../lib/paymentLinks';
+import phoneMockupImg from '../../assets/images/ai_phone_mockup.jpg';
 
 interface VoiceIntelligenceHero3DProps {
   currentUser?: AuthUser | null;
@@ -41,87 +45,87 @@ interface VoiceIntelligenceHero3DProps {
   onLogout: () => void;
 }
 
-// Industry call simulation presets for the interactive demo
-interface IndustryDemo {
-  id: string;
-  name: string;
-  vertical: string;
+/**
+ * Clean SVG Triangle / Delta Logo Mark for VectorOps
+ */
+const VectorOpsLogoMark: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path 
+      d="M12 2.5L2.5 20.5H21.5L12 2.5Z" 
+      fill="url(#vectorops-delta-grad)" 
+      stroke="rgba(255, 255, 255, 0.25)" 
+      strokeWidth="1.2" 
+      strokeLinejoin="round" 
+    />
+    <path 
+      d="M12 7.5L6.5 18H17.5L12 7.5Z" 
+      fill="#0B0F17" 
+      opacity="0.55" 
+    />
+    <defs>
+      <linearGradient id="vectorops-delta-grad" x1="2.5" y1="2.5" x2="21.5" y2="20.5" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#B27BFF" />
+        <stop offset="0.5" stopColor="#7B61FF" />
+        <stop offset="1" stopColor="#00C6FF" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+/**
+ * 8 Exact Common Use Cases
+ */
+interface UseCaseItem {
+  title: string;
+  desc: string;
   icon: React.ComponentType<{ className?: string }>;
-  scenario: string;
-  transcript: Array<{ speaker: 'Caller' | 'AI Agent'; text: string; delaySec: number }>;
-  outcomeBadge: string;
-  recoveredOutcome: string;
 }
 
-const INDUSTRY_DEMOS: IndustryDemo[] = [
+const COMMON_USE_CASES: UseCaseItem[] = [
   {
-    id: 'dental',
-    name: 'Dental & Medical Practice',
-    vertical: 'Dental & Medical',
-    icon: Stethoscope,
-    scenario: 'Emergency patient calling after clinic hours with severe molar pain.',
-    transcript: [
-      { speaker: 'Caller', text: 'Hi, I woke up with severe throbbing on my left molar. Can I see Dr. Reed today?', delaySec: 1 },
-      { speaker: 'AI Agent', text: 'I am so sorry you are in pain. I have checked our live clinic schedule, and Dr. Reed has an emergency triage opening today at 10:30 AM. Would you like me to book that for you?', delaySec: 3 },
-      { speaker: 'Caller', text: 'Yes please, 10:30 AM works perfectly!', delaySec: 5 },
-      { speaker: 'AI Agent', text: 'You are all set! I have reserved 10:30 AM with Dr. Reed. An instant SMS confirmation with clinic directions has been sent to your phone. We will see you then.', delaySec: 7 }
-    ],
-    outcomeBadge: 'Appointment scheduled with Dr. Reed · Confirmation SMS dispatched',
-    recoveredOutcome: '$850 treatment scheduled · 0 minute wait · 0 staff interruption'
+    title: 'AI Receptionist',
+    desc: 'Answers every call instantly, greets customers naturally, and routes inquiries without hold times.',
+    icon: PhoneCall
   },
   {
-    id: 'realestate',
-    name: 'Real Estate & Property',
-    vertical: 'Real Estate',
-    icon: Building2,
-    scenario: 'Buyer calling from a property yard sign on a Sunday afternoon.',
-    transcript: [
-      { speaker: 'Caller', text: 'Hello, I am parked outside the Highland Avenue property. What is the asking price and can I tour it today?', delaySec: 1 },
-      { speaker: 'AI Agent', text: 'Welcome! Highland Avenue is listed at $640,000 with 4 bedrooms and a renovated kitchen. Our listing specialist Sarah has private showing slots today at 2:00 PM or 4:30 PM. Which works best?', delaySec: 3 },
-      { speaker: 'Caller', text: '2:00 PM today would be fantastic.', delaySec: 5 },
-      { speaker: 'AI Agent', text: 'Confirmed. I have scheduled your private showing for 2:00 PM. Sarah has been notified, and gate access instructions have been texted to you.', delaySec: 7 }
-    ],
-    outcomeBadge: 'Private tour confirmed with agent · Verified pre-approval prospect',
-    recoveredOutcome: 'Pre-qualified buyer captured · Tour locked · Zero phone tag'
+    title: 'After-Hours Support',
+    desc: '24/7 emergency answering so you capture business and support callers while competitors sleep.',
+    icon: Moon
   },
   {
-    id: 'logistics',
-    name: 'Logistics & Dispatch',
-    vertical: 'Logistics & Dispatch',
-    icon: Truck,
-    scenario: 'Shipper calling after 6 PM needing urgent pallet dispatch.',
-    transcript: [
-      { speaker: 'Caller', text: 'Hi, we have 4 refrigerated pallets in Dallas that need pick-up first thing tomorrow morning for Atlanta.', delaySec: 1 },
-      { speaker: 'AI Agent', text: 'We have dedicated refrigerated capacity available in Dallas tomorrow at 7:00 AM. May I get your company name and cargo weight to generate your dispatch route quote?', delaySec: 3 },
-      { speaker: 'Caller', text: 'Apex Cold Foods, total weight is 5,200 lbs.', delaySec: 5 },
-      { speaker: 'AI Agent', text: 'Thank you. I have locked your dispatch request into our queue. A rate confirmation and tracking link have been dispatched to your email.', delaySec: 7 }
-    ],
-    outcomeBadge: 'Freight quote dispatched · Morning pick-up route assigned',
-    recoveredOutcome: '$2,400 freight run secured · After-hours capture · Zero voicemail'
+    title: 'Lead Generation',
+    desc: 'Qualifies prospect intent, captures critical contact details, and routes hot deals to your team.',
+    icon: Target
   },
   {
-    id: 'services',
-    name: 'Home & Commercial Services',
-    vertical: 'Home Services',
-    icon: Wrench,
-    scenario: 'Homeowner calling at 9:30 PM with a leaking water heater.',
-    transcript: [
-      { speaker: 'Caller', text: 'Hi, our basement water heater is leaking water everywhere. Do you have an emergency technician available?', delaySec: 1 },
-      { speaker: 'AI Agent', text: 'We can help with that immediately. Our on-call emergency technician Marcus is nearby and can be at your address within 45 minutes. May I confirm your street address?', delaySec: 3 },
-      { speaker: 'Caller', text: '742 Evergreen Terrace.', delaySec: 5 },
-      { speaker: 'AI Agent', text: 'Got it. Marcus has been dispatched to 742 Evergreen Terrace with an estimated 40-minute arrival. I have texted you a live tracker and arrival pass.', delaySec: 7 }
-    ],
-    outcomeBadge: 'Emergency technician dispatched · 45-minute arrival locked',
-    recoveredOutcome: '$1,200 emergency repair captured · Customer retained · Immediate answer'
+    title: 'Sales Follow-Ups',
+    desc: 'Proactively calls warm leads, re-engages inactive inquiries, and accelerates conversion velocity.',
+    icon: Repeat
+  },
+  {
+    title: 'Appointment Booking',
+    desc: 'Checks live availability, coordinates dates and times, and locks bookings into your calendar.',
+    icon: Calendar
+  },
+  {
+    title: 'Order & Payment Updates',
+    desc: 'Delivers real-time status updates, tracks shipments, and guides customers through payment links.',
+    icon: CreditCard
+  },
+  {
+    title: 'Customer Support',
+    desc: 'Resolves common questions, troubleshoots issues, and escalates complex requests to staff.',
+    icon: Headphones
+  },
+  {
+    title: 'Custom Voice Agents',
+    desc: 'Bespoke conversational workflows tailored specifically to your company’s unique operational logic.',
+    icon: Bot
   }
 ];
 
 /**
- * Reusable "Talk to us" control:
- * - If 0 links active: triggers consultation modal
- * - If 1 link active: renders single direct link (no dropdown needed)
- * - If >1 links active: renders a popover dropdown of all active channels
- * - Formats WhatsApp clicks with: "Hi, I'm interested in VectorOps' AI voice agent service for my business. Can we talk?"
+ * Reusable "Talk to us" popover / direct button powered by agency_payment_links
  */
 interface TalkToUsControlProps {
   links: AgencyPaymentLink[];
@@ -133,7 +137,7 @@ interface TalkToUsControlProps {
 const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
   links,
   label = "Talk to us",
-  className = "btn-landing-primary text-sm px-7 py-3 font-semibold",
+  className = "gradient-pill-btn text-xs sm:text-sm px-6 py-3 font-semibold",
   onFallbackOpenModal
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -153,12 +157,11 @@ const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
     };
   }, [isOpen]);
 
-  // Case 1: No active links configured in Settings -> Fallback to consultation modal
   if (links.length === 0) {
     return (
       <button
         onClick={onFallbackOpenModal}
-        className={`${className} flex items-center gap-2`}
+        className={`${className} flex items-center gap-2 cursor-pointer`}
       >
         <span>{label}</span>
         <ArrowRight className="w-4 h-4" />
@@ -166,7 +169,6 @@ const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
     );
   }
 
-  // Case 2: Exactly ONE active link configured -> Single direct button (No unnecessary dropdown)
   if (links.length === 1) {
     const single = links[0];
     const targetUrl = buildGeneralInquiryRedirectUrl(single);
@@ -185,20 +187,19 @@ const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
     );
   }
 
-  // Case 3: Multiple links configured -> Dropdown popover
   return (
     <div className="relative inline-block" ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`${className} flex items-center gap-2`}
+        className={`${className} flex items-center gap-2 cursor-pointer`}
       >
         <span>{label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-72 p-2.5 rounded-2xl neo-modal bg-[var(--surface-2)] border border-white/[0.08] shadow-2xl z-50 text-left animate-in fade-in duration-150">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-72 p-2.5 rounded-2xl glass-panel shadow-2xl z-50 text-left animate-in fade-in duration-150">
           <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] font-mono">
             Connect with our team
           </div>
@@ -212,12 +213,12 @@ const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-between p-2.5 rounded-xl neo-flat hover:bg-white/[0.06] transition-colors text-xs text-[var(--text-primary)] group"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.06] transition-colors text-xs text-white group"
                 >
                   <div className="flex items-center gap-2.5">
                     <PlatformIcon platform={link.platform} size={18} />
                     <div>
-                      <div className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                      <div className="font-semibold text-white group-hover:text-[#00C6FF] transition-colors">
                         {link.label}
                       </div>
                       <div className="text-[10px] text-[var(--text-muted)]">
@@ -229,7 +230,7 @@ const TalkToUsControl: React.FC<TalkToUsControlProps> = ({
                       </div>
                     </div>
                   </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)]" />
+                  <ExternalLink className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-white" />
                 </a>
               );
             })}
@@ -247,20 +248,14 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
   onOpenAuth,
   onLogout,
 }) => {
-  // Live Plans state fetched from Supabase
+  // Live Plans from Supabase subscription_plans table
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
   // Live Agency Payment / Contact Links from agency_payment_links table
   const [agencyLinks, setAgencyLinks] = useState<AgencyPaymentLink[]>([]);
-  const [isLoadingLinks, setIsLoadingLinks] = useState(true);
 
-  // Interactive Call Simulation state
-  const [selectedDemoIndex, setSelectedDemoIndex] = useState(0);
-  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
-  const [currentLineIndex, setCurrentLineIndex] = useState(3); // Default to showing full transcript
-
-  // Contact / Consultation Modal state
+  // Consultation Modal State
   const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
   const [consultPlanName, setConsultPlanName] = useState<string>('Custom Consultation');
   const [consultName, setConsultName] = useState('');
@@ -270,10 +265,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
   const [consultNotes, setConsultNotes] = useState('');
   const [consultSubmitted, setConsultSubmitted] = useState(false);
 
-  const activeDemo = INDUSTRY_DEMOS[selectedDemoIndex];
-  const DemoIcon = activeDemo.icon;
-
-  // 1. Fetch live active subscription plans from Supabase (Part 6 requirement)
+  // 1. Fetch live active subscription plans from Supabase
   useEffect(() => {
     let isMounted = true;
     async function fetchPlans() {
@@ -289,14 +281,12 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           if (!error && data && data.length > 0) {
             setPlans(data as SubscriptionPlan[]);
           } else {
-            const fallbackPlans = db.getPlans().filter(p => p.is_active);
-            setPlans(fallbackPlans);
+            setPlans(db.getPlans().filter(p => p.is_active));
           }
         }
       } catch {
         if (isMounted) {
-          const fallbackPlans = db.getPlans().filter(p => p.is_active);
-          setPlans(fallbackPlans);
+          setPlans(db.getPlans().filter(p => p.is_active));
         }
       } finally {
         if (isMounted) {
@@ -311,11 +301,10 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
     };
   }, []);
 
-  // 2. Fetch live active links from agency_payment_links table (Same table as Settings & Client Portal)
+  // 2. Fetch live active links from agency_payment_links table
   useEffect(() => {
     let isMounted = true;
     async function fetchAgencyLinks() {
-      setIsLoadingLinks(true);
       try {
         const { data, error } = await supabase
           .from('agency_payment_links')
@@ -326,17 +315,12 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           if (!error && data && data.length > 0) {
             setAgencyLinks(data as AgencyPaymentLink[]);
           } else {
-            const fallbackLinks = db.getActivePaymentLinks();
-            setAgencyLinks(fallbackLinks);
+            setAgencyLinks(db.getActivePaymentLinks());
           }
         }
       } catch {
         if (isMounted) {
           setAgencyLinks(db.getActivePaymentLinks());
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingLinks(false);
         }
       }
     }
@@ -347,39 +331,21 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
     };
   }, []);
 
-  // Demo playback timer effect
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isPlayingDemo) {
-      if (currentLineIndex < activeDemo.transcript.length - 1) {
-        timer = setTimeout(() => {
-          setCurrentLineIndex(prev => prev + 1);
-        }, 2200);
-      } else {
-        // Loop back after slight pause
-        timer = setTimeout(() => {
-          setIsPlayingDemo(false);
-        }, 3000);
-      }
-    }
-    return () => clearTimeout(timer);
-  }, [isPlayingDemo, currentLineIndex, activeDemo]);
-
-  const handleStartDemoPlayback = () => {
-    setCurrentLineIndex(0);
-    setIsPlayingDemo(true);
-  };
-
-  const handleSelectDemo = (idx: number) => {
-    setSelectedDemoIndex(idx);
-    setIsPlayingDemo(false);
-    setCurrentLineIndex(INDUSTRY_DEMOS[idx].transcript.length - 1);
-  };
-
   const handleOpenConsultation = (planName: string = 'Custom Quote') => {
     setConsultPlanName(planName);
     setConsultSubmitted(false);
     setIsConsultModalOpen(true);
+  };
+
+  const handleCtaAction = () => {
+    // If WhatsApp is active, trigger direct WhatsApp or modal
+    const waLink = agencyLinks.find(l => l.platform === 'WHATSAPP' && l.is_active);
+    if (waLink) {
+      const redirect = buildGeneralInquiryRedirectUrl(waLink);
+      window.open(redirect, '_blank', 'noopener,noreferrer');
+    } else {
+      handleOpenConsultation("Let's Build Your AI Voice Agents");
+    }
   };
 
   const handleSubmitConsultation = (e: React.FormEvent) => {
@@ -399,641 +365,462 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
   };
 
   return (
-    <div className="min-h-screen bg-[var(--surface-1)] text-[var(--text-primary)] flex flex-col selection:bg-[var(--accent-green)]/30 selection:text-[var(--text-primary)] transition-colors duration-200">
+    <div className="min-h-screen bg-[#0B0F17] text-[#F0F4F8] flex flex-col selection:bg-[#7B61FF]/30 selection:text-white transition-colors duration-200">
       
-      {/* Top Header Navigation */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[var(--surface-1)]/90 border-b border-white/[0.06] transition-colors">
-        <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+      {/* Ambient Top Glow Spheres */}
+      <div className="fixed top-0 left-1/4 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(circle,rgba(155,81,224,0.12)_0%,transparent_70%)] pointer-events-none blur-3xl -z-10" />
+      <div className="fixed top-10 right-0 w-[550px] h-[450px] bg-[radial-gradient(circle,rgba(0,194,255,0.12)_0%,transparent_70%)] pointer-events-none blur-3xl -z-10" />
+
+      {/* ================================================================
+          NAV
+          Left: Logo (triangle mark + "VectorOps" + "AI AUTOMATION AGENCY" small label underneath)
+          Right: Three nav links: "VOICE AGENTS / AUTOMATIONS / REAL RESULTS"
+          ================================================================ */}
+      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-[#0B0F17]/85 border-b border-white/[0.07] transition-all">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           
-          {/* Brand Identity */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl neo-raised flex items-center justify-center">
-              <div className="w-3.5 h-3.5 rounded-full bg-[var(--accent-green)] shadow-[0_0_12px_rgba(47,209,145,0.7)]" />
+          {/* Logo on the left */}
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-3 group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:border-[#7B61FF]/50 transition-colors shadow-lg">
+              <VectorOpsLogoMark className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-lg tracking-tight text-[var(--text-primary)]">VectorOps</span>
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[var(--accent-green)]/15 text-[var(--accent-green)] font-mono">
-                  Voice Agency
-                </span>
-              </div>
-              <p className="text-[11px] text-[var(--text-muted)] hidden sm:block">
-                Dedicated AI phone agents for appointment-driven businesses
-              </p>
+            <div className="flex flex-col">
+              <span className="font-bold text-lg sm:text-xl tracking-tight text-white leading-none">
+                Vector<span className="text-gradient-purple-blue">Ops</span>
+              </span>
+              <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-[#8292A6] mt-1 leading-none font-mono">
+                AI AUTOMATION AGENCY
+              </span>
             </div>
-          </div>
+          </a>
 
-          {/* Quick Anchor Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs text-[var(--text-muted)]">
-            <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">How it works</a>
-            <a href="#who-its-for" className="hover:text-[var(--text-primary)] transition-colors">Who it's for</a>
-            <a href="#what-you-get" className="hover:text-[var(--text-primary)] transition-colors">What you get</a>
-            <a href="#pricing" className="hover:text-[var(--text-primary)] transition-colors">Pricing</a>
-          </nav>
+          {/* Three nav links on the right */}
+          <div className="flex items-center gap-6 lg:gap-8">
+            <nav className="hidden md:flex items-center gap-2 text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-[#8292A6]">
+              <a href="#voice-agents" className="hover:text-white transition-colors">
+                VOICE AGENTS
+              </a>
+              <span className="text-white/20 select-none">/</span>
+              <a href="#automations" className="hover:text-white transition-colors">
+                AUTOMATIONS
+              </a>
+              <span className="text-white/20 select-none">/</span>
+              <a href="#real-results" className="hover:text-white transition-colors">
+                REAL RESULTS
+              </a>
+            </nav>
 
-          {/* Auth & Access Controls */}
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+            {/* Auth Controls & Theme toggle */}
+            <div className="flex items-center gap-2.5">
+              <ThemeToggle />
 
-            {currentUser ? (
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neo-inset text-xs">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center font-bold text-[10px] bg-[var(--accent-green)]/20 text-[var(--accent-green)]">
-                    {currentUser.full_name ? currentUser.full_name[0] : 'U'}
-                  </div>
-                  <span className="font-medium text-[var(--text-primary)] max-w-[120px] truncate">
-                    {currentUser.full_name}
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-white/5 text-[var(--text-muted)]">
-                    {currentUser.role}
-                  </span>
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  {currentUser.role === 'ADMIN' ? (
+                    <button
+                      onClick={onEnterAdmin}
+                      className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.08] hover:bg-white/[0.12] text-white border border-white/[0.1] transition-all flex items-center gap-1.5"
+                    >
+                      <span>Admin</span>
+                      <ArrowRight className="w-3 h-3 text-[#00C6FF]" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onEnterClient}
+                      className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/[0.08] hover:bg-white/[0.12] text-white border border-white/[0.1] transition-all flex items-center gap-1.5"
+                    >
+                      <span>Client portal</span>
+                      <ArrowRight className="w-3 h-3 text-[#00C6FF]" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={onLogout}
+                    title="Sign out"
+                    className="p-1.5 rounded-lg text-[#8292A6] hover:text-[#FF4D4D] transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-
-                {currentUser.role === 'ADMIN' ? (
+              ) : (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={onEnterAdmin}
-                    className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5"
+                    onClick={() => onOpenAuth('CLIENT')}
+                    className="hidden sm:inline-flex text-xs text-[#8292A6] hover:text-white px-2.5 py-1.5 transition-colors font-medium"
                   >
-                    <span>Admin console</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    Client sign in
                   </button>
-                ) : (
                   <button
-                    onClick={onEnterClient}
-                    className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5"
+                    onClick={() => onOpenAuth('ADMIN')}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.08] transition-all flex items-center gap-1.5"
                   >
-                    <span>Client portal</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <LogIn className="w-3 h-3 text-[#7B61FF]" />
+                    <span>Sign in</span>
                   </button>
-                )}
-
-                <button
-                  onClick={onLogout}
-                  title="Sign out"
-                  className="p-2 rounded-xl neo-raised hover:text-[#E2604F] transition-colors"
-                >
-                  <LogOut className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onOpenAuth('CLIENT')}
-                  className="btn-secondary text-xs px-3.5 py-2"
-                >
-                  Client sign in
-                </button>
-
-                <button
-                  onClick={() => onOpenAuth('ADMIN')}
-                  className="btn-primary text-xs px-4 py-2 flex items-center gap-1.5"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>Sign in</span>
-                </button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
+
         </div>
       </header>
 
-      {/* Main Page Body */}
-      <main className="flex-1 w-full space-y-24 sm:space-y-32 py-12 lg:py-16">
+      {/* Main Page Layout */}
+      <main className="flex-1 w-full space-y-20 sm:space-y-28 py-10 lg:py-16">
         
         {/* ================================================================
-            SECTION 1: HERO (Voice Motif + Soft Radial Glow + Interactive Call Demo)
+            HERO — TWO COLUMNS
+            Left:
+              - Headline: "AI Voice Agents" in white, "That Work 24/7" with "Work 24/7" in purple-to-blue gradient
+              - Paragraph: "We build and manage AI voice agents that answer calls, qualify leads, handle customer support, book appointments and more — so you never miss a business opportunity."
+              - Small uppercase label: "COMMON USE CASES"
+              - 8-item grid (2 columns x 4 rows): dark glass container, small icon, bold title, one-line description
+            Right:
+              - Generated phone mockup image
+              - 4 chat-bubble cards floating beside it (Caller/AI Agent alternating)
+              - Below phone: thin horizontal glowing waveform graphic
+              - Handwritten-style script text: "Real Conversations. Real Business Value."
             ================================================================ */}
-        <section className="max-w-7xl mx-auto px-6 space-y-12 relative">
-          
-          {/* Allowed Rich Persuasion Gradient: Soft radial glow behind the hero waveform */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(47,209,145,0.14),transparent_70%)] pointer-events-none blur-3xl -z-10" />
-
-          <div className="text-center max-w-4xl mx-auto space-y-6 pt-4">
+        <section id="voice-agents" className="max-w-7xl mx-auto px-6 scroll-mt-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-start">
             
-            {/* Ambient Waveform Header Accent */}
-            <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full neo-inset text-xs text-[var(--text-muted)]">
-              {/* Subtle animated audio waveform bars */}
-              <div className="flex items-center gap-0.5 h-3.5">
-                {[40, 90, 60, 100, 75, 45, 85].map((h, idx) => (
-                  <span
-                    key={idx}
-                    className="w-0.5 bg-[var(--accent-green)] rounded-full animate-pulse"
-                    style={{
-                      height: `${h}%`,
-                      animationDuration: `${0.8 + idx * 0.2}s`
-                    }}
-                  />
-                ))}
+            {/* LEFT COLUMN (lg:col-span-7) */}
+            <div className="lg:col-span-7 space-y-8">
+              
+              {/* Headlines */}
+              <div className="space-y-4">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.08] text-balance">
+                  AI Voice Agents<br />
+                  That <span className="text-gradient-purple-blue">Work 24/7</span>
+                </h1>
+
+                <p className="text-sm sm:text-base text-[#8292A6] leading-relaxed max-w-xl text-balance">
+                  We build and manage AI voice agents that answer calls, qualify leads, handle customer support, book appointments and more — so you never miss a business opportunity.
+                </p>
               </div>
-              <span className="text-[var(--text-primary)] font-medium">AI Phone Agent Agency</span>
-              <span>·</span>
-              <span>Answers in 1 ring</span>
-              <span>·</span>
-              <span>24/7/365</span>
+
+              {/* COMMON USE CASES Section */}
+              <div className="space-y-4 pt-2">
+                <div className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#8292A6] font-mono flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#7B61FF]" />
+                  <span>COMMON USE CASES</span>
+                </div>
+
+                {/* 8-Item Grid: 2 Columns x 4 Rows */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                  {COMMON_USE_CASES.map((useCase) => {
+                    const Icon = useCase.icon;
+                    return (
+                      <div
+                        key={useCase.title}
+                        className="glass-card rounded-2xl p-4 flex items-start gap-3.5 group hover:border-[#7B61FF]/40 transition-all"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#9B51E0] group-hover:text-[#00C6FF] shrink-0 transition-colors shadow-sm">
+                          <Icon className="w-4 h-4" />
+                        </div>
+
+                        <div className="space-y-1 min-w-0">
+                          <div className="font-bold text-xs sm:text-sm text-white truncate group-hover:text-white transition-colors">
+                            {useCase.title}
+                          </div>
+                          <p className="text-[11px] sm:text-xs text-[#8292A6] leading-relaxed">
+                            {useCase.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
 
-            {/* Core Outcome Headline (Sentence Case, Non-technical) */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[var(--text-primary)] leading-[1.12] text-balance">
-              Never miss another call. Never miss another booking.
-            </h1>
+            {/* RIGHT COLUMN (lg:col-span-5) */}
+            <div className="lg:col-span-5 space-y-6 lg:pl-2">
+              
+              {/* Phone Mockup Canvas with Floating Chat Bubbles */}
+              <div className="relative mx-auto max-w-[420px] sm:max-w-[460px] lg:max-w-none flex flex-col items-center">
+                
+                {/* Backlight Glow Behind Phone */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[380px] h-[480px] bg-gradient-to-tr from-[#9B51E0]/20 via-[#7B61FF]/25 to-[#00C2FF]/20 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-            {/* Practical Subhead Explaining What Happens */}
-            <p className="text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-2xl mx-auto text-balance">
-              Your business gets a dedicated AI phone agent that answers every inbound call 24/7, books appointments directly into your calendar, and never puts a customer on hold.
-            </p>
+                {/* Central Phone Mockup Container */}
+                <div className="relative w-full max-w-[280px] sm:max-w-[310px] mx-auto z-10 transition-transform duration-300 hover:scale-[1.01]">
+                  <img
+                    src={phoneMockupImg}
+                    alt="VectorOps AI Receptionist Voice Agent Phone Mockup"
+                    className="w-full h-auto object-contain rounded-[38px] shadow-[0_20px_50px_rgba(0,0,0,0.85)] drop-shadow-[0_10px_30px_rgba(123,97,255,0.25)] select-none pointer-events-none border border-white/[0.08]"
+                  />
 
-            {/* Hero CTAs — "Talk to us" pulls directly from agency_payment_links */}
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <a
-                href="#how-it-works"
-                className="btn-secondary text-sm px-6 py-3 flex items-center gap-2"
-              >
-                <span>See how it works</span>
-                <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
-              </a>
+                  {/* Bubble 1: Floating top-left (Caller) */}
+                  <div className="absolute -top-3 -left-10 sm:-left-16 z-20 glass-card rounded-2xl p-3 sm:p-3.5 max-w-[210px] sm:max-w-[230px] shadow-2xl animate-in fade-in slide-in-from-left duration-300">
+                    <div className="flex items-center justify-between text-[10px] text-[#8292A6] font-mono mb-1">
+                      <span className="font-semibold text-white/90">Caller</span>
+                      <span>00:03</span>
+                    </div>
+                    <p className="text-[11px] text-[#E2E8F0] leading-snug">
+                      "Hi, I need to book a dental checkup and teeth cleaning this Thursday."
+                    </p>
+                  </div>
 
-              <TalkToUsControl
-                links={agencyLinks}
-                label="Talk to us"
-                className="btn-landing-primary text-sm px-7 py-3 font-semibold"
-                onFallbackOpenModal={() => handleOpenConsultation('Free Consultation')}
-              />
+                  {/* Bubble 2: Floating mid-right (AI Agent) */}
+                  <div className="absolute top-[26%] -right-8 sm:-right-16 z-20 glass-card rounded-2xl p-3 sm:p-3.5 max-w-[220px] sm:max-w-[240px] shadow-2xl border-[#7B61FF]/40 animate-in fade-in slide-in-from-right duration-300">
+                    <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                      <span className="font-semibold text-[#00C6FF] flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5" /> AI Agent
+                      </span>
+                      <span className="text-[#8292A6]">00:07</span>
+                    </div>
+                    <p className="text-[11px] text-white leading-snug">
+                      "Certainly! Dr. Reed has openings this Thursday at 10:30 AM and 2:15 PM. Which time suits you best?"
+                    </p>
+                  </div>
+
+                  {/* Bubble 3: Floating mid-left (Caller) */}
+                  <div className="absolute top-[54%] -left-8 sm:-left-14 z-20 glass-card rounded-2xl p-3 sm:p-3.5 max-w-[190px] sm:max-w-[210px] shadow-2xl animate-in fade-in slide-in-from-left duration-300">
+                    <div className="flex items-center justify-between text-[10px] text-[#8292A6] font-mono mb-1">
+                      <span className="font-semibold text-white/90">Caller</span>
+                      <span>00:11</span>
+                    </div>
+                    <p className="text-[11px] text-[#E2E8F0] leading-snug">
+                      "10:30 AM works great for me."
+                    </p>
+                  </div>
+
+                  {/* Bubble 4: Floating bottom-right (AI Agent) */}
+                  <div className="absolute -bottom-3 -right-8 sm:-right-14 z-20 glass-card rounded-2xl p-3 sm:p-3.5 max-w-[220px] sm:max-w-[240px] shadow-2xl border-[#00C6FF]/40 animate-in fade-in slide-in-from-right duration-300">
+                    <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                      <span className="font-semibold text-[#00C6FF] flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5" /> AI Agent
+                      </span>
+                      <span className="text-[#8292A6]">00:15</span>
+                    </div>
+                    <p className="text-[11px] text-white leading-snug">
+                      "All set! I've confirmed your appointment for Thursday at 10:30 AM and texted you the directions."
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Below the Phone: Thin Horizontal Glowing Waveform Graphic */}
+                <div className="w-full max-w-[340px] sm:max-w-[380px] mt-7 space-y-3">
+                  
+                  {/* Glowing Animated Waveform Bar */}
+                  <div className="relative h-2 w-full rounded-full bg-white/[0.06] overflow-hidden p-[1px]">
+                    <div className="waveform-glow-bar h-full w-full rounded-full bg-gradient-to-r from-[#9B51E0] via-[#7B61FF] via-[#00C6FF] to-[#9B51E0]" />
+                  </div>
+
+                  {/* Frequency bars + Handwritten script tagline */}
+                  <div className="flex items-center justify-between gap-3 px-1">
+                    
+                    {/* Animated sound frequency bars */}
+                    <div className="flex items-center gap-1 h-3.5 opacity-85 shrink-0">
+                      {[35, 80, 50, 100, 65, 90, 45, 85, 95, 60, 40].map((h, i) => (
+                        <span
+                          key={i}
+                          className="w-1 bg-gradient-to-t from-[#7B61FF] to-[#00C6FF] rounded-full animate-pulse"
+                          style={{
+                            height: `${h}%`,
+                            animationDuration: `${0.75 + (i % 4) * 0.2}s`
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Small handwritten-style script text */}
+                    <span className="font-script text-lg sm:text-xl text-[#C4B5FD] tracking-wide select-none">
+                      Real Conversations. Real Business Value.
+                    </span>
+
+                  </div>
+                </div>
+
+              </div>
+
             </div>
+
           </div>
 
-          {/* Interactive Call Simulation — Proof by Demonstration */}
-          <div className="max-w-4xl mx-auto neo-raised rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden bg-[var(--surface-2)] border border-white/[0.05]">
+          {/* ================================================================
+              STRIP — BELOW THE HERO
+              Full-width bordered glass panel:
+              Left: "FULLY MANAGED FROM START TO SCALE"
+              Right: 4 icon+label items:
+                - Setup & Configuration
+                - Testing & Optimization
+                - Monitoring & Performance
+                - Ongoing Support & Maintenance
+              ================================================================ */}
+          <div id="automations" className="mt-14 w-full glass-panel rounded-2xl p-6 sm:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xl scroll-mt-24">
             
-            {/* Top Control Bar: Industry Switcher & Live Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
-                  <DemoIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs text-[var(--text-muted)] font-medium">Hear how natural it sounds</div>
-                  <h2 className="text-base font-bold text-[var(--text-primary)]">{activeDemo.name}</h2>
-                </div>
-              </div>
-
-              {/* Vertical Switcher Tabs */}
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl neo-inset overflow-x-auto max-w-full">
-                {INDUSTRY_DEMOS.map((demo, idx) => (
-                  <button
-                    key={demo.id}
-                    onClick={() => handleSelectDemo(idx)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
-                      selectedDemoIndex === idx
-                        ? 'neo-raised text-[var(--text-primary)] font-semibold text-[var(--accent-green)]'
-                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                    }`}
-                  >
-                    {demo.vertical}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Scenario Context Banner */}
-            <div className="p-3.5 rounded-xl neo-flat text-xs flex items-center justify-between gap-3 text-[var(--text-muted)]">
-              <div className="flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
-                <span><strong className="text-[var(--text-primary)]">Live scenario:</strong> {activeDemo.scenario}</span>
-              </div>
-              <button
-                onClick={isPlayingDemo ? () => setIsPlayingDemo(false) : handleStartDemoPlayback}
-                className="shrink-0 px-3 py-1 text-xs font-semibold rounded-lg neo-raised flex items-center gap-1.5 text-[var(--text-primary)] hover:text-[var(--accent-green)] transition-colors"
-              >
-                {isPlayingDemo ? (
-                  <>
-                    <Pause className="w-3 h-3 text-[var(--accent-amber)]" />
-                    <span>Pause</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3 h-3 text-[var(--accent-green)]" />
-                    <span>Replay call</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Conversational Transcript Player */}
-            <div className="space-y-3 pt-1">
-              <div className="flex items-center justify-between text-xs text-[var(--text-muted)] px-1">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <Volume2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
-                  <span>Simulated live call recording</span>
-                </span>
-                <span className="text-[11px] font-mono">Natural human cadence</span>
-              </div>
-
-              <div className="space-y-3">
-                {activeDemo.transcript.slice(0, currentLineIndex + 1).map((turn, i) => {
-                  const isAgent = turn.speaker === 'AI Agent';
-                  return (
-                    <div
-                      key={i}
-                      className={`p-4 rounded-2xl text-xs leading-relaxed transition-all animate-in fade-in duration-300 ${
-                        isAgent
-                          ? 'neo-raised ml-6 sm:ml-12 border-l-4 border-l-[var(--accent-green)]'
-                          : 'neo-flat mr-6 sm:mr-12'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className={`font-semibold flex items-center gap-1.5 ${
-                          isAgent ? 'text-[var(--accent-green)]' : 'text-[var(--text-muted)]'
-                        }`}>
-                          {isAgent ? (
-                            <>
-                              <Sparkles className="w-3 h-3" />
-                              <span>VectorOps Voice Agent</span>
-                            </>
-                          ) : (
-                            <span>Caller</span>
-                          )}
-                        </span>
-                        <span className="text-[10px] text-[var(--text-muted)] font-mono">00:0{turn.delaySec}s</span>
-                      </div>
-                      <p className="text-[var(--text-primary)] text-sm">{turn.text}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Live Result Outcome Card */}
-            <div className="p-4 rounded-2xl neo-inset flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
-                <span className="font-semibold text-[var(--text-primary)]">{activeDemo.outcomeBadge}</span>
-              </div>
-              <span className="text-[var(--text-muted)] text-[11px] font-mono">
-                {activeDemo.recoveredOutcome}
+            {/* Left title */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#00C6FF] shadow-[0_0_10px_#00C6FF]" />
+              <span className="text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-white font-mono">
+                FULLY MANAGED FROM START TO SCALE
               </span>
             </div>
+
+            {/* 4 Icon + Label items on the right */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 flex-1 lg:max-w-3xl">
+              
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#B27BFF] shrink-0">
+                  <SlidersHorizontal className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold text-white leading-tight">
+                  Setup & Configuration
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#7B61FF] shrink-0">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold text-white leading-tight">
+                  Testing & Optimization
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#00C6FF] shrink-0">
+                  <LineChart className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold text-white leading-tight">
+                  Monitoring & Performance
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#1AE598] shrink-0">
+                  <Headphones className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold text-white leading-tight">
+                  Ongoing Support & Maintenance
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ================================================================
+              FOOTER (OF THIS SECTION, NOT THE PAGE FOOTER)
+              Left: Logo + "YOUR AI VOICE. OUR EXPERTISE." tagline
+              Right: Gradient-bordered pill CTA button "Let's Build Your AI Voice Agents →"
+              (wired to the agency_payment_links / contact flow)
+              ================================================================ */}
+          <div className="mt-8 pt-6 pb-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                <VectorOpsLogoMark className="w-5 h-5" />
+              </div>
+              <span className="text-xs sm:text-sm font-bold tracking-[0.2em] uppercase text-[#8292A6] font-mono">
+                YOUR AI VOICE. OUR EXPERTISE.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCtaAction}
+              className="gradient-pill-btn px-7 py-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 self-start sm:self-auto cursor-pointer"
+            >
+              <span>Let's Build Your AI Voice Agents</span>
+              <ArrowRight className="w-4 h-4 text-[#00C6FF]" />
+            </button>
 
           </div>
 
         </section>
 
         {/* ================================================================
-            SECTION 2: THE PROBLEM (Three Concrete, Numbers-Driven Pain Points)
+            REAL RESULTS / PROOF SECTION
             ================================================================ */}
-        <section className="max-w-7xl mx-auto px-6 space-y-12">
-          
+        <section id="real-results" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-amber)] font-mono">
-              The cost of missed calls
+            <div className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#7B61FF] font-mono">
+              REAL BUSINESS IMPACT
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-              Why businesses lose revenue every single day
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              Why growing businesses switch to VectorOps
             </h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              If a customer calls your business and gets voicemail, they don't wait — they call your competitor.
+            <p className="text-sm text-[#8292A6] leading-relaxed">
+              Eliminate missed calls, remove phone tag, and capture every customer when intent is highest.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* Pain Point 1: After-Hours Missed Calls */}
-            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-amber)]">
+            <div className="p-7 rounded-3xl glass-card space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#FFA726]">
                 <Clock className="w-6 h-6" />
               </div>
-              <div className="space-y-1.5">
-                <div className="text-2xl font-bold text-[var(--text-primary)] font-mono-numbers">
-                  67% of callers
-                </div>
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                  Hang up when they hit voicemail
-                </h3>
+              <div className="text-2xl font-bold text-white font-mono-numbers">
+                67% of callers
               </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Over two-thirds of after-hours callers refuse to leave a message. They immediately click the next listing on Google Maps. For a dental clinic, real estate agent, or emergency contractor, each missed call is hundreds or thousands of dollars walking away.
+              <h3 className="text-base font-semibold text-white">
+                Hang up when they hit voicemail
+              </h3>
+              <p className="text-xs text-[#8292A6] leading-relaxed">
+                Callers rarely leave voicemails. They immediately call your competitor. Our voice agents answer in under one second.
               </p>
             </div>
 
-            {/* Pain Point 2: Front-Desk Peak Hour Burnout */}
-            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)]">
+            <div className="p-7 rounded-3xl glass-card space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#00C6FF]">
                 <Users className="w-6 h-6" />
               </div>
-              <div className="space-y-1.5">
-                <div className="text-2xl font-bold text-[var(--text-primary)] font-mono-numbers">
-                  1 in 4 calls
-                </div>
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                  Goes unanswered during peak hours
-                </h3>
+              <div className="text-2xl font-bold text-white font-mono-numbers">
+                1 in 4 calls
               </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Your receptionists and front-desk staff are already busy greeting patients, checking in clients, and processing paperwork. When three phones ring simultaneously, callers wait on hold or get dropped.
+              <h3 className="text-base font-semibold text-white">
+                Dropped during front-desk rush hours
+              </h3>
+              <p className="text-xs text-[#8292A6] leading-relaxed">
+                When phones ring while front-desk staff are greeting clients, VectorOps absorbs excess call volume without hold times.
               </p>
             </div>
 
-            {/* Pain Point 3: Customers Expect Immediate Answers */}
-            <div className="p-7 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-red)]">
-                <PhoneCall className="w-6 h-6" />
+            <div className="p-7 rounded-3xl glass-card space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#1AE598]">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
-              <div className="space-y-1.5">
-                <div className="text-2xl font-bold text-[var(--text-primary)] font-mono-numbers">
-                  2-day phone tag
-                </div>
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                  Kills high-intent customer momentum
-                </h3>
+              <div className="text-2xl font-bold text-white font-mono-numbers">
+                100% scheduled
               </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                When prospective clients have a specific question about your hours, pricing, or appointment slots, they want an immediate answer. Playing phone tag back and forth across 48 hours almost always ends in a lost customer.
+              <h3 className="text-base font-semibold text-white">
+                Locked directly into your calendar
+              </h3>
+              <p className="text-xs text-[#8292A6] leading-relaxed">
+                Live calendar slot synchronization prevents double-booking and dispatches SMS directions straight to the client.
               </p>
             </div>
 
           </div>
-
         </section>
 
         {/* ================================================================
-            SECTION 3: HOW IT WORKS (Simple 4-Step Horizontal Flow)
-            ================================================================ */}
-        <section id="how-it-works" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-blue)] font-mono">
-              The setup process
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-              How it works
-            </h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              We handle the entire build, testing, and continuous management. You never have to touch complicated software.
-            </p>
-          </div>
-
-          {/* 4-Step Sequential Cards with Flow Line */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            
-            {/* Step 1 */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
-                  1
-                </div>
-                <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Custom build</span>
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
-                We build your agent
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                We train a custom AI voice agent on your exact business — your service offerings, operating hours, pricing rules, provider schedules, and frequent questions.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
-                  2
-                </div>
-                <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">24/7 Answering</span>
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
-                It answers every call
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Calls forward automatically when lines are busy or after hours. Your voice agent answers in a natural, warm tone with zero robotic menus or dial trees.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
-                  3
-                </div>
-                <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Direct calendar</span>
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
-                Books into your calendar
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Your agent verifies live provider availability, books appointments without double-booking, and texts/emails an instant confirmation to both you and the client.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 relative">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl neo-inset flex items-center justify-center text-sm font-bold text-[var(--accent-blue)] font-mono">
-                  4
-                </div>
-                <span className="text-[10px] uppercase font-mono text-[var(--text-muted)]">Full visibility</span>
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
-                Review your dashboard
-              </h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Log in to your private client portal anytime to see every call, review upcoming appointments, check billing, and message your account manager directly.
-              </p>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ================================================================
-            SECTION 4: WHAT YOU GET (Actual Deliverables, Outcome-Focused)
-            ================================================================ */}
-        <section id="what-you-get" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-green)] font-mono">
-              The deliverables
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-              What you get
-            </h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              A complete, fully managed voice operations solution built specifically for your company.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Deliverable 1: Dedicated Voice Agent */}
-            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)] shrink-0 mt-1">
-                <PhoneCall className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  A dedicated AI voice agent for your business
-                </h3>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  Trained exclusively on your procedures, staff profiles, pricing schedules, and FAQs. It sounds completely natural, speaks clearly, and represents your brand professionally on every call.
-                </p>
-              </div>
-            </div>
-
-            {/* Deliverable 2: Private Client Portal */}
-            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)] shrink-0 mt-1">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  A private client portal
-                </h3>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  Your secure dashboard where you can see all booked appointments, track client inquiries, inspect billing receipts, and message your dedicated agency manager in real-time.
-                </p>
-              </div>
-            </div>
-
-            {/* Deliverable 3: Transparent Monthly Retainer */}
-            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)] shrink-0 mt-1">
-                <DollarSign className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Transparent monthly billing
-                </h3>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  Predictable flat-fee monthly retainer. No surprise minute penalties, no hidden fees, and no complicated billing tiers. You always know your exact investment each month.
-                </p>
-              </div>
-            </div>
-
-            {/* Deliverable 4: Dedicated Human Oversight */}
-            <div className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-3 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)] shrink-0 mt-1">
-                <UserCheck className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  A real person overseeing everything
-                </h3>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  This is never a faceless black box. You have a dedicated account manager who monitors call quality, updates your agent's knowledge as your business grows, and supports you continuously.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ================================================================
-            SECTION 5: WHO IT'S FOR (Grounded in Actual Client Base)
-            ================================================================ */}
-        <section id="who-its-for" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-blue)] font-mono">
-              Target industries
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-              Who it's for
-            </h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              Proven results for high-intent, appointment-driven businesses where every phone call represents significant revenue.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Vertical 1: Dental & Medical */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
-                <Stethoscope className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  Dental & Medical
-                </h3>
-                <p className="text-xs text-[var(--accent-green)] font-medium">
-                  After-hours patient capture
-                </p>
-              </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Triage emergency pain calls after hours, schedule new patient consultations, and handle appointment reschedules without pulling clinical staff away from patients.
-              </p>
-            </div>
-
-            {/* Vertical 2: Real Estate */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-blue)]">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  Real Estate & Realty
-                </h3>
-                <p className="text-xs text-[var(--accent-blue)] font-medium">
-                  Instant buyer pre-qualification
-                </p>
-              </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Answer buyer calls from property yard signs instantly, qualify purchasing intent, verify mortgage pre-approval status, and schedule private showings directly into agent calendars.
-              </p>
-            </div>
-
-            {/* Vertical 3: Logistics & Dispatch */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-amber)]">
-                <Truck className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  Logistics & Dispatch
-                </h3>
-                <p className="text-xs text-[var(--accent-amber)] font-medium">
-                  24/7 load & driver intake
-                </p>
-              </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Handle freight inquiries, log driver status updates, record cargo details, and schedule pick-up routes around the clock while your dispatchers sleep.
-              </p>
-            </div>
-
-            {/* Vertical 4: Home Services */}
-            <div className="p-6 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4">
-              <div className="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-[var(--accent-green)]">
-                <Wrench className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  Home Services
-                </h3>
-                <p className="text-xs text-[var(--accent-green)] font-medium">
-                  Emergency technician dispatch
-                </p>
-              </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Capture urgent plumbing, HVAC, and electrical calls on evenings and weekends. Lock in the emergency call-out fee before a competitor can pick up the phone.
-              </p>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ================================================================
-            SECTION 6: PRICING TEASER (Pulls Live From Supabase subscription_plans)
+            PRICING SECTION (Pulls Live From Supabase subscription_plans)
             ================================================================ */}
         <section id="pricing" className="max-w-7xl mx-auto px-6 space-y-12 scroll-mt-24">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-green)] font-mono">
-              Transparent investment
+            <div className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#1AE598] font-mono">
+              TRANSPARENT INVESTMENT
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-              Simple, predictable pricing
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              Simple, predictable monthly pricing
             </h2>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              No hidden minute fees or complex contracts. Flat monthly retainers designed for high return on investment.
+            <p className="text-sm text-[#8292A6] leading-relaxed">
+              No hidden minute penalties or complex usage tiers. Flat monthly retainers with complete management included.
             </p>
           </div>
 
@@ -1041,19 +828,18 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
           {isLoadingPlans ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] space-y-4 h-80" />
+                <div key={i} className="p-8 rounded-3xl glass-card space-y-4 h-80" />
               ))}
             </div>
           ) : plans.length === 0 ? (
-            /* Graceful Fallback if all plans are deactivated */
-            <div className="max-w-xl mx-auto p-8 rounded-3xl neo-raised bg-[var(--surface-2)] text-center space-y-4">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">Pricing available on request</h3>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                We create bespoke voice operations architectures tailored to your exact call volume and multi-location requirements.
+            <div className="max-w-xl mx-auto p-8 rounded-3xl glass-card text-center space-y-4">
+              <h3 className="text-lg font-bold text-white">Pricing available on request</h3>
+              <p className="text-xs text-[#8292A6] leading-relaxed">
+                We design bespoke voice operations architectures tailored to your exact call volume and multi-location requirements.
               </p>
               <button
                 onClick={() => handleOpenConsultation('Custom Consultation')}
-                className="btn-primary text-xs px-6 py-2.5 mx-auto"
+                className="gradient-pill-btn text-xs px-6 py-2.5 mx-auto cursor-pointer"
               >
                 Get a custom quote
               </button>
@@ -1067,54 +853,53 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                 return (
                   <div
                     key={plan.id || plan.name}
-                    className="p-8 rounded-3xl neo-raised bg-[var(--surface-2)] flex flex-col justify-between space-y-6 relative transition-all hover:translate-y-[-2px]"
+                    className="p-8 rounded-3xl glass-card flex flex-col justify-between space-y-6 relative transition-all hover:translate-y-[-2px]"
                   >
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <h3 className="text-xl font-bold text-[var(--text-primary)]">{plan.name}</h3>
-                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">{plan.description}</p>
+                        <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                        <p className="text-xs text-[#8292A6] leading-relaxed">{plan.description}</p>
                       </div>
 
-                      {/* Headline Price (Money Positive: Green) & Setup Fee Line */}
-                      <div className="pt-2 border-t border-white/[0.06] space-y-0.5">
+                      {/* Headline Price & Setup Fee Line */}
+                      <div className="pt-2 border-t border-white/[0.08] space-y-0.5">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl sm:text-4xl font-bold font-mono-numbers text-[var(--accent-green)]">
+                          <span className="text-3xl sm:text-4xl font-bold font-mono-numbers text-[#1AE598]">
                             {monthlyFormatted}
                           </span>
-                          <span className="text-xs text-[var(--text-muted)] font-medium">/month</span>
+                          <span className="text-xs text-[#8292A6] font-medium">/month</span>
                         </div>
-                        <div className="text-xs text-[var(--text-muted)] font-mono-numbers">
+                        <div className="text-xs text-[#8292A6] font-mono-numbers">
                           {setupFormatted} setup fee
                         </div>
                       </div>
 
                       {/* Included Service Description Line */}
-                      <div className="pt-3 border-t border-white/[0.06] space-y-2 text-xs">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] font-mono">
+                      <div className="pt-3 border-t border-white/[0.08] space-y-2 text-xs">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8292A6] font-mono">
                           What's included:
                         </span>
-                        <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2 text-white">
+                          <Check className="w-4 h-4 text-[#1AE598] shrink-0 mt-0.5" />
                           <span>{plan.included_service_description}</span>
                         </div>
-                        <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2 text-white">
+                          <Check className="w-4 h-4 text-[#1AE598] shrink-0 mt-0.5" />
                           <span>Dedicated client dashboard & live call transcripts</span>
                         </div>
-                        <div className="flex items-start gap-2 text-[var(--text-primary)]">
-                          <Check className="w-4 h-4 text-[var(--accent-green)] shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2 text-white">
+                          <Check className="w-4 h-4 text-[#1AE598] shrink-0 mt-0.5" />
                           <span>Full calendar synchronization & SMS confirmations</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Sales-Assisted Custom Quote CTA Button — Blue action button inside cards */}
                     <button
                       onClick={() => handleOpenConsultation(plan.name)}
-                      className="w-full btn-primary text-xs py-3 font-semibold mt-4 flex items-center justify-center gap-2"
+                      className="w-full gradient-pill-btn text-xs py-3 font-semibold mt-4 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Get a custom quote</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3.5 h-3.5 text-[#00C6FF]" />
                     </button>
                   </div>
                 );
@@ -1122,34 +907,29 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             </div>
           )}
 
-          <p className="text-center text-xs text-[var(--text-muted)]">
-            Need custom integrations or high-volume multi-location routing? <button onClick={() => handleOpenConsultation('Enterprise Custom')} className="text-[var(--accent-blue)] hover:underline font-semibold">Speak with our agency team</button>.
+          <p className="text-center text-xs text-[#8292A6]">
+            Need multi-location routing or custom integrations?{' '}
+            <button 
+              onClick={() => handleOpenConsultation('Enterprise Custom')} 
+              className="text-[#00C6FF] hover:underline font-semibold cursor-pointer"
+            >
+              Speak with our agency team
+            </button>.
           </p>
 
         </section>
 
         {/* ================================================================
-            SECTION 7: FINAL CTA (Dynamic Settings Links + Consultation)
+            CONTACT SECTION (Dynamic Settings Links + Consultation)
             ================================================================ */}
         <section id="contact" className="max-w-4xl mx-auto px-6 scroll-mt-24">
-          <div className="p-8 sm:p-12 rounded-3xl neo-raised bg-[var(--surface-2)] text-center space-y-6 relative overflow-hidden border border-white/[0.06]">
+          <div className="p-8 sm:p-12 rounded-3xl glass-panel text-center space-y-6 relative overflow-hidden shadow-2xl">
             
-            {/* Ambient Waveform Accent */}
-            <div className="flex items-center justify-center gap-1 h-4 mx-auto opacity-70">
-              {[30, 60, 95, 45, 80, 100, 70, 50, 85, 40].map((h, i) => (
-                <span
-                  key={i}
-                  className="w-1 bg-[var(--accent-green)] rounded-full animate-pulse"
-                  style={{ height: `${h}%`, animationDuration: `${0.9 + i * 0.15}s` }}
-                />
-              ))}
-            </div>
-
             <div className="space-y-3 max-w-xl mx-auto">
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
-                See if we're a fit for your business
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                See if VectorOps is right for your business
               </h2>
-              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              <p className="text-sm text-[#8292A6] leading-relaxed">
                 Book a brief consultation with our team. We'll listen to your current call workflow, demonstrate a voice agent tailored to your industry, and give you honest feedback on whether this will drive profit for you.
               </p>
             </div>
@@ -1157,32 +937,32 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <button
                 onClick={() => handleOpenConsultation('Free Consultation')}
-                className="btn-landing-primary text-sm px-8 py-3.5 font-semibold flex items-center gap-2"
+                className="gradient-pill-btn text-sm px-8 py-3.5 font-semibold flex items-center gap-2 cursor-pointer"
               >
                 <span>Book a free consultation</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 text-[#00C6FF]" />
               </button>
 
               <TalkToUsControl
                 links={agencyLinks}
                 label="Direct chat & inquiry"
-                className="btn-secondary text-sm px-6 py-3.5 font-medium"
+                className="px-6 py-3.5 rounded-full text-sm font-medium bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.1] transition-all cursor-pointer"
                 onFallbackOpenModal={() => handleOpenConsultation('Direct Inquiry')}
               />
             </div>
 
-            <div className="pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-6 text-xs text-[var(--text-muted)]">
+            <div className="pt-4 border-t border-white/[0.08] flex flex-wrap items-center justify-center gap-6 text-xs text-[#8292A6]">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#1AE598]" />
                 <span>Zero technical setup required</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-green)]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#1AE598]" />
                 <span>48-hour onboarding</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-blue)]" />
-                <span>Personal agency account manager</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#00C6FF]" />
+                <span>Dedicated account manager</span>
               </span>
             </div>
 
@@ -1192,40 +972,58 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
       </main>
 
       {/* Public Footer */}
-      <footer className="w-full border-t border-white/[0.06] bg-[var(--surface-2)] py-12 text-xs text-[var(--text-muted)] transition-colors">
+      <footer className="w-full border-t border-white/[0.08] bg-[#0B0F17] py-12 text-xs text-[#8292A6] transition-colors">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           <div className="space-y-2">
-            <div className="font-bold text-[var(--text-primary)] text-sm">VectorOps Voice Agency</div>
+            <div className="flex items-center gap-2">
+              <VectorOpsLogoMark className="w-5 h-5" />
+              <span className="font-bold text-white text-sm">VectorOps Agency</span>
+            </div>
             <p className="leading-relaxed">
               We design, deploy, and manage custom 24/7 AI phone agents for appointment-driven businesses.
             </p>
           </div>
 
           <div className="space-y-2">
-            <div className="font-bold text-[var(--text-primary)] text-sm">Industries Served</div>
+            <div className="font-bold text-white text-sm">Use Cases</div>
             <ul className="space-y-1">
-              <li>Dental & Medical Clinics</li>
-              <li>Real Estate & Property Groups</li>
-              <li>Logistics & Dispatch Operators</li>
-              <li>Contractors & Home Services</li>
+              <li>AI Receptionist & Booking</li>
+              <li>After-Hours Emergency Triage</li>
+              <li>Lead Generation & Qualification</li>
+              <li>Order Updates & Customer Care</li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <div className="font-bold text-[var(--text-primary)] text-sm">Quick Links</div>
+            <div className="font-bold text-white text-sm">Quick Links</div>
             <ul className="space-y-1">
-              <li><a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">How it works</a></li>
-              <li><a href="#who-its-for" className="hover:text-[var(--text-primary)] transition-colors">Who it's for</a></li>
-              <li><a href="#pricing" className="hover:text-[var(--text-primary)] transition-colors">Pricing tiers</a></li>
-              <li><button onClick={() => onOpenAuth('CLIENT')} className="hover:text-[var(--text-primary)] transition-colors">Client Portal Login</button></li>
-              <li><button onClick={() => onOpenAuth('ADMIN')} className="hover:text-[var(--text-primary)] transition-colors">Admin Sign In</button></li>
+              <li><a href="#voice-agents" className="hover:text-white transition-colors">Voice Agents</a></li>
+              <li><a href="#automations" className="hover:text-white transition-colors">Managed Automations</a></li>
+              <li><a href="#real-results" className="hover:text-white transition-colors">Real Results</a></li>
+              <li><a href="#pricing" className="hover:text-white transition-colors">Pricing tiers</a></li>
+              <li>
+                <button
+                  onClick={() => currentUser?.role === 'CLIENT' ? onEnterClient() : onOpenAuth('CLIENT')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Client Portal
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => currentUser?.role === 'ADMIN' ? onEnterAdmin() : onOpenAuth('ADMIN')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Admin Console
+                </button>
+              </li>
             </ul>
           </div>
 
           {/* Contact Agency — DYNAMICALLY pulls all active links from agency_payment_links table */}
           <div className="space-y-2">
-            <div className="font-bold text-[var(--text-primary)] text-sm">Contact Agency</div>
+            <div className="font-bold text-white text-sm">Contact Agency</div>
             <p className="leading-relaxed">
               Ready to eliminate missed calls? Reach out to our team through any configured channel:
             </p>
@@ -1237,7 +1035,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                       href={buildGeneralInquiryRedirectUrl(link)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[var(--accent-blue)] hover:underline inline-flex items-center gap-1.5 font-medium transition-colors"
+                      className="text-[#00C6FF] hover:underline inline-flex items-center gap-1.5 font-medium transition-colors"
                     >
                       <PlatformIcon platform={link.platform} size={14} />
                       <span>{link.label}</span>
@@ -1248,7 +1046,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
               ) : (
                 <button
                   onClick={() => handleOpenConsultation('General Inquiry')}
-                  className="text-[var(--accent-blue)] hover:underline font-medium"
+                  className="text-[#00C6FF] hover:underline font-medium cursor-pointer"
                 >
                   Book a consultation
                 </button>
@@ -1271,22 +1069,28 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
       </footer>
 
       {/* ================================================================
-          CONSULTATION & INQUIRY MODAL (Sales-Assisted Model)
+          CONSULTATION & INQUIRY MODAL
           ================================================================ */}
       {isConsultModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg neo-modal rounded-3xl p-6 sm:p-8 space-y-5 relative bg-[var(--surface-2)] text-[var(--text-primary)]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsConsultModalOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg glass-panel rounded-3xl p-6 sm:p-8 space-y-5 relative text-white modal-sheet-enter shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
               <div>
-                <span className="text-[10px] uppercase font-mono text-[var(--accent-green)] font-semibold">Free consultation</span>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
+                <span className="text-[10px] uppercase font-mono text-[#00C6FF] font-semibold">Free consultation</span>
+                <h3 className="text-lg font-bold text-white">
                   {consultPlanName}
                 </h3>
               </div>
               <button
                 onClick={() => setIsConsultModalOpen(false)}
-                className="p-1.5 rounded-lg neo-inset hover:text-[#E2604F] transition-colors"
+                className="p-1.5 rounded-lg text-[#8292A6] hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1294,79 +1098,79 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
 
             {consultSubmitted ? (
               <div className="p-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl neo-inset text-[var(--accent-green)] flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-[#1AE598]/15 text-[#1AE598] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-base font-bold text-[var(--text-primary)]">Inquiry received!</h4>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                <h4 className="text-base font-bold text-white">Inquiry received!</h4>
+                <p className="text-xs text-[#8292A6] leading-relaxed">
                   Thank you, {consultName}. Our account director will review your business requirements and contact you within 24 hours.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmitConsultation} className="space-y-4 text-xs">
-                <p className="text-[var(--text-muted)] leading-relaxed">
-                  Fill out your details below and our agency director will prepare a tailored voice agent demonstration for your business.
+                <p className="text-[#8292A6] leading-relaxed">
+                  Fill out your details below and our team will prepare a tailored voice agent demonstration for your business.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[var(--text-primary)] font-medium">Your name *</label>
+                    <label className="text-white font-medium">Your name *</label>
                     <input
                       type="text"
                       required
                       placeholder="Jane Doe"
                       value={consultName}
                       onChange={(e) => setConsultName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl neo-inset text-[var(--text-primary)] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-[#8292A6] focus:outline-none focus:border-[#7B61FF]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[var(--text-primary)] font-medium">Company name *</label>
+                    <label className="text-white font-medium">Company name *</label>
                     <input
                       type="text"
                       required
                       placeholder="Highland Dental Practice"
                       value={consultCompany}
                       onChange={(e) => setConsultCompany(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl neo-inset text-[var(--text-primary)] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-[#8292A6] focus:outline-none focus:border-[#7B61FF]"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[var(--text-primary)] font-medium">Email address *</label>
+                    <label className="text-white font-medium">Email address *</label>
                     <input
                       type="email"
                       required
                       placeholder="jane@company.com"
                       value={consultEmail}
                       onChange={(e) => setConsultEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl neo-inset text-[var(--text-primary)] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-[#8292A6] focus:outline-none focus:border-[#7B61FF]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[var(--text-primary)] font-medium">Phone number (optional)</label>
+                    <label className="text-white font-medium">Phone number (optional)</label>
                     <input
                       type="tel"
                       placeholder="+1 (555) 000-0000"
                       value={consultPhone}
                       onChange={(e) => setConsultPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl neo-inset text-[var(--text-primary)] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-[#8292A6] focus:outline-none focus:border-[#7B61FF]"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[var(--text-primary)] font-medium">Current monthly call volume or questions</label>
+                  <label className="text-white font-medium">Current monthly call volume or questions</label>
                   <textarea
                     rows={2}
                     placeholder="We get ~300 calls/month and want to stop missing after-hours patients..."
                     value={consultNotes}
                     onChange={(e) => setConsultNotes(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl neo-inset text-[var(--text-primary)] focus:outline-none resize-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder-[#8292A6] focus:outline-none focus:border-[#7B61FF] resize-none"
                   />
                 </div>
 
@@ -1377,7 +1181,7 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                         href={buildGeneralInquiryRedirectUrl(agencyLinks.find(l => l.platform === 'WHATSAPP')!)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--accent-blue)] hover:underline inline-flex items-center gap-1 font-medium"
+                        className="text-[#00C6FF] hover:underline inline-flex items-center gap-1 font-medium"
                       >
                         <PlatformIcon platform="WHATSAPP" size={14} />
                         <span>WhatsApp chat</span>
@@ -1389,13 +1193,13 @@ export const VoiceIntelligenceHero3D: React.FC<VoiceIntelligenceHero3DProps> = (
                     <button
                       type="button"
                       onClick={() => setIsConsultModalOpen(false)}
-                      className="px-4 py-2 rounded-xl neo-raised text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                      className="px-4 py-2 rounded-xl text-[#8292A6] hover:text-white transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="btn-primary px-5 py-2 font-semibold"
+                      className="gradient-pill-btn px-5 py-2 font-semibold cursor-pointer"
                     >
                       Request consultation
                     </button>

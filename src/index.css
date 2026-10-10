@@ -2,375 +2,354 @@
 
 @layer base {
   /* ================================================================
-     NIGHT MODE (Default) — True Neumorphic Palette with Tinted Navy
+     GLOBAL DESIGN TOKENS (Navy / Gradient Glass Design System)
+     Declared at root, referenced everywhere across all screens.
      ================================================================ */
   :root,
   [data-theme="dark"] {
-    /* Page & Card Surface — MUST be the same color for true neumorphism */
-    --surface-1: #0B0F17;          /* page background: rich near-black navy tint */
-    --surface-2: #0B0F17;          /* card background: IDENTICAL to page background */
-    --surface-3: #111724;          /* nested raised tier (within 2-3% lightness) */
+    /* Primary Canvas & Background */
+    --bg: #0B0F17;
+    --bg-glow: radial-gradient(circle at 50% 0%, rgba(123, 97, 255, 0.15) 0%, rgba(0, 194, 255, 0.08) 45%, transparent 70%);
 
-    --bg: var(--surface-1);
-    --surface: var(--surface-2);
-    --surface-raised: var(--surface-3);
+    /* Cards & Containers */
+    --card-bg: rgba(14, 19, 31, 0.75);
+    --card-bg-solid: #0E131F;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-border-hover: rgba(123, 97, 255, 0.35);
 
-    --text-primary: #F0F4F8;
+    /* Typography */
+    --text: #F0F4F8;
+    --text-primary: var(--text);
     --text-muted: #8292A6;
 
-    /* Semantic Color Accents (+15-20% Vivid Saturation against dark surface) */
-    --accent-green: #1AE598;       /* Vivid emerald green for money/revenue/success */
-    --accent-blue: #2994FF;        /* Vivid electric blue for primary interactive action */
-    --accent-amber: #FFA726;       /* Vivid warm amber for warning, pending, due soon <=7d */
-    --accent-red: #FF4D4D;         /* Vivid coral red for danger, overdue, void */
+    /* Accents & Gradients */
+    --accent-gradient: linear-gradient(135deg, #9B51E0 0%, #7662FA 50%, #00C6FF 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #A855F7 0%, #6366F1 50%, #06B6D4 100%);
+    --accent-blue: #00C6FF;
+    --accent-purple: #9B51E0;
+    --accent-indigo: #7662FA;
+    --accent: #7662FA;
 
-    /* Token aliases */
-    --accent: var(--accent-blue);
-    --accent-soft: #126ACC;
-    --success: var(--accent-green);
-    --warning: var(--accent-amber);
-    --danger: var(--accent-red);
+    /* Semantic Tokens */
+    --success: #1AE598;
+    --warning: #FFA726;
+    --danger: #FF4D4D;
+    --info: #00C6FF;
 
-    /* Neumorphic Dual Shadows (Tinted toward background navy hue) */
-    --shadow-light: rgba(255, 255, 255, 0.045);
-    --shadow-dark: rgba(2, 4, 8, 0.78);
+    /* Aliases for Universal Screen Inheritance */
+    --surface-1: var(--bg);
+    --surface-2: var(--card-bg-solid);
+    --surface-3: #131A2B;
+    --surface: var(--card-bg);
+    --surface-raised: var(--surface-3);
+    --accent-green: var(--success);
+    --accent-amber: var(--warning);
+    --accent-red: var(--danger);
 
-    --bg-main: var(--bg);
-    --surface-main: var(--surface);
+    /* Soft Glow Shadows */
+    --shadow-light: rgba(255, 255, 255, 0.04);
+    --shadow-dark: rgba(0, 0, 0, 0.6);
+  }
+
+  [data-theme="light"] {
+    --bg: #F4F7FB;
+    --bg-glow: radial-gradient(circle at 50% 0%, rgba(123, 97, 255, 0.08) 0%, rgba(0, 194, 255, 0.05) 45%, transparent 70%);
+
+    --card-bg: rgba(255, 255, 255, 0.88);
+    --card-bg-solid: #FFFFFF;
+    --card-border: rgba(0, 0, 0, 0.08);
+    --card-border-hover: rgba(118, 98, 250, 0.4);
+
+    --text: #0F172A;
+    --text-primary: var(--text);
+    --text-muted: #64748B;
+
+    --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #0284C7 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #7C3AED 0%, #4F46E5 50%, #0369A1 100%);
+    --accent-blue: #0284C7;
+    --accent-purple: #8B5CF6;
+    --accent-indigo: #6366F1;
+    --accent: #6366F1;
+
+    --success: #059669;
+    --warning: #D97706;
+    --danger: #E11D48;
+    --info: #0284C7;
+
+    --surface-1: var(--bg);
+    --surface-2: var(--card-bg-solid);
+    --surface-3: #EBF1F7;
+    --surface: var(--card-bg);
+    --surface-raised: var(--surface-3);
+    --accent-green: var(--success);
+    --accent-amber: var(--warning);
+    --accent-red: var(--danger);
+
+    --shadow-light: rgba(255, 255, 255, 0.85);
+    --shadow-dark: rgba(162, 177, 198, 0.35);
   }
 
   /* ================================================================
-     DAY MODE — True Neumorphic Soft Slate Off-White Palette
+     GLOBAL TYPOGRAPHY
+     - "Inter" for all UI / body text (weights 400/500/600/700)
+     - "Plus Jakarta Sans" for all headings (weights 600/700)
      ================================================================ */
-  [data-theme="light"] {
-    /* Page & Card Surface — MUST be the same color for true neumorphism */
-    --surface-1: #EFF3F8;          /* soft slate off-white page background */
-    --surface-2: #EFF3F8;          /* card background: IDENTICAL to page background */
-    --surface-3: #F6F9FC;          /* nested raised tier (within 2% lightness) */
-
-    --bg: var(--surface-1);
-    --surface: var(--surface-2);
-    --surface-raised: var(--surface-3);
-
-    --text-primary: #121A26;
-    --text-muted: #5E6E82;
-
-    /* Semantic Color Accents (+15% Vivid Saturation) */
-    --accent-green: #059669;       /* Vivid emerald green */
-    --accent-blue: #1A75EB;        /* Vivid royal blue */
-    --accent-amber: #D97706;       /* Vivid warm amber */
-    --accent-red: #E11D48;         /* Vivid rose red */
-
-    /* Token aliases */
-    --accent: var(--accent-blue);
-    --accent-soft: #BFD7F5;
-    --success: var(--accent-green);
-    --warning: var(--accent-amber);
-    --danger: var(--accent-red);
-
-    /* Neumorphic Dual Shadows */
-    --shadow-light: rgba(255, 255, 255, 0.95);
-    --shadow-dark: rgba(162, 177, 198, 0.52);
-
-    --bg-main: var(--bg);
-    --surface-main: var(--surface);
-  }
-
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    font-weight: 400;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14.5px;
+    line-height: 1.5;
     background-color: var(--bg);
-    color: var(--text-primary);
+    background-image: var(--bg-glow);
+    background-attachment: fixed;
+    color: var(--text);
     transition: background-color 200ms ease-out, color 200ms ease-out;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.015em;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--text);
   }
 
   .font-mono-numbers {
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
   }
+
+  .font-script {
+    font-family: 'Caveat', cursive, sans-serif;
+  }
 }
 
 /* ================================================================
-   TRUE NEUMORPHISM — EXACT DUAL SHADOW RULES FOR BOTH MODES
-   Every card's background is the SAME color as the page background.
-   No borders. Depth comes strictly from dual top-left / bottom-right shadows.
+   GLOBAL COMPONENT BASE STYLES — APP-WIDE DEFAULTS
    ================================================================ */
 
-/* RAISED element (cards, buttons, panels) */
-.neo-raised, 
-.neo-card, 
-.neo-item-raised {
-  background-color: var(--surface) !important;
-  border: none !important;
+/* 1. INPUTS & TEXTAREAS: --card-bg fill, 1px --card-border, 10-12px radius, gradient-accent focus */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+  background-color: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+  color: var(--text) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13.5px !important;
+  padding: 0.625rem 0.875rem !important;
   outline: none !important;
-  border-radius: 20px;
-  box-shadow: -8px -8px 20px var(--shadow-light),
-               8px  8px 20px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: all 180ms ease !important;
 }
 
-/* Hover on raised element */
-.neo-raised:hover,
-.neo-card:hover {
-  box-shadow: -10px -10px 24px var(--shadow-light),
-               10px  10px 24px var(--shadow-dark) !important;
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #7662FA !important;
+  box-shadow: 0 0 0 2px rgba(118, 98, 250, 0.25), 0 0 16px rgba(0, 194, 255, 0.18) !important;
 }
 
-/* PRESSED / ACTIVE state inverts shadow to inset and springs to scale 0.97 */
-.neo-raised:active,
-.neo-card:active,
-.tappable:active {
-  box-shadow: inset -5px -5px 14px var(--shadow-light),
-              inset  5px  5px 14px var(--shadow-dark) !important;
-  transform: scale(0.97) !important;
-  transition: transform 90ms ease-out, box-shadow 90ms ease-out !important;
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8;
 }
 
-/* RAISED — HERO/PRIMARY element */
-.neo-focal, 
-.neo-hero, 
-.neo-briefing,
-.neo-kpi-primary {
-  background-color: var(--surface) !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: 20px;
-  box-shadow: -10px -10px 24px var(--shadow-light),
-               10px  10px 24px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Secondary KPI card */
-.neo-kpi-secondary {
-  background-color: var(--surface) !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: 20px;
-  box-shadow: -8px -8px 20px var(--shadow-light),
-               8px  8px 20px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Modal depth: deep elevation, clean shadow boundary, no border */
-.neo-modal {
-  background-color: var(--surface) !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: 24px;
-  box-shadow: -14px -14px 32px var(--shadow-light),
-               14px  14px 38px var(--shadow-dark) !important;
-}
-
-/* PRESSED/INSET element (active nav item, focused input, selected tab, toggled switch) */
-.neo-inset {
-  background-color: var(--surface) !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: inset -5px -5px 14px var(--shadow-light),
-              inset  5px  5px 14px var(--shadow-dark) !important;
-  transition: box-shadow 120ms ease, background-color 150ms ease;
-}
-
-/* Sidebar elevation */
-.neo-sidebar {
-  background-color: var(--surface) !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: 8px 0 24px var(--shadow-dark) !important;
-}
-
-/* Toggle Thumb */
-.neo-toggle-thumb {
-  box-shadow: -3px -3px 8px var(--shadow-light),
-               3px  3px 8px var(--shadow-dark);
-}
-
-/* FLAT elements — NO shadow, by design (transparent base for nested lists) */
-.neo-flat,
-.neo-table-row {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* Surface Depth Tiers */
-.surface-1 {
-  background-color: var(--surface-1) !important;
-}
-
-.surface-2 {
-  background-color: var(--surface-2) !important;
-}
-
-.surface-3,
-.neo-surface-3 {
-  background-color: var(--surface-3) !important;
-  border: none !important;
-  border-radius: 16px;
-  box-shadow: inset -3px -3px 8px var(--shadow-light),
-              inset  3px  3px 8px var(--shadow-dark) !important;
-}
-
-/* ================================================================
-   NEUMORPHIC BUTTONS & TACTILE SPRING PRESS FEEDBACK
-   scale to 0.97 on press (active state), spring back on release
-   ================================================================ */
-
-button {
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease, background-color 150ms ease;
-}
-
-button:active:not(:disabled) {
-  transform: scale(0.97) !important;
-}
-
-/* Primary Action Button (Flat solid vivid Blue, tactile raised shadow) */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 14px;
-  background-color: var(--accent-blue) !important;
+/* 2. BUTTONS (PRIMARY): --accent-gradient fill, white text, soft glow shadow */
+.btn-primary,
+button.btn-primary,
+.btn-landing-primary,
+button.btn-landing-primary {
+  background: var(--accent-gradient) !important;
   color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
   border: none !important;
   outline: none !important;
-  box-shadow: -6px -6px 16px var(--shadow-light),
-               6px  6px 16px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.08);
-  box-shadow: -8px -8px 20px var(--shadow-light),
-               8px  8px 20px var(--shadow-dark) !important;
-}
-
-.btn-primary:active {
-  box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.3),
-              inset  4px  4px 10px rgba(0, 0, 0, 0.5) !important;
-  transform: scale(0.97) !important;
-}
-
-/* Landing Page Conversion CTA Button */
-.btn-landing-primary {
+  border-radius: 9999px !important;
+  padding: 0.625rem 1.25rem;
+  box-shadow: 0 4px 18px rgba(118, 98, 250, 0.35) !important;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--accent-green), color-mix(in srgb, var(--accent-green) 85%, #000)) !important;
-  color: #0B0F17 !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent-green) 35%, transparent),
-              -6px -6px 16px var(--shadow-light),
-               6px  6px 16px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), filter 150ms ease;
-  cursor: pointer;
 }
 
-.btn-landing-primary:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 6px 24px color-mix(in srgb, var(--accent-green) 45%, transparent),
-              -8px -8px 20px var(--shadow-light),
-               8px  8px 20px var(--shadow-dark) !important;
+.btn-primary:hover,
+button.btn-primary:hover,
+.btn-landing-primary:hover,
+button.btn-landing-primary:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 6px 24px rgba(118, 98, 250, 0.55), 0 0 20px rgba(0, 194, 255, 0.25) !important;
+  transform: translateY(-1px) !important;
 }
 
-.btn-landing-primary:active {
+.btn-primary:active,
+button.btn-primary:active,
+.btn-landing-primary:active,
+button.btn-landing-primary:active {
   transform: scale(0.97) !important;
 }
 
-/* Secondary Button (Tactile raised on surface, inset on click) */
-.btn-secondary {
+/* 3. BUTTONS (SECONDARY / GHOST): transparent, 1px border, muted text */
+.btn-secondary,
+button.btn-secondary {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  font-family: 'Inter', sans-serif !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 9999px !important;
+  padding: 0.625rem 1.25rem;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 14px;
-  background-color: var(--surface) !important;
-  color: var(--text-primary) !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: -6px -6px 16px var(--shadow-light),
-               6px  6px 16px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms ease;
-  cursor: pointer;
 }
 
-.btn-secondary:hover {
-  color: var(--accent-blue) !important;
-  box-shadow: -8px -8px 18px var(--shadow-light),
-               8px  8px 18px var(--shadow-dark) !important;
+.btn-secondary:hover,
+button.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  transform: translateY(-1px) !important;
 }
 
-.btn-secondary:active {
-  box-shadow: inset -5px -5px 14px var(--shadow-light),
-              inset  5px  5px 14px var(--shadow-dark) !important;
+.btn-secondary:active,
+button.btn-secondary:active {
   transform: scale(0.97) !important;
 }
 
-/* Danger Button */
-.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 14px;
-  background-color: var(--surface) !important;
-  color: var(--danger) !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: -6px -6px 16px var(--shadow-light),
-               6px  6px 16px var(--shadow-dark) !important;
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms ease;
-  cursor: pointer;
+/* Gradient Pill CTA Button */
+.gradient-pill-btn {
+  position: relative;
+  background: linear-gradient(135deg, rgba(155, 81, 224, 0.18), rgba(0, 194, 255, 0.18));
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+  color: #FFFFFF;
+  transition: all 200ms ease;
 }
 
-.btn-danger:hover {
-  color: color-mix(in srgb, var(--danger) 85%, white) !important;
-  box-shadow: -8px -8px 18px var(--shadow-light),
-               8px  8px 18px var(--shadow-dark) !important;
+.gradient-pill-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #9B51E0 0%, #7662FA 50%, #00C2FF 100%);
+  z-index: -1;
+  transition: opacity 200ms ease;
 }
 
-.btn-danger:active {
-  box-shadow: inset -5px -5px 14px var(--shadow-light),
-              inset  5px  5px 14px var(--shadow-dark) !important;
-  transform: scale(0.97) !important;
+.gradient-pill-btn:hover {
+  box-shadow: 0 0 25px rgba(118, 98, 250, 0.45);
+  transform: translateY(-1px);
+}
+
+.gradient-pill-btn:active {
+  transform: scale(0.97);
+}
+
+/* 4. CARDS: --card-bg, --card-border, 16-20px radius, soft shadow */
+.neo-raised,
+.neo-card,
+.neo-item-raised,
+.neo-focal,
+.neo-hero,
+.glass-card,
+.neo-briefing,
+.neo-kpi-primary,
+.neo-kpi-secondary {
+  background-color: var(--card-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.neo-raised:hover,
+.neo-card:hover,
+.glass-card:hover {
+  border-color: var(--card-border-hover) !important;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45), 0 0 18px rgba(118, 98, 250, 0.12) !important;
+}
+
+/* Inset / Flat Sub-Bars (e.g. key-value bars in detail sheets) */
+.neo-flat,
+.neo-inset {
+  background-color: rgba(255, 255, 255, 0.035) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+  transition: all 180ms ease;
+}
+
+/* 5. MODALS & DIALOGS: glass card + blurred backdrop overlay */
+.modal-backdrop-enter {
+  background-color: rgba(6, 9, 15, 0.82) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
+.neo-modal,
+.glass-panel,
+.modal-sheet-enter {
+  background-color: rgba(14, 19, 31, 0.9) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(118, 98, 250, 0.15) !important;
+}
+
+/* 6. TABLES & LISTS: --card-bg rows, --card-border dividers, no harsh contrast */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+thead tr {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid var(--card-border) !important;
+}
+
+thead th {
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.02em;
+  padding: 0.75rem 1rem !important;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--card-border) !important;
+  transition: background-color 150ms ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+tbody td {
+  padding: 0.875rem 1rem !important;
+  color: var(--text) !important;
 }
 
 /* ================================================================
    SCREEN TRANSITIONS & MOTION SPECIFICATIONS
-   - Tab switches: fades in and slides up 10px over 200ms ease-out
-   - Detail modal/sheet: slides up (mobile) or scales 96%->100% (desktop) over 250ms cubic-bezier(0.16, 1, 0.3, 1)
-   - Filtered list items: fade in with 4px upward slide over 180ms
    ================================================================ */
-
 @keyframes screenFadeSlideUp {
   0% {
     opacity: 0;
@@ -451,7 +430,38 @@ button:active:not(:disabled) {
 }
 
 /* ================================================================
+   GRADIENT TEXT & WAVEFORM UTILITIES
+   ================================================================ */
+.text-gradient-purple-blue {
+  background: linear-gradient(135deg, #B27BFF 0%, #7662FA 50%, #00C6FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyan-purple {
+  background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 50%, #9B51E0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes waveformGlow {
+  0%, 100% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 8px rgba(0, 194, 255, 0.6)) drop-shadow(0 0 14px rgba(155, 81, 224, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px rgba(0, 194, 255, 0.9)) drop-shadow(0 0 22px rgba(155, 81, 224, 0.7));
+  }
+}
+
+.waveform-glow-bar {
+  animation: waveformGlow 3s ease-in-out infinite;
+}
+
+/* ================================================================
    AUTOMATIC THEME TOKEN ADAPTERS FOR LEGACY HARDCODED CLASSES
+   Maps existing screen elements to new navy/gradient tokens
    ================================================================ */
 .bg-\[\#17181B\], .bg-\[\#17181b\],
 .bg-\[\#0E1512\], .bg-\[\#0e1512\] {
@@ -460,17 +470,21 @@ button:active:not(:disabled) {
 
 .bg-\[\#1D1F23\], .bg-\[\#1d1f23\],
 .bg-\[\#141C19\], .bg-\[\#141c19\] {
-  background-color: var(--surface) !important;
+  background-color: var(--card-bg) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border) !important;
 }
 
 .bg-\[\#16201C\], .bg-\[\#16201c\],
 .bg-\[\#25282E\], .bg-\[\#25282e\] {
   background-color: var(--surface-raised) !important;
+  border: 1px solid var(--card-border) !important;
 }
 
 .text-\[\#EDEAE2\], .text-\[\#edeae2\],
 .text-\[\#E8F0EC\], .text-\[\#e8f0ec\] {
-  color: var(--text-primary) !important;
+  color: var(--text) !important;
 }
 
 .text-\[\#8B8D93\], .text-\[\#8b8d93\],
@@ -479,19 +493,61 @@ button:active:not(:disabled) {
   color: var(--text-muted) !important;
 }
 
-/* Form input styling for neumorphic inset */
-input, select, textarea {
-  background-color: var(--surface) !important;
-  color: var(--text-primary) !important;
-  border: none !important;
-  outline: none !important;
+/* Terracotta & orange mappings to cyan/purple and accent */
+.text-\[\#E2896A\], .text-\[\#e2896a\],
+.text-\[\#EA9679\], .text-\[\#ea9679\] {
+  color: #00C6FF !important;
 }
 
-input:focus, select:focus, textarea:focus {
-  outline: none !important;
-  box-shadow: inset -5px -5px 14px var(--shadow-light),
-              inset  5px  5px 14px var(--shadow-dark),
-              0 0 0 1.5px color-mix(in srgb, var(--accent-blue) 35%, transparent) !important;
+.bg-\[\#E2896A\], .bg-\[\#e2896a\],
+.bg-\[\#EA9679\], .bg-\[\#ea9679\] {
+  background: var(--accent-gradient) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-\[\#E2896A\]\/10, .bg-\[\#e2896a\]\/10,
+.bg-\[\#E2896A\]\/15, .bg-\[\#e2896a\]\/15,
+.bg-\[\#E2896A\]\/20, .bg-\[\#e2896a\]\/20 {
+  background-color: rgba(0, 198, 255, 0.12) !important;
+  color: #00C6FF !important;
+}
+
+.border-\[\#E2896A\], .border-\[\#e2896a\],
+.border-\[\#E2896A\]\/20, .border-\[\#e2896a\]\/20,
+.border-\[\#E2896A\]\/30, .border-\[\#e2896a\]\/30 {
+  border-color: rgba(0, 198, 255, 0.3) !important;
+}
+
+.accent-\[\#E2896A\], .accent-\[\#e2896a\] {
+  accent-color: #7662FA !important;
+}
+
+/* Old forest green mappings to success */
+.bg-\[\#4CAF7D\], .bg-\[\#4caf7d\],
+.text-\[\#4CAF7D\], .text-\[\#4caf7d\] {
+  color: var(--success) !important;
+}
+
+.bg-\[\#4CAF7D\] {
+  background-color: var(--success) !important;
+}
+
+/* Old amber mappings to warning */
+.text-\[\#E0A94C\], .text-\[\#e0a94c\] {
+  color: var(--warning) !important;
+}
+
+.bg-\[\#E0A94C\], .bg-\[\#e0a94c\] {
+  background-color: var(--warning) !important;
+}
+
+/* Old red mappings to danger */
+.text-\[\#E2604F\], .text-\[\#e2604f\] {
+  color: var(--danger) !important;
+}
+
+.bg-\[\#E2604F\], .bg-\[\#e2604f\] {
+  background-color: var(--danger) !important;
 }
 
 /* Subtle scrollbar */

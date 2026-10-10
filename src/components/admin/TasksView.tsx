@@ -67,15 +67,15 @@ export const TasksView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#EDEAE2]">Agency tasks</h1>
-          <p className="text-xs text-[#8B8D93] mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-white">Agency tasks</h1>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             Operational action items derived from onboarding, client messages, appointments, and AI triage
           </p>
         </div>
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="btn-primary text-xs px-4 py-2 self-start sm:self-auto"
+          className="btn-primary text-xs px-4 py-2 self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Create task</span>
@@ -84,7 +84,7 @@ export const TasksView: React.FC = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1 p-1 bg-[#1D1F23] rounded-xl text-xs">
+        <div className="flex items-center gap-1 p-1 bg-white/[0.03] border border-[var(--card-border)] rounded-xl text-xs">
           {[
             { id: 'ALL', label: 'All' },
             { id: 'TODO', label: 'To do' },
@@ -95,10 +95,10 @@ export const TasksView: React.FC = () => {
             <button
               key={st.id}
               onClick={() => setFilterStatus(st.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                 filterStatus === st.id
-                  ? 'neo-inset text-[#EDEAE2] font-semibold'
-                  : 'text-[#8B8D93] hover:text-[#EDEAE2]'
+                  ? 'bg-gradient-to-r from-[#9B51E0]/25 via-[#7662FA]/20 to-[#00C6FF]/20 text-white font-semibold border border-[#7662FA]/40 shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-white'
               }`}
             >
               {st.label}
@@ -108,11 +108,11 @@ export const TasksView: React.FC = () => {
 
         {/* Source Filter */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-[#8B8D93]">Source:</span>
+          <span className="text-[var(--text-muted)]">Source:</span>
           <select
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value)}
-            className="px-3 py-1.5 rounded-xl neo-inset text-[#EDEAE2] text-xs focus:outline-none"
+            className="px-3 py-1.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-white text-xs focus:outline-none"
           >
             <option value="ALL">All sources</option>
             <option value="BILLING">Billing & renewal triggers</option>
@@ -124,10 +124,10 @@ export const TasksView: React.FC = () => {
         </div>
       </div>
 
-      {/* Tasks List — Flat, no shadow, scannable */}
+      {/* Tasks List */}
       <div className="space-y-2.5">
         {filteredTasks.length === 0 ? (
-          <div className="neo-flat bg-[#1D1F23] p-12 text-center rounded-xl text-xs text-[#8B8D93]">
+          <div className="glass-card bg-[var(--card-bg)] border border-[var(--card-border)] p-12 text-center rounded-xl text-xs text-[var(--text-muted)]">
             No tasks found in this view.
           </div>
         ) : (
@@ -138,17 +138,17 @@ export const TasksView: React.FC = () => {
             return (
               <div
                 key={t.id}
-                className={`p-5 rounded-[16px] neo-raised bg-[#1D1F23] flex items-start justify-between gap-4 transition-all ${
+                className={`p-5 rounded-[18px] glass-card bg-[var(--card-bg)] border border-[var(--card-border)] flex items-start justify-between gap-4 transition-all ${
                   isDone ? 'opacity-60' : 'hover:translate-y-[-1px]'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => handleToggleStatus(t)}
-                    className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center transition-colors ${
+                    className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center transition-colors cursor-pointer ${
                       isDone
-                        ? 'bg-[#4CAF7D] text-[#17181B]'
-                        : 'border border-white/20 hover:border-[#E2896A]'
+                        ? 'bg-[var(--success)] text-[#0B0F17]'
+                        : 'border border-white/20 hover:border-[#00C6FF]'
                     }`}
                   >
                     {isDone && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -156,23 +156,23 @@ export const TasksView: React.FC = () => {
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-semibold ${isDone ? 'line-through text-[#8B8D93]' : 'text-[#EDEAE2]'}`}>
+                      <span className={`text-xs font-semibold ${isDone ? 'line-through text-[var(--text-muted)]' : 'text-white'}`}>
                         {t.title}
                       </span>
 
                       {/* Source tag */}
                       {t.source === 'AI' ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-[#E2896A]">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-[#00C6FF]">
                           <Sparkles className="w-3 h-3" />
                           <span>AI-created</span>
                         </span>
                       ) : t.source === 'BILLING' ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-[#E0A94C]">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-[var(--warning)]">
                           <CreditCard className="w-3 h-3" />
                           <span>Billing reminder</span>
                         </span>
                       ) : (
-                        <span className="text-[11px] text-[#8B8D93]">
+                        <span className="text-[11px] text-[var(--text-muted)]">
                           {t.source.replace(/_/g, ' ').toLowerCase()}
                         </span>
                       )}
@@ -181,17 +181,17 @@ export const TasksView: React.FC = () => {
                     </div>
 
                     {t.description && (
-                      <p className="text-xs text-[#8B8D93] leading-relaxed">
+                      <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                         {t.description}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 text-[11px] text-[#8B8D93] pt-1">
+                    <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)] pt-1">
                       {client && (
-                        <span>Client: <span className="font-semibold text-[#EDEAE2]">{client.company_name}</span></span>
+                        <span>Client: <span className="font-semibold text-white">{client.company_name}</span></span>
                       )}
-                      <span>Due: <span className="font-semibold text-[#EDEAE2] font-mono-numbers">{t.due_date}</span></span>
-                      <span>Assigned: <span className="text-[#EDEAE2]">{t.assigned_to ? 'Operator' : 'Sovereign operator'}</span></span>
+                      <span>Due: <span className="font-semibold text-white font-mono-numbers">{t.due_date}</span></span>
+                      <span>Assigned: <span className="text-white">{t.assigned_to ? 'Operator' : 'Sovereign operator'}</span></span>
                     </div>
                   </div>
                 </div>
@@ -207,45 +207,51 @@ export const TasksView: React.FC = () => {
 
       {/* Create Task Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#1D1F23] neo-modal rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 bg-[#17181B] flex items-center justify-between">
-              <h2 className="text-base font-semibold text-[#EDEAE2]">Create agency task</h2>
-              <button onClick={() => setIsCreateOpen(false)} className="p-1 text-[#8B8D93] hover:text-[#EDEAE2]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+          onClick={() => setIsCreateOpen(false)}
+        >
+          <div 
+            className="bg-[var(--card-bg)] border border-[var(--card-border)] glass-panel neo-modal modal-sheet-enter rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 bg-[var(--card-bg)]/80 flex items-center justify-between border-b border-[var(--card-border)]">
+              <h2 className="text-base font-bold text-white">Create agency task</h2>
+              <button onClick={() => setIsCreateOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="p-6 space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-[#EDEAE2]">Task title *</label>
+                <label className="font-semibold text-white">Task title *</label>
                 <input
                   type="text"
                   placeholder="e.g. Verify voice interruption sensitivity"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-[#EDEAE2]">Description</label>
+                <label className="font-semibold text-white">Description</label>
                 <textarea
                   rows={2}
                   placeholder="Task steps or technical details..."
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-[#EDEAE2]">Priority</label>
+                  <label className="font-semibold text-white">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                    className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                    className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -255,22 +261,22 @@ export const TasksView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-[#EDEAE2]">Due date</label>
+                  <label className="font-semibold text-white">Due date</label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none font-mono-numbers"
+                    className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none font-mono-numbers"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-[#EDEAE2]">Client (optional)</label>
+                <label className="font-semibold text-white">Client (optional)</label>
                 <select
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
-                  className="w-full px-3 py-2 neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white focus:outline-none"
                 >
                   <option value="">No specific client</option>
                   {clients.map(c => (
@@ -279,17 +285,17 @@ export const TasksView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-white/[0.08]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[var(--card-border)]">
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="btn-secondary text-xs px-4 py-2"
+                  className="btn-secondary text-xs px-4 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary text-xs px-4 py-2"
+                  className="btn-primary text-xs px-5 py-2 cursor-pointer shadow-lg"
                 >
                   Save task
                 </button>

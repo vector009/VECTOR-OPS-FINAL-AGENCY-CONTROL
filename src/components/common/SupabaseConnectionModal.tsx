@@ -176,25 +176,31 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1D1F23] neo-modal rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-backdrop-enter"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[var(--card-bg)] neo-modal border border-[var(--card-border)] rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] modal-sheet-enter shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#17181B] border-b border-white/[0.04]">
+        <div className="flex items-center justify-between px-6 py-4 bg-[var(--card-bg)]/80 border-b border-[var(--card-border)]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl neo-inset text-[#E2896A]">
+            <div className="p-2.5 rounded-xl bg-[#7662FA]/15 text-[#00C6FF] border border-[#7662FA]/30">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-[#EDEAE2]">Supabase Backend Integration</h2>
+                <h2 className="text-base font-bold text-white">Supabase Backend Integration</h2>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                  isConnected ? 'bg-[#4CAF7D]/20 text-[#4CAF7D]' : 'bg-[#E2604F]/20 text-[#E2604F]'
+                  isConnected ? 'bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/30' : 'bg-[var(--danger)]/15 text-[var(--danger)] border border-[var(--danger)]/30'
                 }`}>
                   {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
                 </span>
               </div>
-              <p className="text-xs text-[#8B8D93]">
+              <p className="text-xs text-[var(--text-muted)]">
                 {isConnected 
                   ? 'Frontend is connected to your Supabase PostgreSQL database' 
                   : 'Frontend is running in local standalone store. Follow steps below to link Supabase'}
@@ -203,30 +209,30 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-[#8B8D93] hover:text-[#EDEAE2] rounded-xl neo-raised transition-colors"
+            className="p-1.5 text-[var(--text-muted)] hover:text-white rounded-xl btn-secondary transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 px-6 pt-4 border-b border-white/[0.04] text-xs">
+        <div className="flex items-center gap-2 px-6 pt-3 border-b border-[var(--card-border)] text-xs">
           <button
             onClick={() => setActiveTab('connection')}
-            className={`pb-3 px-3 font-medium transition-colors border-b-2 ${
+            className={`pb-3 px-3 font-semibold transition-all border-b-2 cursor-pointer ${
               activeTab === 'connection'
-                ? 'border-[#E2896A] text-[#EDEAE2]'
-                : 'border-transparent text-[#8B8D93] hover:text-[#EDEAE2]'
+                ? 'border-[#00C6FF] text-white'
+                : 'border-transparent text-[var(--text-muted)] hover:text-white'
             }`}
           >
             API Connection & Keys
           </button>
           <button
             onClick={() => setActiveTab('sql')}
-            className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+            className={`pb-3 px-3 font-semibold transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'sql'
-                ? 'border-[#E2896A] text-[#EDEAE2]'
-                : 'border-transparent text-[#8B8D93] hover:text-[#EDEAE2]'
+                ? 'border-[#00C6FF] text-white'
+                : 'border-transparent text-[var(--text-muted)] hover:text-white'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
@@ -240,13 +246,13 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
             <form onSubmit={handleTestAndSave} className="space-y-4">
               
               {/* How to connect banner */}
-              <div className="p-4 rounded-2xl neo-inset space-y-2 text-xs">
-                <span className="font-semibold text-[#EDEAE2] block flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-[#4CAF7D]" />
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-[var(--card-border)] space-y-2 text-xs">
+                <span className="font-semibold text-white flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[var(--success)]" />
                   <span>How to connect your Supabase backend to this frontend:</span>
                 </span>
-                <ol className="list-decimal list-inside space-y-1 text-[#8B8D93] leading-relaxed">
-                  <li>Open your <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-[#E2896A] underline inline-flex items-center gap-0.5">Supabase Dashboard <ExternalLink className="w-3 h-3" /></a>.</li>
+                <ol className="list-decimal list-inside space-y-1 text-[var(--text-muted)] leading-relaxed">
+                  <li>Open your <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-[#00C6FF] underline inline-flex items-center gap-0.5">Supabase Dashboard <ExternalLink className="w-3 h-3" /></a>.</li>
                   <li>Click on <strong>Project Settings</strong> (gear icon) &rarr; <strong>API</strong>.</li>
                   <li>Copy <strong>Project URL</strong> and paste into "Database API Endpoint" below.</li>
                   <li>Copy <strong>anon public API key</strong> and paste into "Public Anon Key" below.</li>
@@ -256,37 +262,37 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
 
               {/* URL input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#EDEAE2] flex items-center justify-between">
+                <label className="text-xs font-semibold text-white flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-[#E2896A]" />
+                    <Globe className="w-3.5 h-3.5 text-[#00C6FF]" />
                     <span>Project URL</span>
                   </div>
-                  <span className="text-[11px] text-[#8B8D93]">e.g. https://your-ref.supabase.co</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">e.g. https://your-ref.supabase.co</span>
                 </label>
                 <input
                   type="url"
                   placeholder="https://abcdefghijkl.supabase.co"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs neo-inset rounded-xl text-[#EDEAE2] placeholder-[#8B8D93] focus:outline-none font-mono"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none font-mono"
                 />
               </div>
 
               {/* Anon key input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#EDEAE2] flex items-center justify-between">
+                <label className="text-xs font-semibold text-white flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-[#E2896A]" />
+                    <Key className="w-3.5 h-3.5 text-[#00C6FF]" />
                     <span>Anon / Public API Key</span>
                   </div>
-                  <span className="text-[11px] text-[#8B8D93]">JWT client token</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">JWT client token</span>
                 </label>
                 <input
                   type="password"
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   value={anonKey}
                   onChange={(e) => setAnonKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs neo-inset rounded-xl text-[#EDEAE2] placeholder-[#8B8D93] focus:outline-none font-mono"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none font-mono"
                 />
               </div>
 
@@ -294,10 +300,10 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
               {statusMessage && (
                 <div className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 ${
                   status === 'success' 
-                    ? 'neo-inset text-[#4CAF7D]' 
+                    ? 'bg-[var(--success)]/15 border border-[var(--success)]/30 text-[var(--success)]' 
                     : status === 'error'
-                    ? 'neo-inset text-[#E2604F]'
-                    : 'neo-inset text-[#8B8D93]'
+                    ? 'bg-[var(--danger)]/15 border border-[var(--danger)]/30 text-[var(--danger)]'
+                    : 'bg-white/[0.04] border border-[var(--card-border)] text-[var(--text-muted)]'
                 }`}>
                   {status === 'success' && <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />}
                   {status === 'error' && <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
@@ -311,7 +317,7 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
                 <button
                   type="button"
                   onClick={handleClearMockData}
-                  className="text-xs text-[#E2604F] hover:underline flex items-center gap-1.5 self-start sm:self-auto"
+                  className="text-xs text-[var(--danger)] hover:underline flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Purge mock data & start clean (0 records)</span>
@@ -322,7 +328,7 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
                     <button
                       type="button"
                       onClick={handleDisconnect}
-                      className="btn-secondary text-xs px-3.5 py-2 text-[#E2604F]"
+                      className="btn-secondary text-xs px-3.5 py-2 text-[var(--danger)] cursor-pointer"
                     >
                       Disconnect
                     </button>
@@ -331,7 +337,7 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
                   <button
                     type="submit"
                     disabled={status === 'testing'}
-                    className="btn-primary text-xs px-4 py-2.5 flex items-center gap-2"
+                    className="btn-primary text-xs px-5 py-2.5 flex items-center gap-2 cursor-pointer shadow-lg"
                   >
                     {status === 'testing' ? (
                       <>
@@ -353,25 +359,25 @@ export const SupabaseConnectionModal: React.FC<SupabaseConnectionModalProps> = (
           {activeTab === 'sql' && (
             <div className="space-y-4 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[#8B8D93]">
+                <span className="text-[var(--text-muted)]">
                   Deploy these tables in your Supabase project (<strong>SQL Editor</strong> &rarr; <strong>New Query</strong>):
                 </span>
                 <button
                   type="button"
                   onClick={handleCopySql}
-                  className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+                  className="btn-primary text-xs px-4 py-2 flex items-center gap-1.5 cursor-pointer shadow-md"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-[#4CAF7D]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'Copied SQL!' : 'Copy SQL Schema'}</span>
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl neo-inset font-mono text-[11px] text-[#EDEAE2] max-h-72 overflow-y-auto leading-relaxed whitespace-pre select-all">
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-[var(--card-border)] font-mono text-[11px] text-white max-h-72 overflow-y-auto leading-relaxed whitespace-pre select-all">
                 {SAMPLE_SQL_SCHEMA}
               </div>
 
-              <div className="p-3.5 rounded-xl neo-inset text-[#8B8D93] text-[11px] leading-relaxed">
-                Full schema with all 15 tables and integer USD functions is also saved in <code className="text-[#E2896A]">supabase/schema.sql</code>.
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-[var(--card-border)] text-[var(--text-muted)] text-[11px] leading-relaxed">
+                Full schema with all 15 tables and integer USD functions is also saved in <code className="text-[#00C6FF]">supabase/schema.sql</code>.
               </div>
             </div>
           )}

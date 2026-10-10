@@ -58,13 +58,13 @@ export const AICopilotView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#EDEAE2]">AI copilot console</h1>
-          <p className="text-xs text-[#8B8D93] mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-white">AI copilot console</h1>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             Grounded operational intelligence querying live database records
           </p>
         </div>
 
-        <div className="flex items-center gap-2 p-2 rounded-xl neo-flat bg-[#1D1F23] text-xs text-[#E2896A]">
+        <div className="flex items-center gap-2 p-2.5 rounded-xl neo-flat bg-[var(--card-bg)] text-xs text-[#00C6FF] border border-[#00C6FF]/30">
           <ShieldAlert className="w-3.5 h-3.5" />
           <span>Operational guardrails: AI proposes, admin confirms</span>
         </div>
@@ -73,13 +73,13 @@ export const AICopilotView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Natural Language Query Terminal */}
-        <div className="lg:col-span-8 flex flex-col neo-raised rounded-2xl overflow-hidden min-h-[520px] bg-[#1D1F23]">
-          <div className="p-4 bg-[#17181B] flex items-center justify-between">
+        <div className="lg:col-span-8 flex flex-col neo-raised rounded-2xl overflow-hidden min-h-[520px] bg-[var(--card-bg)] border border-[var(--card-border)]">
+          <div className="p-4 bg-white/[0.02] border-b border-[var(--card-border)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#E2896A]" />
-              <span className="text-xs font-semibold text-[#EDEAE2]">Autonomous business query terminal</span>
+              <Sparkles className="w-4 h-4 text-[#00C6FF]" />
+              <span className="text-xs font-semibold text-white">Autonomous business query terminal</span>
             </div>
-            <span className="text-xs text-[#4CAF7D]">Grounded in database state</span>
+            <span className="text-xs text-[var(--success)] font-mono">Grounded in database state</span>
           </div>
 
           {/* Chat transcript */}
@@ -90,20 +90,20 @@ export const AICopilotView: React.FC = () => {
                 className={`flex gap-3 text-xs ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {m.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-[#E2896A]/10 text-[#E2896A] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-xl bg-[#00C6FF]/15 text-[#00C6FF] border border-[#00C6FF]/30 flex items-center justify-center shrink-0 mt-0.5">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
 
                 <div
-                  className={`p-3.5 rounded-xl leading-relaxed max-w-[85%] ${
+                  className={`p-3.5 rounded-2xl leading-relaxed max-w-[85%] ${
                     m.role === 'user'
-                      ? 'bg-[#E2896A] text-[#17181B] font-medium'
-                      : 'bg-[#17181B] text-[#EDEAE2]'
+                      ? 'bg-gradient-to-r from-[#9B51E0] to-[#00C6FF] text-white font-medium shadow-md'
+                      : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-white'
                   }`}
                 >
                   <p>{m.text}</p>
-                  <span className="text-[10px] opacity-60 block mt-1 text-right font-mono-numbers">
+                  <span className="text-[10px] opacity-70 block mt-1 text-right font-mono-numbers">
                     {m.timestamp}
                   </span>
                 </div>
@@ -111,22 +111,22 @@ export const AICopilotView: React.FC = () => {
             ))}
 
             {isThinking && (
-              <div className="flex items-center gap-2 text-xs text-[#8B8D93] animate-pulse">
-                <Bot className="w-4 h-4 text-[#E2896A]" />
+              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] animate-pulse">
+                <Bot className="w-4 h-4 text-[#00C6FF]" />
                 <span>Querying authoritative PostgreSQL views...</span>
               </div>
             )}
           </div>
 
           {/* Quick suggestions */}
-          <div className="px-4 py-2 bg-[#17181B] flex flex-wrap gap-2 text-xs">
+          <div className="px-4 py-2 bg-white/[0.02] border-t border-[var(--card-border)] flex flex-wrap gap-2 text-xs">
             {suggestedQueries.map((sq) => (
               <button
                 key={sq}
                 onClick={() => {
                   setQueryInput(sq);
                 }}
-                className="px-2.5 py-1 rounded-lg neo-flat bg-[#1D1F23] text-[#8B8D93] hover:text-[#EDEAE2] transition-colors text-xs"
+                className="px-2.5 py-1 rounded-xl neo-flat bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-white transition-colors text-xs cursor-pointer"
               >
                 {sq}
               </button>
@@ -134,18 +134,18 @@ export const AICopilotView: React.FC = () => {
           </div>
 
           {/* Input Form */}
-          <form onSubmit={handleAsk} className="p-4 bg-[#17181B] flex gap-2">
+          <form onSubmit={handleAsk} className="p-4 bg-white/[0.02] border-t border-[var(--card-border)] flex gap-2">
             <input
               type="text"
               placeholder="Ask anything regarding clients, revenue, appointments, or unread messages..."
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
-              className="flex-1 px-4 py-2 text-xs neo-inset rounded-xl text-[#EDEAE2] focus:outline-none"
+              className="flex-1 px-4 py-2 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#7662FA]"
             />
             <button
               type="submit"
               disabled={!queryInput.trim() || isThinking}
-              className="px-5 py-2 text-xs font-semibold text-[#17181B] bg-[#E2896A] hover:bg-[#EA9679] rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              className="btn-primary text-xs px-5 py-2 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Query</span>
@@ -156,43 +156,43 @@ export const AICopilotView: React.FC = () => {
         {/* Right Column: Grounded Brief & Telemetry */}
         <div className="lg:col-span-4 space-y-4">
           <div className="neo-raised p-5 rounded-2xl space-y-3">
-            <h3 className="text-sm font-semibold text-[#EDEAE2]">
+            <h3 className="text-sm font-semibold text-white">
               Live business telemetry
             </h3>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-[#8B8D93]">Active clients:</span>
-                <span className="font-semibold text-[#EDEAE2]">{dailyBrief.activeClientsCount}</span>
+              <div className="flex justify-between py-1 border-b border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)]">Active clients:</span>
+                <span className="font-semibold text-white">{dailyBrief.activeClientsCount}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-[#8B8D93]">Verified MRR:</span>
-                <span className="font-semibold text-[#4CAF7D] font-mono-numbers">{dailyBrief.mrrFormatted}</span>
+              <div className="flex justify-between py-1 border-b border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)]">Verified MRR:</span>
+                <span className="font-semibold text-[var(--success)] font-mono-numbers">{dailyBrief.mrrFormatted}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-[#8B8D93]">Collected this month:</span>
-                <span className="font-semibold text-[#EDEAE2] font-mono-numbers">{dailyBrief.collectedThisMonthFormatted}</span>
+              <div className="flex justify-between py-1 border-b border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)]">Collected this month:</span>
+                <span className="font-semibold text-white font-mono-numbers">{dailyBrief.collectedThisMonthFormatted}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-[#8B8D93]">Overdue invoices:</span>
-                <span className="font-semibold text-[#E2604F] font-mono-numbers">{dailyBrief.overdueFormatted}</span>
+              <div className="flex justify-between py-1 border-b border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)]">Overdue invoices:</span>
+                <span className="font-semibold text-[var(--danger)] font-mono-numbers">{dailyBrief.overdueFormatted}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-[#8B8D93]">Unread client messages:</span>
-                <span className="font-semibold text-[#E0A94C] font-mono-numbers">{dailyBrief.unreadMessagesCount}</span>
+              <div className="flex justify-between py-1 border-b border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)]">Unread client messages:</span>
+                <span className="font-semibold text-[var(--warning)] font-mono-numbers">{dailyBrief.unreadMessagesCount}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-[#8B8D93]">Blocked onboardings:</span>
-                <span className="font-semibold text-[#E2896A] font-mono-numbers">{dailyBrief.blockedOnboardingCount}</span>
+                <span className="text-[var(--text-muted)]">Blocked onboardings:</span>
+                <span className="font-semibold text-[#00C6FF] font-mono-numbers">{dailyBrief.blockedOnboardingCount}</span>
               </div>
             </div>
           </div>
 
           <div className="neo-raised p-5 rounded-2xl space-y-3">
-            <h3 className="text-sm font-semibold text-[#EDEAE2]">
+            <h3 className="text-sm font-semibold text-white">
               Safety invariants
             </h3>
-            <p className="text-xs text-[#8B8D93] leading-relaxed">
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
               The AI copilot does not have independent write access to create payments, delete clients, alter pricing, or waive invoices. All financial mutations must be explicitly reviewed and confirmed by an administrator.
             </p>
           </div>

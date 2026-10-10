@@ -23,14 +23,15 @@ function AppContent() {
   }, []);
 
   // Determine path from window.location.pathname or window.location.hash
+  // Root URL ("/") ALWAYS starts at "/" and renders the public landing page!
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').trim();
-      if (hash) return hash.startsWith('/') ? hash : `/${hash}`;
+      if (hash && hash !== '/') return hash.startsWith('/') ? hash : `/${hash}`;
       const path = window.location.pathname;
-      if (path && path !== '/') return path;
+      if (path && path !== '') return path;
     }
-    return '/login';
+    return '/';
   });
 
   const navigate = (path: string) => {
@@ -39,7 +40,13 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       try {
         window.history.pushState(null, '', cleanPath);
-        window.location.hash = cleanPath;
+        if (cleanPath === '/' || cleanPath === '') {
+          if (window.location.hash) {
+            window.history.replaceState(null, '', '/');
+          }
+        } else {
+          window.location.hash = cleanPath;
+        }
       } catch {
         // ignore
       }
@@ -49,11 +56,11 @@ function AppContent() {
   useEffect(() => {
     const handlePopState = () => {
       const hash = window.location.hash.replace('#', '').trim();
-      if (hash) {
+      if (hash && hash !== '/') {
         setCurrentPath(hash.startsWith('/') ? hash : `/${hash}`);
       } else {
         const path = window.location.pathname;
-        setCurrentPath(path && path !== '/' ? path : '/landing');
+        setCurrentPath(path || '/');
       }
     };
 
@@ -65,31 +72,23 @@ function AppContent() {
     };
   }, []);
 
-  // Handle Root and Login Redirects
+  // Handle Login route auto-skip if session is already active:
+  // "They'd click 'Login' (which can detect their existing session and skip straight to their dashboard)"
+  // Notice: We NEVER redirect when currentPath is "/"! Root URL always renders the landing page!
   useEffect(() => {
-    if (!isLoading) {
-      if (currentPath === '/' || currentPath === '') {
-        if (!profile) {
-          navigate('/landing');
-        } else if (profile.role === 'ADMIN') {
-          navigate('/admin/dashboard');
-        } else if (profile.role === 'CLIENT') {
-          navigate('/portal/dashboard');
-        } else {
-          navigate('/landing');
-        }
-      } else if (currentPath === '/login' && profile) {
-        if (profile.role === 'ADMIN') {
-          navigate('/admin/dashboard');
-        } else if (profile.role === 'CLIENT') {
-          navigate('/portal/dashboard');
-        }
+    if (!isLoading && currentPath === '/login' && profile) {
+      if (profile.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (profile.role === 'CLIENT') {
+        navigate('/client');
       }
     }
   }, [currentPath, profile, isLoading]);
 
-  // Loading state during initial profile fetch
-  if (isLoading && currentPath !== '/landing') {
+  // Loading state during initial profile fetch ONLY for protected dashboard routes!
+  // When hitting "/" or "/login", we NEVER block the visitor behind a full loading screen!
+  const isProtectedRoute = currentPath.startsWith('/admin') || currentPath.startsWith('/client') || currentPath.startsWith('/portal');
+  if (isLoading && isProtectedRoute) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 rounded-2xl neo-raised flex items-center justify-center">
@@ -104,36 +103,15 @@ function AppContent() {
 
   // 1. Route: /login
   if (currentPath === '/login') {
-    // If already logged in, wait for redirect effect
+    // If already logged in, wait for redirect effect to dashboard
     if (profile) {
       return null;
     }
     return <LoginPage onNavigate={navigate} />;
   }
 
-  // 2. Route: /landing
-  if (currentPath === '/landing') {
-    return (
-      <VoiceIntelligenceHero3D
-        currentUser={profile ? {
-          id: profile.id,
-          email: profile.email,
-          role: profile.role,
-          full_name: profile.full_name,
-          timezone: profile.timezone,
-          client_id: profile.client_id,
-          created_at: new Date().toISOString(),
-        } : null}
-        onEnterAdmin={() => navigate('/admin/dashboard')}
-        onEnterClient={() => navigate('/portal/dashboard')}
-        onOpenAuth={() => navigate('/login')}
-        onLogout={signOut}
-      />
-    );
-  }
-
-  // 3. Route: /admin/dashboard or any /admin/* route
-  if (currentPath.startsWith('/admin')) {
+  // 2. Route: /admin or /admin/*
+  if (currentPath === '/admin' || currentPath.startsWith('/admin/')) {
     return (
       <AdminRoute onNavigate={navigate}>
         <AdminShell
@@ -148,15 +126,20 @@ function AppContent() {
             created_at: new Date().toISOString(),
           } : null}
           onLogout={signOut}
-          onBackToLanding={() => navigate('/landing')}
-          onSwitchToClient={() => navigate('/portal/dashboard')}
+          onBackToLanding={() => navigate('/')}
+          onSwitchToClient={() => navigate('/client')}
         />
       </AdminRoute>
     );
   }
 
-  // 4. Route: /portal/dashboard or any /portal/* route
-  if (currentPath.startsWith('/portal')) {
+  // 3. Route: /client or /client/* or /portal or /portal/*
+  if (
+    currentPath === '/client' ||
+    currentPath.startsWith('/client/') ||
+    currentPath === '/portal' ||
+    currentPath.startsWith('/portal/')
+  ) {
     return (
       <ClientRoute onNavigate={navigate}>
         <ClientPortal
@@ -171,15 +154,31 @@ function AppContent() {
             created_at: new Date().toISOString(),
           } : null}
           onLogout={signOut}
-          onBackToLanding={() => navigate('/landing')}
-          onSwitchToAdmin={() => navigate('/admin/dashboard')}
+          onBackToLanding={() => navigate('/')}
+          onSwitchToAdmin={() => navigate('/admin')}
         />
       </ClientRoute>
     );
   }
 
-  // Fallback -> /login
-  return <LoginPage onNavigate={navigate} />;
+  // 4. Root ("/") and all other public routes: ALWAYS render the public landing page!
+  return (
+    <VoiceIntelligenceHero3D
+      currentUser={profile ? {
+        id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        full_name: profile.full_name,
+        timezone: profile.timezone,
+        client_id: profile.client_id,
+        created_at: new Date().toISOString(),
+      } : null}
+      onEnterAdmin={() => navigate('/admin')}
+      onEnterClient={() => navigate('/client')}
+      onOpenAuth={() => navigate('/login')}
+      onLogout={signOut}
+    />
+  );
 }
 
 export default function App() {

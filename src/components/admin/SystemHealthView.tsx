@@ -104,23 +104,23 @@ export const SystemHealthView: React.FC<SystemHealthViewProps> = ({
         {/* Scheduled Automation Engine */}
         <div className="neo-raised p-5 rounded-2xl space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#8B8D93]">
+            <span className="text-xs text-[var(--text-muted)]">
               Scheduled engine
             </span>
-            <Clock className="w-4 h-4 text-[#E2896A]" />
+            <Clock className="w-4 h-4 text-[#00C6FF]" />
           </div>
 
           <div className="space-y-1">
-            <div className="text-base font-semibold text-[#EDEAE2]">
+            <div className="text-base font-semibold text-white">
               {health.active_cron_jobs.length} active jobs
             </div>
-            <p className="text-xs text-[#8B8D93]">
+            <p className="text-xs text-[var(--text-muted)]">
               Nightly invoice generator, overdue marker, and 7-day renewal detector.
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/5 text-[11px] text-[#8B8D93]">
-            Last executed: <span className="font-mono-numbers text-[#EDEAE2]">{new Date(health.last_scheduled_run).toLocaleTimeString()}</span>
+          <div className="pt-2 border-t border-[var(--card-border)] text-[11px] text-[var(--text-muted)]">
+            Last executed: <span className="font-mono-numbers text-white">{new Date(health.last_scheduled_run).toLocaleTimeString()}</span>
           </div>
         </div>
 
@@ -181,23 +181,23 @@ export const SystemHealthView: React.FC<SystemHealthViewProps> = ({
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-semibold text-[#EDEAE2]">{job.title}</span>
-                  <span className="text-[11px] text-[#8B8D93]">
+                  <span className="font-mono text-xs font-semibold text-white">{job.title}</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">
                     {job.schedule}
                   </span>
                 </div>
-                <p className="text-xs text-[#8B8D93] leading-relaxed max-w-2xl">{job.desc}</p>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed max-w-2xl">{job.desc}</p>
               </div>
 
               <button
                 onClick={() => handleRunScheduledJob(job.title)}
                 disabled={isRunningJob === job.title}
-                className="px-3 py-1.5 text-xs font-normal text-[#EDEAE2] neo-raised rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto shrink-0 disabled:opacity-50"
+                className="btn-secondary text-xs px-3.5 py-1.5 flex items-center gap-1.5 self-start sm:self-auto shrink-0 disabled:opacity-50 cursor-pointer"
               >
                 {isRunningJob === job.title ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#E2896A]" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#00C6FF]" />
                 ) : (
-                  <Play className="w-3.5 h-3.5 text-[#E2896A]" />
+                  <Play className="w-3.5 h-3.5 text-[#00C6FF]" />
                 )}
                 <span>{isRunningJob === job.title ? 'Executing...' : 'Trigger now'}</span>
               </button>

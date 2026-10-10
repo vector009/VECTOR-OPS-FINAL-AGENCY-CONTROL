@@ -29,9 +29,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'COMPLETE':
       case 'LOW':
         return {
-          bg: 'bg-[var(--accent-green)]/15',
-          text: 'text-[var(--accent-green)]',
-          dot: 'bg-[var(--accent-green)]',
+          bg: 'bg-[var(--success)]/15',
+          text: 'text-[var(--success)]',
+          border: 'border border-[var(--success)]/30',
+          dot: 'bg-[var(--success)] shadow-[0_0_6px_var(--success)]',
         };
 
       case 'ONBOARDING':
@@ -42,9 +43,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'REQUESTED':
       case 'MEDIUM':
         return {
-          bg: 'bg-[var(--accent-amber)]/15',
-          text: 'text-[var(--accent-amber)]',
-          dot: 'bg-[var(--accent-amber)]',
+          bg: 'bg-[var(--warning)]/15',
+          text: 'text-[var(--warning)]',
+          border: 'border border-[var(--warning)]/30',
+          dot: 'bg-[var(--warning)] shadow-[0_0_6px_var(--warning)]',
         };
 
       case 'OVERDUE':
@@ -56,16 +58,18 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'CANCELLED':
       case 'NO_SHOW':
         return {
-          bg: 'bg-[var(--accent-red)]/15',
-          text: 'text-[var(--accent-red)]',
-          dot: 'bg-[var(--accent-red)]',
+          bg: 'bg-[var(--danger)]/15',
+          text: 'text-[var(--danger)]',
+          border: 'border border-[var(--danger)]/30',
+          dot: 'bg-[var(--danger)] shadow-[0_0_6px_var(--danger)]',
         };
 
       case 'PARTIALLY_PAID':
         return {
-          bg: 'bg-[var(--accent-blue)]/15',
-          text: 'text-[var(--accent-blue)]',
-          dot: 'bg-[var(--accent-blue)]',
+          bg: 'bg-[var(--info)]/15',
+          text: 'text-[var(--info)]',
+          border: 'border border-[var(--info)]/30',
+          dot: 'bg-[var(--info)] shadow-[0_0_6px_var(--info)]',
         };
 
       case 'EXPIRED':
@@ -73,17 +77,18 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'VOID':
       default:
         return {
-          bg: 'bg-white/[0.08]',
+          bg: 'bg-white/[0.06]',
           text: 'text-[var(--text-muted)]',
+          border: 'border border-white/[0.12]',
           dot: 'bg-[var(--text-muted)]',
         };
     }
   };
 
-  const { bg, text, dot } = getBadgeStyle();
+  const { bg, text, border, dot } = getBadgeStyle();
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${bg} ${text} select-none transition-all`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${bg} ${text} ${border} select-none backdrop-blur-sm transition-all`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
       <span>{toSentenceCase(status)}</span>
     </span>
